@@ -1,0 +1,14 @@
+.DS_Store
+.vscode/
+.idea/
+application/cache/*
+!application/cache/index.html
+!application/cache/.htaccess
+application/logs/*
+!application/logs/index.html
+!application/logs/.htaccess
+vendor/
+node_modules/
+npm-debug.log
+nbproject/
+public/uploads/
