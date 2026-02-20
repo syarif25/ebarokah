@@ -18,6 +18,15 @@
                         <a href="<?php echo base_url('Laporan_satpam/cetak/'.$id_enkripsi); ?>" target="_blank" class="btn btn-primary btn-sm"><i class="fa fa-print me-2"></i> Cetak Laporan</a>
                     </div>
                     <div class="card-body">
+                         <!-- Ringkasan mirip Validasi -->
+                         <div class="mb-4">
+                            <span class="badge badge-secondary badge-total mr-2">Total Transport: <span id="sumTransport">0</span></span>
+                            <span class="badge badge-secondary badge-total mr-2">Total Barokah: <span id="sumBarokah">0</span></span>
+                            <span class="badge badge-secondary badge-total mr-2">Total Dinihari: <span id="sumDini">0</span></span>
+                            <span class="badge badge-info badge-total mr-2 text-white">Total Danru: <span id="sumDanru">0</span></span>
+                            <span class="badge badge-primary badge-total">Grand Total: <span id="sumGrand">0</span></span>
+                        </div>
+
                         <div class="table-responsive">
                             <table id="table" class="table table-striped table-bordered" style="min-width: 845px">
                                 <thead>

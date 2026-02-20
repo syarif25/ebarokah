@@ -126,6 +126,7 @@
                                    <option>Ya</option>
                                    <option>Tidak</option>
                                    <option value="walkes_sklh">Wali Kelas Sekolah</option>
+                                   <option value="walkes_amsilati">Wali Kelas Amsilati</option>
                                 </select>
                             </div>
                             <div class="mb-3 col-sm-3 input-success-o">

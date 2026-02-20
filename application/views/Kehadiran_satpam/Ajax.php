@@ -58,8 +58,32 @@
     var save_method; // for save method string
     var table;
 
+    // Clone the header row for search inputs
+    $('#tabel_view thead tr').clone(true).appendTo( '#tabel_view thead' );
+    $('#tabel_view thead tr:eq(1) th').each( function (i) {
+        var title = $(this).text();
+        
+        // Skip filter for No and Aksi
+        if (title !== 'Aksi' && title !== 'No') {
+            $(this).html( '<input type="text" class="form-control form-control-sm" placeholder="'+title+'" />' );
+     
+            $( 'input', this ).on( 'keyup change', function () {
+                if ( table.column(i).search() !== this.value ) {
+                    table
+                        .column(i)
+                        .search( this.value )
+                        .draw();
+                }
+            } );
+        } else {
+            $(this).html('');
+        }
+    } );
+
     $(function () {
         table = $('#tabel_view').DataTable({
+            "orderCellsTop": true,
+            "fixedHeader": true,
             "ajax": {
                 "url": "<?php echo site_url('kehadiran_satpam/data_list')?>",
                 "type": "POST"

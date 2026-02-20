@@ -13,6 +13,14 @@ class Report_model extends CI_Model {
     }
     
     private function _tahun_ajaran($bulan, $tahun) {
+        // Policy change starting 2026: Use calendar year format (Jan-Dec)
+        // Before 2026: Use academic year format (Jul-Jun)
+        if ((int)$tahun >= 2026) {
+            // Calendar year format for 2026 onwards (e.g., "2026", "2027")
+            return (string)$tahun;
+        }
+        
+        // Academic year format for years before 2026 (e.g., "2025/2026")
         if ((int)$bulan >= 7) { // mulai TA di Juli
             return $tahun . '/' . ($tahun + 1);
         } else {
@@ -147,7 +155,7 @@ class Report_model extends CI_Model {
             SELECT YEAR(tb.`timestamp`) AS y,
                 MONTH(tb.`timestamp`) AS m,
                 MIN(tb.bulan)        AS label_bulan,
-                YEAR(tb.`timestamp`) AS label_tahun,
+                MIN(tb.tahun)        AS label_tahun,
                 COALESCE(SUM(tb.diterima),0) AS total
             FROM total_barokah tb
             JOIN penempatan p ON p.id_penempatan = tb.id_penempatan
@@ -160,7 +168,7 @@ class Report_model extends CI_Model {
             SELECT YEAR(tbp.`timestamp`) AS y,
                 MONTH(tbp.`timestamp`) AS m,
                 MIN(tbp.bulan)         AS label_bulan,
-                YEAR(tbp.`timestamp`)  AS label_tahun,
+                MIN(tbp.tahun)         AS label_tahun,
                 COALESCE(SUM(tbp.diterima),0) AS total
             FROM total_barokah_pengajar tbp
             JOIN pengajar pg ON pg.id_pengajar = tbp.id_pengajar
@@ -173,7 +181,7 @@ class Report_model extends CI_Model {
             SELECT YEAR(tbs.`tgl_input`) AS y,
                 MONTH(tbs.`tgl_input`) AS m,
                 MIN(tbs.bulan)         AS label_bulan,
-                YEAR(tbs.`tgl_input`)  AS label_tahun,
+                MIN(tbs.tahun)         AS label_tahun,
                 COALESCE(SUM(tbs.diterima),0) AS total
             FROM total_barokah_satpam tbs
             JOIN satpam sp ON sp.id_satpam = tbs.id_satpam
@@ -192,7 +200,7 @@ class Report_model extends CI_Model {
         FROM (
             -- Struktural
             SELECT YEAR(tb.`timestamp`) AS y, MONTH(tb.`timestamp`) AS m,
-                tb.bulan AS label_bulan, YEAR(tb.`timestamp`) AS label_tahun,
+                tb.bulan AS label_bulan, tb.tahun AS label_tahun,
                 l.nama_lembaga AS lembaga, 'Struktural' AS jenis, tb.diterima AS nominal
             FROM total_barokah tb
             JOIN penempatan p ON p.id_penempatan = tb.id_penempatan
@@ -203,7 +211,7 @@ class Report_model extends CI_Model {
 
             -- Pengajar
             SELECT YEAR(tbp.`timestamp`) AS y, MONTH(tbp.`timestamp`) AS m,
-                tbp.bulan AS label_bulan, YEAR(tbp.`timestamp`) AS label_tahun,
+                tbp.bulan AS label_bulan, tbp.tahun AS label_tahun,
                 l.nama_lembaga AS lembaga, 'Pengajar' AS jenis, tbp.diterima AS nominal
             FROM total_barokah_pengajar tbp
             JOIN pengajar pg ON pg.id_pengajar = tbp.id_pengajar
@@ -214,7 +222,7 @@ class Report_model extends CI_Model {
 
             -- Satpam (lewat kehadiran_lembaga untuk nama lembaga)
             SELECT YEAR(tbs.`tgl_input`) AS y, MONTH(tbs.`tgl_input`) AS m,
-                tbs.bulan AS label_bulan, YEAR(tbs.`tgl_input`) AS label_tahun,
+                tbs.bulan AS label_bulan, tbs.tahun AS label_tahun,
                 COALESCE(l.nama_lembaga,'(Tidak terkait lembaga)') AS lembaga,
                 'Satpam' AS jenis, tbs.diterima AS nominal
             FROM total_barokah_satpam tbs
@@ -300,8 +308,13 @@ class Report_model extends CI_Model {
                 $sql = "
                     SELECT YEAR(t.`timestamp`) AS y,
                         MONTH(t.`timestamp`) AS m,
-                        MIN(t.bulan)         AS label_bulan,
-                        YEAR(t.`timestamp`)  AS label_tahun,
+                        MAX(t.bulan)         AS label_bulan,
+                        CASE 
+                            WHEN LENGTH(MAX(t.tahun)) = 4 THEN MAX(t.tahun)
+                            WHEN MAX(t.bulan) IN ('Januari','Februari','Maret','April','Mei','Juni') 
+                            THEN SUBSTRING(MAX(t.tahun), 6, 4)
+                            ELSE SUBSTRING(MAX(t.tahun), 1, 4)
+                        END AS label_tahun,
                         COALESCE(SUM(t.diterima),0) AS total
                     FROM total_barokah_pengajar t
                     JOIN pengajar pg ON pg.id_pengajar = t.id_pengajar
@@ -316,8 +329,13 @@ class Report_model extends CI_Model {
                 $sql = "
                     SELECT YEAR(t.`tgl_input`) AS y,
                         MONTH(t.`tgl_input`) AS m,
-                        MIN(t.bulan)         AS label_bulan,
-                        YEAR(t.`tgl_input`)  AS label_tahun,
+                        MAX(t.bulan)         AS label_bulan,
+                        CASE 
+                            WHEN LENGTH(MAX(t.tahun)) = 4 THEN MAX(t.tahun)
+                            WHEN MAX(t.bulan) IN ('Januari','Februari','Maret','April','Mei','Juni') 
+                            THEN SUBSTRING(MAX(t.tahun), 6, 4)
+                            ELSE SUBSTRING(MAX(t.tahun), 1, 4)
+                        END AS label_tahun,
                         COALESCE(SUM(t.diterima),0) AS total
                     FROM total_barokah_satpam t
                     JOIN satpam sp ON sp.id_satpam = t.id_satpam
@@ -332,8 +350,13 @@ class Report_model extends CI_Model {
                 $sql = "
                     SELECT YEAR(t.`timestamp`) AS y,
                         MONTH(t.`timestamp`) AS m,
-                        MIN(t.bulan)         AS label_bulan,
-                        YEAR(t.`timestamp`)  AS label_tahun,
+                        MAX(t.bulan)         AS label_bulan,
+                        CASE 
+                            WHEN LENGTH(MAX(t.tahun)) = 4 THEN MAX(t.tahun)
+                            WHEN MAX(t.bulan) IN ('Januari','Februari','Maret','April','Mei','Juni') 
+                            THEN SUBSTRING(MAX(t.tahun), 6, 4)
+                            ELSE SUBSTRING(MAX(t.tahun), 1, 4)
+                        END AS label_tahun,
                         COALESCE(SUM(t.diterima),0) AS total
                     FROM total_barokah t
                     JOIN penempatan p ON p.id_penempatan = t.id_penempatan

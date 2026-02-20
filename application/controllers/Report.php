@@ -47,6 +47,11 @@ class Report extends CI_Controller {
         $this->load->helper('Rupiah_helper');
 
         // window: dari awal bulan LALU sampai awal bulan DEPAN (menutup 2 bulan: bulan ini & bulan lalu)
+        // window: dari awal bulan lalu (Jan) sampai awal bulan depan (Mar) 
+        // Logika: 
+        // Gaji Jan cair Feb -> Timestamp Feb -> Bucket Feb.
+        // Gaji Dec cair Jan -> Timestamp Jan -> Bucket Jan.
+        // Kita perlu bucket Feb (untuk Current) dan Jan (untuk Prev).
         $start = (new DateTime('first day of -1 month 00:00:00'))->format('Y-m-d H:i:s');
         $end   = (new DateTime('first day of +1 month 00:00:00'))->format('Y-m-d H:i:s');
 
@@ -59,20 +64,27 @@ class Report extends CI_Controller {
         $rows = $this->Report_model->list_barokah_last_two_months($nik, $start, $end);
 
         // tentukan key bulan ini & bulan lalu
-        $now  = new DateTime('now');
-        $keyNow  = $now->format('Y-m');
-        $prev = (clone $now)->modify('first day of last month');
-        $keyPrev = $prev->format('Y-m');
+        $now     = new DateTime('now');
+        $keyNow  = $now->format('Y-m'); // 2026-02
+        $prev    = (clone $now)->modify('first day of last month');
+        $keyPrev = $prev->format('Y-m'); // 2026-01
 
         $totalNow  = isset($buckets[$keyNow])  ? (int)$buckets[$keyNow]['total'] : 0;
         $totalPrev = isset($buckets[$keyPrev]) ? (int)$buckets[$keyPrev]['total'] : 0;
 
         // label untuk UI: pakai label dari tabel (jika ada), fallback nama bulan default
+        // label untuk UI: pakai label dari tabel (jika ada), fallback ke Logic Payroll (Bulan - 1)
         $namaBulan = [1=>'Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-        $labelNowBulan  = $buckets[$keyNow]['label_bulan']  ?? $namaBulan[(int)$now->format('n')]  ?? '';
-        $labelNowTahun  = $buckets[$keyNow]['label_tahun']  ?? $now->format('Y');
-        $labelPrevBulan = $buckets[$keyPrev]['label_bulan'] ?? $namaBulan[(int)$prev->format('n')] ?? '';
-        $labelPrevTahun = $buckets[$keyPrev]['label_tahun'] ?? $prev->format('Y');
+        
+        // Fallback Date Objects (Mundur 1 bulan dari key bucket)
+        // KeyNow = Feb. Fallback Label = Jan.
+        $fallbackNowDate  = (clone $now)->modify('-1 month');
+        $fallbackPrevDate = (clone $prev)->modify('-1 month');
+
+        $labelNowBulan  = $buckets[$keyNow]['label_bulan']  ?? $namaBulan[(int)$fallbackNowDate->format('n')]  ?? '';
+        $labelNowTahun  = $buckets[$keyNow]['label_tahun']  ?? $fallbackNowDate->format('Y');
+        $labelPrevBulan = $buckets[$keyPrev]['label_bulan'] ?? $namaBulan[(int)$fallbackPrevDate->format('n')] ?? '';
+        $labelPrevTahun = $buckets[$keyPrev]['label_tahun'] ?? $fallbackPrevDate->format('Y');
 
         // pisahkan rows jadi 2 kelompok (bulan ini & lalu)
         $rincianNow  = array_values(array_filter($rows,  fn($r) => sprintf('%04d-%02d',$r['y'],$r['m']) === $keyNow));

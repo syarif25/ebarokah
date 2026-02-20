@@ -13,6 +13,10 @@
 	<script src="<?php echo base_url() ?>assets/js/dlabnav-init.js"></script>
 	
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+    <!-- SweetAlert2 -->
+    <link href="<?php echo base_url() ?>assets/vendor/sweetalert2/dist/sweetalert2.min.css" rel="stylesheet">
+    <script src="<?php echo base_url() ?>assets/vendor/sweetalert2/dist/sweetalert2.min.js"></script>
+    <!-- Toastify (Keep if needed, or remove if replacing completely) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
@@ -101,17 +105,22 @@
                 {
                     $('#modal_umana').modal('hide');
                     reload_table();
-                    notif(pesan);
+                    // notif(pesan); // Old notification
+                    Swal.fire(
+                        'Berhasil!',
+                        'Data berhasil ' + (save_method == 'add' ? 'disimpan' : 'diupdate') + '.',
+                        'success'
+                    );
                 }
                 else
                 {
                     for (var i = 0; i < data.inputerror.length; i++) 
                     {
-                        $('[name="'+data.inputerror[i]+'"]').parent().parent().addClass('has-error'); //select parent twice to select div form-group class and add has-error class
-                        $('[name="'+data.inputerror[i]+'"]').next().text(data.error_string[i]); //select span help-block class set text error string
+                        $('[name="'+data.inputerror[i]+'"]').parent().parent().addClass('has-error'); 
+                        $('[name="'+data.inputerror[i]+'"]').next().text(data.error_string[i]); 
                     }
                 }
-                $('#btnSave').text('save'); //change button text
+                $('#btnSave').text('Simpan'); //change button text
                 $('#btnSave').attr('disabled',false); //set button enable 
             },
             error: function (jqXHR, textStatus, errorThrown)
@@ -174,6 +183,53 @@
     function reload_table()
     {
         table.ajax.reload(null,false); //reload datatable ajax 
+    }
+
+    function delete_umana(id)
+    {
+        Swal.fire({
+            title: 'Apakah Anda yakin?',
+            text: "Data yang dihapus tidak dapat dikembalikan!",
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Ya, hapus!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.value) {
+                $.ajax({
+                    url : "<?php echo site_url('umana/hapus')?>/"+id,
+                    type: "POST",
+                    dataType: "JSON",
+                    success: function(data)
+                    {
+                        if(data.status) {
+                            reload_table();
+                            Swal.fire(
+                                'Terhapus!',
+                                'Data berhasil dihapus.',
+                                'success'
+                            );
+                        } else {
+                            Swal.fire(
+                                'Gagal!',
+                                'Gagal menghapus data.',
+                                'error'
+                            );
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown)
+                    {
+                        Swal.fire(
+                            'Error!',
+                            'Terjadi kesalahan saat menghapus data.',
+                            'error'
+                        );
+                    }
+                });
+            }
+        })
     }
 
 </script>

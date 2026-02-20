@@ -109,6 +109,7 @@ class Penempatan extends CI_Controller {
 	
 	public function pengajar(){
 		$this->Login_model->getsqurity() ;
+        $isi['stats']   = $this->Penempatan_model->get_statistik_pengajar();
 		$isi['css'] 	= 'Pengajar/Css';
 		$isi['content'] = 'Pengajar/Pengajar';
 		$isi['ajax'] 	= 'Pengajar/Ajax';
@@ -149,30 +150,52 @@ class Penempatan extends CI_Controller {
 				
 			$row[] =date_singkat($datanya->tgl_mulai).' <br> Sampai <br> '. date_singkat($datanya->tgl_selesai);
 			// $row[] = htmlentities($datanya->tunj_kel)."<br>".htmlentities($datanya->kehormatan);
-			if($datanya->tunj_kel == "Ya" and $datanya->kehormatan == "Ya" and $datanya->tunj_anak == "Ya" and $datanya->walkes == "Ya"){
-				$row[] = '<span class="badge badge-success">Tungkel<i class="ms-1 fa fa-check"></i></span> <br>
-				<span class="badge badge-secondary">Kehormatan<i class="ms-1 fa fa-check"></i></span><br>
-				<span class="badge badge-danger">Tunj Anak<i class="ms-1 fa fa-check"></i></span>
-				<span class="badge badge-info">Wali kelas<i class="ms-1 fa fa-check"></i></span>';
-			} elseif ($datanya->tunj_kel == "Ya" and $datanya->kehormatan == "Ya" and $datanya->tunj_anak == "Tidak" and $datanya->walkes == "Tidak"){
-				$row[] = '<span class="badge badge-success">Tungkel<span class="ms-1 fa fa-check"></span></span> <br>
-				<span class="badge badge-secondary">Kehormatan<span class="ms-1 fa fa-check"></span></span>';
-			} elseif ($datanya->tunj_kel == "Tidak" and $datanya->kehormatan == "Ya" and $datanya->tunj_anak == "Ya" and $datanya->walkes == "Tidak"){
-				$row[] = '<span class="badge badge-secondary">Kehormatan<span class="ms-1 fa fa-check"></span></span> <br>
-				<span class="badge badge-danger">Tunj Anak<span class="ms-1 fa fa-check"></span></span>';
-			} elseif ($datanya->tunj_kel == "Ya" and $datanya->kehormatan == "Tidak" and $datanya->tunj_anak == "Ya"){
-				$row[] = '<span class="badge badge-success">Tunkel<span class="ms-1 fa fa-check"></span></span> <br>
-				<span class="badge badge-danger">Tunj Anak<span class="ms-1 fa fa-check"></span></span>';
-			} elseif ($datanya->tunj_kel == "Ya" and $datanya->kehormatan == "Tidak" and $datanya->tunj_anak == "Tidak"){
-				$row[] = '<span class="badge badge-success">Tungkel<span class="ms-1 fa fa-check"></span></span>';
-			} elseif ($datanya->tunj_kel == "Tidak" and $datanya->kehormatan == "Ya" and $datanya->tunj_anak == "Tidak"){
-				$row[] = '<span class="badge badge-secondary">Kehormatan<span class="ms-1 fa fa-check"></span></span>';
-			} elseif ($datanya->kehormatan == "Tidak" and $datanya->tunj_kel == "Tidak" and $datanya->tunj_anak == "Ya"){
-				$row[] = '<span class="badge badge-secondary">Tunj Anak<span class="ms-1 fa fa-check"></span></span>';
+			// Logic Icon Tunjangan
+			$icons = '';
+			
+			// Tunkel (Keluarga) - Icon Users
+			if($datanya->tunj_kel == "Ya") {
+				$icons .= '<span class="badge badge-primary light me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Tunjangan Keluarga"><i class="fa fa-users"></i></span>';
 			} else {
-				$row[] = '<span class="badge badge-warning">Tidak Ada<span class="ms-1 fa fa-ban"></span></span>';
+				$icons .= '<span class="badge badge-light me-1" style="opacity:0.4" data-bs-toggle="tooltip" data-bs-placement="top" title="Tidak Ada Tunj Keluarga"><i class="fa fa-users"></i></span>';
 			}
-			$row[] = htmlentities($datanya->status);
+
+			// Tunjangan Anak - Icon Baby/Child
+			if($datanya->tunj_anak == "Ya") {
+				$icons .= '<span class="badge badge-success light me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Tunjangan Anak"><i class="fa fa-child"></i></span>';
+			} else {
+				$icons .= '<span class="badge badge-light me-1" style="opacity:0.4" data-bs-toggle="tooltip" data-bs-placement="top" title="Tidak Ada Tunj Anak"><i class="fa fa-child"></i></span>';
+			}
+
+			// Kehormatan - Icon Star/Medal
+			if($datanya->kehormatan == "Ya") {
+				$icons .= '<span class="badge badge-warning light me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Tunjangan Kehormatan"><i class="fa fa-star"></i></span>';
+			} else {
+				$icons .= '<span class="badge badge-light me-1" style="opacity:0.4" data-bs-toggle="tooltip" data-bs-placement="top" title="Tidak Ada Kehormatan"><i class="fa fa-star"></i></span>';
+			}
+
+			// Jafung - Icon Certificate/Scroll
+			if($datanya->jafung == "Ya") {
+				$icons .= '<span class="badge badge-danger light me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Jabatan Fungsional"><i class="fa fa-certificate"></i></span>';
+			} else {
+				$icons .= '<span class="badge badge-light me-1" style="opacity:0.4" data-bs-toggle="tooltip" data-bs-placement="top" title="Tidak Ada Jafung"><i class="fa fa-certificate"></i></span>';
+			}
+
+			// Wali Kelas - Icon Chalkboard Teacher
+			if($datanya->walkes == "Ya" or $datanya->walkes == "walkes_sklh") {
+				$icons .= '<span class="badge badge-info light me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Wali Kelas"><i class="fa fa-chalkboard-teacher"></i></span>';
+			} else {
+				$icons .= '<span class="badge badge-light me-1" style="opacity:0.4" data-bs-toggle="tooltip" data-bs-placement="top" title="Bukan Wali Kelas"><i class="fa fa-chalkboard-teacher"></i></span>';
+			}
+
+			$row[] = $icons;
+
+			if ($datanya->status == 'Aktif') {
+				$row[] = '<span class="badge badge-success">Aktif</span>';
+			} else {
+				$row[] = '<span class="badge badge-danger">'.$datanya->status.'</span>';
+			}
+			
 			$row[] = '<td class="py-2 text-end">
 						<div class="dropdown"><button class="btn btn-primary tp-btn-light sharp" type="button" data-bs-toggle="dropdown" aria-expanded="false"><span class="fs--1"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="18px" height="18px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"></rect><circle fill="#000000" cx="5" cy="12" r="2"></circle><circle fill="#000000" cx="12" cy="12" r="2"></circle><circle fill="#000000" cx="19" cy="12" r="2"></circle></g></svg></span></button>
 							<div class="dropdown-menu dropdown-menu-end border py-0" style="margin: 0px;">

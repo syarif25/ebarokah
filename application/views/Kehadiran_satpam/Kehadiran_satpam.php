@@ -23,7 +23,8 @@
                                     <th>No</th>
                                     <th>Nama lembaga</th>
                                     <th>Jumlah Satpam</th>
-                                    <th>Periode</th>
+                                    <th>Bulan</th>
+                                    <th>Tahun</th>
                                     <th>Status</th>
                                     <th>Aksi</th>
                                 </tr>

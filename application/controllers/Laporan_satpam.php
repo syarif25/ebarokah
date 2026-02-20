@@ -48,12 +48,7 @@ class Laporan_satpam extends CI_Controller {
             show_404();
         }
 
-		$isi['css'] 	= 'laporan_satpam/Css';
-		$isi['content'] = 'laporan_satpam/Rincian';
-		$isi['ajax'] 	= 'laporan_satpam/Ajax';
-        $isi['id_enkripsi'] = $id;
-
-        // Ambil data header lembaga
+        // 1. Ambil Data Header (Periode)
         $header = $this->db->query("
             SELECT kl.*, l.nama_lembaga 
             FROM kehadiran_lembaga kl
@@ -61,8 +56,29 @@ class Laporan_satpam extends CI_Controller {
             WHERE kl.id_kehadiran_lembaga = ?
         ", [$decrypted_id])->row();
 
-        $isi['header'] = $header;
-		$this->load->view('Template', $isi);
+        if (!$header) {
+            show_error("Data tidak ditemukan", 404);
+            return;
+        }
+
+        // 2. Ambil Data Absolute dari total_barokah_satpam
+        $list = $this->db->query("
+            SELECT 
+                tb.*, 
+                u.nama_lengkap, u.gelar_depan, u.gelar_belakang
+            FROM total_barokah_satpam tb
+            JOIN satpam s ON tb.id_satpam = s.id_satpam
+            JOIN umana u ON s.nik = u.nik
+            WHERE tb.id_kehadiran_lembaga = ?
+            ORDER BY u.nama_lengkap ASC
+        ", [$decrypted_id])->result();
+
+        // 3. Kirim ke View Fullscreen
+        $data['header'] = $header;
+        $data['isilist'] = $list;
+        $data['id_enkripsi'] = $id;
+
+		$this->load->view('Validasi_fullscreen/Laporan_fullscreen', $data);
 	}
 
     public function cetak($id)
@@ -85,7 +101,7 @@ class Laporan_satpam extends CI_Controller {
         $data['header'] = $header;
         $data['data'] = $this->Laporan_model->get_datatables_rincian_satpam($decrypted_id);
     
-        $this->load->view('laporan_satpam/Cetak', $data);
+        $this->load->view('laporan_satpam/Cetak_pdf', $data);
     }
     
     // AJAX Method for DataTable

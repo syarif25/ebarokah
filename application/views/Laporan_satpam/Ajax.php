@@ -48,6 +48,30 @@
                             i : 0;
                 };
 
+                // Total Transport (Column 4)
+                totalTransport = api
+                    .column( 4 )
+                    .data()
+                    .reduce( function (a, b) {
+                        return intVal(a) + intVal(b);
+                    }, 0 );
+
+                // Total Barokah/Shift (Column 7)
+                totalShift = api
+                    .column( 7 )
+                    .data()
+                    .reduce( function (a, b) {
+                        return intVal(a) + intVal(b);
+                    }, 0 );
+
+                // Total Dinihari (Column 10)
+                totalDini = api
+                    .column( 10 )
+                    .data()
+                    .reduce( function (a, b) {
+                        return intVal(a) + intVal(b);
+                    }, 0 );
+
                 // Total Danru (Column 11)
                 totalDanru = api
                     .column( 11 )
@@ -56,11 +80,6 @@
                         return intVal(a) + intVal(b);
                     }, 0 );
                     
-                // Update footer
-                $( api.column( 11 ).footer() ).html(
-                    'Rp '+ totalDanru.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
-                );
-
                 // Grand Total (Column 12)
                 grandTotal = api
                     .column( 12 )
@@ -69,9 +88,29 @@
                         return intVal(a) + intVal(b);
                     }, 0 );
 
-                $( api.column( 12 ).footer() ).html(
-                    'Rp '+ grandTotal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
-                );
+
+                // Helper for currency formatting
+                var fmt = function(n) {
+                    return 'Rp ' + n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+                };
+                
+                var fmtNum = function(n) {
+                    return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+                };
+
+                // Update Footer Table
+                $( api.column( 4 ).footer() ).html(fmt(totalTransport));
+                $( api.column( 7 ).footer() ).html(fmt(totalShift));
+                $( api.column( 10 ).footer() ).html(fmt(totalDini));
+                $( api.column( 11 ).footer() ).html(fmt(totalDanru));
+                $( api.column( 12 ).footer() ).html(fmt(grandTotal));
+
+                // Update Top Badges (Ringkasan)
+                $('#sumTransport').html(fmtNum(totalTransport));
+                $('#sumBarokah').html(fmtNum(totalShift));
+                $('#sumDini').html(fmtNum(totalDini));
+                $('#sumDanru').html(fmtNum(totalDanru));
+                $('#sumGrand').html(fmtNum(grandTotal));
             }
         });
     });

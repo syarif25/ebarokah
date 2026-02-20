@@ -23,13 +23,15 @@
                                     <th>No</th>
                                     <th>Nama lembaga</th>
                                     <th>Jumlah Umana'</th>
-                                    <th>Periode</th>
+                                    <th>Bulan</th>
+                                    <th>Tahun</th>
                                     <th>Status</th>
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
                                
+                            </tbody>
                             </tbody>
                         </table>
                     </div>

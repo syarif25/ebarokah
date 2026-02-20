@@ -196,22 +196,54 @@ class Kehadiran extends CI_Controller {
 			$row[] = htmlentities($datanya->nama_lembaga);
 			// $row[] = htmlentities($datanya->kategori);
 			$row[] = htmlentities($datanya->jml)." org";
-			$row[] = htmlentities($datanya->bulan." ".$datanya->tahun);
-		if ($datanya->status == 'Belum'){
+			$row[] = htmlentities($datanya->bulan);
+			$row[] = htmlentities($datanya->tahun);
+			if ($datanya->status == 'Belum'){
 			$row[] = "<span class='badge badge-secondary'>Belum diisi<span class='ms-1 fa fa-times'></span></span>";
 			//pengajar
 			$row[] = '<a type="button" class="btn btn-outline-secondary btn-sm" href="#" 
 			title="Rekap" onclick="rekap_pengajar('."'".$encrypted_id."'".')"><i class="mdi mdi-file-document-box mr-1" ></i> Isi Rekap Kehadiran</a>';
 		}	elseif ($datanya->status == "Sudah") {
 			$row[] = "<span class='badge badge-danger'>Belum dikirim <i class='mdi mdi-alert-circle' data-name='mdi-alert-circle'></i></span>";
-			$row[] = '<a type="button" class="btn btn-success btn-xs" href="koreksi_pengajar/'.$encrypted_id.'")"><i class="mdi mdi-checkbox-marked-circle mr-1" ></i> Cek Barokah</a>
-			 ';
+            
+            $aksi = '<a type="button" class="btn btn-success btn-xs" href="'.base_url().'Validasi_pengajar/koreksi/'.$encrypted_id.'"><i class="mdi mdi-checkbox-marked-circle mr-1" ></i> Cek Barokah</a>';
+            
+            // Tambah tombol reset (SuperAdmin/Evaluasi Only)
+            if (in_array($this->session->userdata('jabatan'), ['SuperAdmin', 'Evaluasi'])) {
+                 $aksi .= ' - <button type="button" class="btn btn-sm btn-outline-danger ml-2 btn-reset" '.
+                          'data-id="'.$datanya->id_kehadiran_lembaga.'" '.
+                          'data-nama="'.$datanya->nama_lembaga.'">'.
+                          '<i class="fa fa-undo mr-1"></i> Reset</button>';
+            }
+			$row[] = $aksi;
+
 		}  elseif ($datanya->status == "Terkirim" || $datanya->status == 'acc') {
 			$row[] = "<span class='badge badge-warning text-dark'>Sedang dikoreksi<span class='ms-1 fa fa-redo'></span></span>";
-			$row[] = '<a type="button" class="btn btn-success btn-sm" href="koreksi_pengajar/'.$encrypted_id.'")"><i class="mdi mdi-file-document-box mr-1" ></i> Lihat Rekap Kehadiran</a>';
+            
+            $aksi = '<a type="button" class="btn btn-success btn-sm" href="'.base_url().'Validasi_pengajar/koreksi/'.$encrypted_id.'"><i class="mdi mdi-file-document-box mr-1" ></i> Lihat Rekap Kehadiran</a>';
+            
+            // Tambah tombol reset (SuperAdmin/Evaluasi Only)
+             if (in_array($this->session->userdata('jabatan'), ['SuperAdmin', 'Evaluasi'])) {
+                 $aksi .= ' - <button type="button" class="btn btn-sm btn-outline-danger ml-2 btn-reset" '.
+                          'data-id="'.$datanya->id_kehadiran_lembaga.'" '.
+                          'data-nama="'.$datanya->nama_lembaga.'">'.
+                          '<i class="fa fa-undo mr-1"></i> Reset</button>';
+            }
+			$row[] = $aksi;
+
 		} else {
 			$row[] = "<span class='badge badge-success'>Sudah ditransfer<span class='ms-1 fa fa-check'></span></span>";
-			$row[] = '<a type="button" class="btn btn-info btn-sm" href="koreksi_pengajar/'.$encrypted_id.'"<i class="mdi mdi-file-document-box mr-1" ></i> Lihat Rekap Barokah</a>';
+            
+            $aksi = '<a type="button" class="btn btn-info btn-sm" href="'.base_url().'Laporan_pengajar/rincian/'.$encrypted_id.'"><i class="mdi mdi-eye mr-1" ></i> Lihat Rekap Barokah</a>';
+
+             // Tambah tombol reset (SuperAdmin/Evaluasi Only)
+             if (in_array($this->session->userdata('jabatan'), ['SuperAdmin', 'Evaluasi'])) {
+                 $aksi .= ' - <button type="button" class="btn btn-sm btn-outline-danger ml-2 btn-reset" '.
+                          'data-id="'.$datanya->id_kehadiran_lembaga.'" '.
+                          'data-nama="'.$datanya->nama_lembaga.'">'.
+                          '<i class="fa fa-undo mr-1"></i> Reset</button>';
+            }
+			$row[] = $aksi;
 		}
 			//add html for action
 			
@@ -680,25 +712,8 @@ class Kehadiran extends CI_Controller {
 	}
 	
 	public function cetak_pengajar($id){
-		$list2 = $this->db->query("select tmt_maif, status_aktif, jumlah_hadir_piket, jumlah_hadir_15, jumlah_hadir_10, jafung, kehadiran_lembaga.status, status_sertifikasi, walkes, kehadiran_pengajar.id_kehadiran_pengajar, pengajar.kategori, jabatan_akademik, jumlah_sks, status_sertifikasi, ijazah_terakhir, id_bidang, tunj_anak, umana.gelar_depan, umana.gelar_belakang, kehormatan, kehadiran_lembaga.file, tunj_kel, kehadiran_lembaga.id_kehadiran_lembaga, 
-		nama_lengkap, status_nikah, tmt_dosen, tmt_guru, kehadiran_pengajar.id_pengajar, kehadiran_pengajar.bulan, kehadiran_pengajar.tahun, jumlah_hadir, nama_lembaga, nominal_transport from umana, pengajar, kehadiran_pengajar, kehadiran_lembaga,
-		lembaga, transport WHERE 
-		kehadiran_lembaga.id_kehadiran_lembaga = kehadiran_pengajar.id_kehadiran_lembaga and 
-		pengajar.id_pengajar = kehadiran_pengajar.id_pengajar and 
-		pengajar.nik = umana.nik and 
-		pengajar.id_lembaga = lembaga.id_lembaga and 
-		pengajar.kategori_trans = transport.id_transport and 
-		DATEDIFF(NOW(), pengajar.tgl_mulai) < pengajar.tgl_selesai and
-		kehadiran_lembaga.id_kehadiran_lembaga = $id order by nama_lengkap asc ")->result();
-		$tunkel_get = $this->db->get('tunkel')->result();
-		$tunj_anak_get = $this->db->get('tunjanak')->result();
-		// $kehormatan = $this->db->query('select * from ');
-		$this->Login_model->getsqurity() ;
-
-		$isi['isitunkel']  = $tunkel_get;
-		$isi['isitunj_anak']  = $tunj_anak_get;
-		$isi['isilist']  = $list2;
-		$this->load->view('Kehadiran_pengajar/Cetak',$isi);	
+		// Redirect to new module
+		redirect('Laporan_pengajar/cetak/'.$id);
 	}
 	
 	public function cetak_potongan_pengajar($id){

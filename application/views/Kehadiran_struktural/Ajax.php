@@ -46,27 +46,45 @@
     $('#inputku').mask('000.000.000.000', {reverse: true});
 
       // $("#example1").DataTable();
+    // Clone the header row for search inputs
+    $('#tabel_view thead tr').clone(true).appendTo( '#tabel_view thead' );
+    $('#tabel_view thead tr:eq(1) th').each( function (i) {
+        var title = $(this).text();
+        
+        // Skip filter for No and Aksi
+        if (title !== 'Aksi' && title !== 'No') {
+            $(this).html( '<input type="text" class="form-control form-control-sm" placeholder="'+title+'" />' );
+     
+            $( 'input', this ).on( 'keyup change', function () {
+                if ( table.column(i).search() !== this.value ) {
+                    table
+                        .column(i)
+                        .search( this.value )
+                        .draw();
+                }
+            } );
+        } else {
+            $(this).html('');
+        }
+    } );
+
     table =   $('#tabel_view').DataTable({
+        "orderCellsTop": true,
+        "fixedHeader": true,
         "ajax": {
-            // "searching": true,
-            // "responsive" : true,
-            // "processing": true,
-            // "serverSide": true,
             "url": "<?php echo site_url('kehadiran_struktural/data_list')?>",
             "type": "POST"
         },
-
         "columnDefs": [
             { 
                 "targets": [ -1 ], //last column
                 "orderable": false, //set not orderable
             },
-        
         ],  
         "paging": true,
         "searching": true,
         "ordering": true,
-        });
+    });
 
     });
 

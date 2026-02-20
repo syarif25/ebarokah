@@ -242,7 +242,7 @@
 						</a>
                         <ul aria-expanded="false">
                             <li><a href="<?php echo base_url() ?>kehadiran_struktural">Struktural</a></li>
-							<li><a href="<?php echo base_url() ?>kehadiran/pengajar">Pengajar</a></li>
+							<li><a href="<?php echo base_url() ?>Kehadiran_pengajar">Pengajar</a></li>
                             <li><a href="<?php echo base_url() ?>kehadiran_satpam">Satpam</a></li>
                         </ul>
                     </li>
@@ -308,7 +308,7 @@
 						</a>
                         <ul aria-expanded="false">
                             <li><a href="<?php echo base_url() ?>kehadiran_struktural">Struktural</a></li>
-							<li><a href="<?php echo base_url() ?>kehadiran/pengajar">Pengajar</a></li>
+							<li><a href="<?php echo base_url() ?>Kehadiran_pengajar">Pengajar</a></li>
                         </ul>
                     </li>
                     <li><a class="has-arrow" href="javascript:void()">
@@ -466,7 +466,7 @@
 						</a>
                         <ul aria-expanded="false">
                             <li><a href="<?php echo base_url() ?>kehadiran_struktural">Struktural</a></li>
-							<li><a href="<?php echo base_url() ?>kehadiran/pengajar">Pengajar</a></li>
+                            <li><a href="<?php echo base_url() ?>Kehadiran_pengajar">Pengajar</a></li>
                         </ul>
                     </li>
                     <?php } else { ?>
@@ -546,7 +546,7 @@
     ***********************************-->
     <!-- Global Vendor -->
     <script src="<?php echo base_url() ?>assets/vendor/global/global.min.js"></script>
-	<script src="<?php echo base_url() ?>assets/vendor/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
+
     <script src="<?php echo base_url() ?>assets/js/custom.min.js"></script>
 	<script src="<?php echo base_url() ?>assets/js/dlabnav-init.js"></script>
     

@@ -56,7 +56,7 @@
 
       <?php if(!empty($periode->id_lembaga)): ?>
         <a class="btn btn-danger text-white" target="_blank"
-           href="<?php echo base_url('Kehadiran_struktural/Cetak_Potongan_struktural/'.$periode->id_lembaga); ?>">
+           href="<?php echo base_url('Kehadiran_struktural/cetak_potongan/'.$periode->id_lembaga); ?>">
           <i class="fa fa-scissors mr-1"></i> Potongan
         </a>
       <?php endif; ?>

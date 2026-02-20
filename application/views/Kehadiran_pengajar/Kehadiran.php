@@ -24,7 +24,8 @@
                                     <th>Nama lembaga</th>
                                     <!-- <th>Bidang</th> -->
                                     <th>Jumlah Pengajar</th>
-                                    <th>Periode</th>
+                                    <th>Bulan</th>
+                                    <th>Tahun</th>
                                     <th>Status</th>
                                     <th>Aksi</th>
                                 </tr>

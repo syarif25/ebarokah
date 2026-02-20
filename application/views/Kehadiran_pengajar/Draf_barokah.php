@@ -89,6 +89,8 @@
                                                 $tunj_walkes = 60000;
                                             } else if($key->walkes == "walkes_sklh") {
                                                 $tunj_walkes = 50000;
+                                            } else if($key->walkes == "walkes_amsilati") {
+                                                $tunj_walkes = 25000;
                                             } else {
                                                 $tunj_walkes = 0;
                                             }

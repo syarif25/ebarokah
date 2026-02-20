@@ -30,7 +30,8 @@ class Kehadiran_satpam extends CI_Controller {
 			kl.id_kehadiran_lembaga,
 			kl.bulan,
 			kl.tahun,
-			kl.status
+			kl.status,
+            (SELECT COUNT(*) FROM kehadiran_satpam ks WHERE ks.id_kehadiran_lembaga = kl.id_kehadiran_lembaga) as jumlah_personil
 		');
 		$this->db->from('kehadiran_lembaga kl');
 		$this->db->join('lembaga l', 'kl.id_lembaga = l.id_lembaga');
@@ -52,8 +53,18 @@ class Kehadiran_satpam extends CI_Controller {
 			$row = array();
 			$row[] = $no++;
 			$row[] = htmlentities($datanya->nama_lembaga);
-			$row[] = " org";
-			$row[] = htmlentities($datanya->bulan." ".$datanya->tahun);
+			$row[] = $datanya->jumlah_personil . " org";
+			$row[] = htmlentities($datanya->bulan);
+			$row[] = htmlentities($datanya->tahun);
+			// Logic tombol Reset: Hanya untuk Super Admin (Bukan AdminLembaga)
+			$btnReset = '';
+			if ($this->session->userdata('jabatan') != 'AdminLembaga') {
+				$btnReset = '<button type="button" class="btn btn-sm btn-outline-danger ml-2 btn-reset"
+							data-id="'.$datanya->id_kehadiran_lembaga.'">
+						<i class="fa fa-undo mr-1"></i> Reset
+					</button>';
+			}
+
 			if ($datanya->status == 'Belum'){
 				$row[] = "<span class='badge badge-secondary'>Belum diisi<span class='ms-1 fa fa-times'></span></span>";
 				$row[] = '<a type="button" class="btn btn-outline-secondary btn-sm"
@@ -67,11 +78,7 @@ class Kehadiran_satpam extends CI_Controller {
 					<a type="button" class="btn btn-success btn-xs"
 					   href="validasi_satpam/koreksi_satpam/'.$this->encrypt_url($datanya->id_kehadiran_lembaga).'">
 					   <i class="mdi mdi-checkbox-marked-circle mr-1"></i> Cek Barokah
-					</a>
-					<button type="button" class="btn btn-sm btn-outline-danger ml-2 btn-reset"
-							data-id="'.$datanya->id_kehadiran_lembaga.'">
-						<i class="fa fa-undo mr-1"></i> Reset
-					</button>';
+					</a>' . $btnReset;
 			} elseif ($datanya->status == "Terkirim" || $datanya->status == "acc") {
 				$row[] = "<span class='badge badge-warning text-dark'>Sedang dikoreksi<span class='ms-1 fa fa-redo'></span></span>";
 				$row[] = '
@@ -85,11 +92,7 @@ class Kehadiran_satpam extends CI_Controller {
 					<a type="button" class="btn btn-info btn-sm"
 					   href="Laporan_satpam/rincian/'.$this->encrypt_url($datanya->id_kehadiran_lembaga).'">
 					   <i class="mdi mdi-file-document-box mr-1"></i> Lihat Laporan Final
-					</a>
-					<button type="button" class="btn btn-sm btn-outline-danger ml-2 btn-reset"
-							data-id="'.$datanya->id_kehadiran_lembaga.'">
-						<i class="fa fa-undo mr-1"></i> Reset
-					</button>';
+					</a>' . $btnReset;
 			}
 			
 			//add html for action

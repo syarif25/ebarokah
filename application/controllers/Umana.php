@@ -77,8 +77,8 @@ class Umana extends CI_Controller {
 			//add html for action
 			$row[] = '<a type="button" class="btn btn-success btn-sm" href="#" 
 			title="Track" onclick="edit_umana('."'".$datanya->nik."'".')"><i class="bx bx-edit mr-1" ></i> Edit</a>
-            <a type="button" class="btn btn-info btn-sm" href="umana/hapus/'.$datanya->nik.'" 
-			title="Track"><i class="bx bx-trash mr-1" ></i> Hapus</a>
+            <a type="button" class="btn btn-danger btn-sm" href="#" 
+			title="Track" onclick="delete_umana('."'".$datanya->nik."'".')"><i class="bx bx-trash mr-1" ></i> Hapus</a>
             ';
 		$data[] = $row;
 		}
@@ -350,12 +350,7 @@ class Umana extends CI_Controller {
 	public function hapus($id)
     {
      $this->db->where('nik', $id)->delete('umana');
-     
-     // Set pesan notifikasi menggunakan flashdata
-     $this->session->set_flashdata('success', 'Data berhasil dihapus.');
-     $this->session->set_flashdata('action', 'delete');
-     // Redirect ke halaman yang diinginkan
-     redirect('umana');
+     echo json_encode(array("status" => TRUE));
     }  
     
     private function _validate_pwd(){

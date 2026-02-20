@@ -29,6 +29,32 @@
         "destroy": true,
         "deferRender": true
       });
+
+      // --- LIVE CALCULATION LOGIC ---
+      function calculateColumnTotal(inputName, outputId) {
+          var total = 0;
+          $('input[name^="' + inputName + '"]').each(function() {
+              var val = parseFloat($(this).val()) || 0;
+              total += val;
+          });
+          $('#' + outputId).text(total);
+      }
+
+      function calculateAll() {
+          calculateColumnTotal('jumlah_kehadiran[]', 'total_hadir_normal');
+          calculateColumnTotal('jumlah_kehadiran_15[]', 'total_hadir_15');
+          calculateColumnTotal('jumlah_kehadiran_10[]', 'total_hadir_10');
+          calculateColumnTotal('jumlah_kehadiran_piket[]', 'total_hadir_piket');
+      }
+
+      // Trigger calculation on input change
+      $(document).on('input keyup change', '.calc-trigger', function() {
+          calculateAll();
+      });
+
+      // Calculate initially (in case of re-render or edit mode)
+      calculateAll();
+      // ------------------------------
    });
 
     function cekInputFile() {
@@ -44,13 +70,37 @@
     $('#inputku').mask('000.000.000.000', {reverse: true});
 
       // $("#example1").DataTable();
+    // Clone the header row for search inputs
+    $('#tabel_view thead tr').clone(true).appendTo( '#tabel_view thead' );
+    $('#tabel_view thead tr:eq(1) th').each( function (i) {
+        var title = $(this).text();
+        
+        // Skip filter for No and Aksi
+        if (title !== 'Aksi' && title !== 'No') {
+            $(this).html( '<input type="text" class="form-control form-control-sm" placeholder="'+title+'" />' );
+     
+            $( 'input', this ).on( 'keyup change', function () {
+                if ( table.column(i).search() !== this.value ) {
+                    table
+                        .column(i)
+                        .search( this.value )
+                        .draw();
+                }
+            } );
+        } else {
+            $(this).html('');
+        }
+    } );
+
     table =   $('#tabel_view').DataTable({
+        "orderCellsTop": true,
+        "fixedHeader": true,
         "ajax": {
             // "searching": true,
             // "responsive" : true,
             // "processing": true,
             // "serverSide": true,
-            "url": "<?php echo site_url('kehadiran/data_list_pengajar')?>",
+            "url": "<?php echo site_url('Kehadiran_pengajar/data_list')?>",
             "type": "POST"
         },
 
@@ -70,12 +120,12 @@
 
     function rekap($id) {
         var id = $id;
-        window.open("<?php echo site_url('kehadiran/add/')?>"+id, '_blank');   
+        window.open("<?php echo site_url('Kehadiran_pengajar/add/')?>"+id, '_blank');   
     }
 
     function rekap_pengajar($id) {
         var id = $id;
-        window.open("<?php echo site_url('kehadiran/add_pengajar/')?>"+id, '_blank');   
+        window.open("<?php echo site_url('Kehadiran_pengajar/add/')?>"+id, '_blank');   
     }
 
     function add_blanko() {
@@ -108,7 +158,7 @@
 
     // kirim data
     $.ajax({
-        url: "<?php echo site_url('kehadiran/ajax_add_pengajar')?>",
+        url: "<?php echo site_url('Kehadiran_pengajar/ajax_add')?>",
         type: "POST",
         data: new FormData($('#form')[0]),
         contentType: false,
@@ -124,7 +174,7 @@
             title: 'Tersimpan',
             text: data.message || 'Rekap kehadiran berhasil disimpan.'
             }).then(() => {
-            window.location = "<?php echo site_url('kehadiran/pengajar')?>";
+            window.location = "<?php echo site_url('Kehadiran_pengajar')?>";
             });
         } else {
             // gagal logis / validasi server
@@ -155,10 +205,10 @@
         $('#btnSave').attr('disabled',true); //set button disable 
         var url;
         if(save_method == 'add') {
-            url = "<?php echo site_url('kehadiran/blanko_add')?>";
+            url = "<?php echo site_url('Kehadiran_pengajar/blanko_add')?>";
             var pesan = ' Menambah data';
         } else {
-            url = "<?php echo site_url('kehadiran/blanko_update')?>";
+            url = "<?php echo site_url('Kehadiran_pengajar/blanko_update')?>";
             var pesan = ' Edit data';
         }
 
@@ -281,10 +331,10 @@
         $('#btnSave').attr('disabled',true); //set button disable 
         var url;
         if(save_method == 'add_pengajar') {
-            url = "<?php echo site_url('kehadiran/blanko_pengajar_add')?>";
+            url = "<?php echo site_url('Kehadiran_pengajar/blanko_add')?>";
             var pesan = ' Menambah data';
         } else {
-            url = "<?php echo site_url('kehadiran/blanko_pengajar_update')?>";
+            url = "<?php echo site_url('Kehadiran_pengajar/blanko_update')?>";
             var pesan = ' Edit data';
         }
 
@@ -334,6 +384,80 @@
         // notif(pesan);
     }
 
+    // --- FITUR RESET PENGAJAR ---
+    $(document).on('click', '.btn-reset', function() {
+        const idKL = $(this).data('id');
+        const nama = $(this).data('nama') || 'Lembaga ini';
+
+        if (!idKL) {
+            Swal.fire('Error', 'ID periode tidak ditemukan.', 'error');
+            return;
+        }
+
+        Swal.fire({
+            title: 'Reset Data Pengajar?',
+            html: `
+            <p>Anda akan mereset data untuk <b>${nama}</b>.</p>
+            <div class="text-left mt-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="resetmode" id="mode1" value="kehadiran" checked>
+                    <label class="form-check-label" for="mode1">
+                        <b>Hapus Input Kehadiran</b> <br>
+                        <small class="text-muted">(Semua data hadir/jam hilang. Status kembali ke "Belum")</small>
+                    </label>
+                </div>
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="radio" name="resetmode" id="mode2" value="status">
+                    <label class="form-check-label" for="mode2">
+                        <b>Hapus Status Kirim/Validasi</b> <br>
+                        <small class="text-muted">(Data input AMAN. Hanya kembalikan status ke "Sudah/Belum Terkirim")</small>
+                    </label>
+                </div>
+            </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Reset',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#d33',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const mode = $('input[name="resetmode"]:checked').val();
+                
+                // Loading
+                Swal.fire({title:'Memproses...', allowOutsideClick:false, didOpen:()=>Swal.showLoading()});
+
+                $.ajax({
+                    url: "<?= site_url('Validasi_pengajar/reset_json') ?>",
+                    type: "POST",
+                    dataType: "json",
+                    data: {
+                        id_kehadiran_lembaga: idKL,
+                        mode: mode
+                    },
+                    success: function(res) {
+                        if (res && res.status) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil Reset',
+                                text: res.message,
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
+                                reload_table();
+                            });
+                        } else {
+                            Swal.fire('Gagal', (res && res.message) ? res.message : 'Gagal mereset data.', 'error');
+                        }
+                    },
+                    error: function(xhr) {
+                        console.error(xhr.responseText);
+                        Swal.fire('Error', 'Gagal menghubungi server.', 'error');
+                    }
+                });
+            }
+        });
+    });
 </script>
 
 

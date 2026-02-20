@@ -412,7 +412,7 @@ $(function(){
             Swal.fire({icon:'success', title:'Terkirim', text: res.message || 'Periode berhasil dikirim.', timer:1400, showConfirmButton:false})
             .then(()=>{ 
                 // window.location.reload(); 
-                window.location.href = "<?= site_url('Kehadiran') ?>";
+                window.location.href = "<?= site_url('Kehadiran_satpam') ?>";
             });
             } else {
             Swal.fire('Gagal', (res && res.message) ? res.message : 'Gagal mengirim periode.','error');

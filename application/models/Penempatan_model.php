@@ -124,4 +124,35 @@ class Penempatan_model extends CI_Model {
 
 		return $query->row();
 	}
+	public function get_statistik_pengajar()
+	{
+		$id_lemb = $this->session->userdata('lembaga');
+		$isAdminLembaga = $this->session->userdata('jabatan') == 'AdminLembaga';
+
+		// Hitung berdasarkan kategori
+		$this->db->select('kategori, COUNT(*) as total');
+		$this->db->from('pengajar');
+		if ($isAdminLembaga) {
+			$this->db->where('id_lembaga', $id_lemb);
+		}
+        $this->db->where('status', 'Aktif');
+		$this->db->group_by('kategori');
+		$query = $this->db->get();
+		$result = $query->result();
+
+		$stats = [
+			'GTY' => 0, 'GTT' => 0, 'DTY' => 0, 'DTT' => 0
+		];
+
+		foreach ($result as $row) {
+			if (isset($stats[$row->kategori])) {
+				$stats[$row->kategori] = $row->total;
+			}
+		}
+
+		$stats['guru'] = $stats['GTY'] + $stats['GTT'];
+		$stats['dosen'] = $stats['DTY'] + $stats['DTT'];
+
+		return $stats;
+	}
 }

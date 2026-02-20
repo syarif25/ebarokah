@@ -105,7 +105,8 @@ class Kehadiran_struktural extends CI_Controller {
 			$row[] = $no++;
 			$row[] = htmlentities($datanya->nama_lembaga);
 			$row[] = htmlentities($datanya->jml)." org";
-			$row[] = htmlentities($datanya->bulan." ".$datanya->tahun);
+			$row[] = htmlentities($datanya->bulan);
+			$row[] = htmlentities($datanya->tahun);
 			$jabatanUser = $this->session->userdata('jabatan');
 
 			if ($datanya->status == 'Belum') {

@@ -199,7 +199,7 @@ class Payroll extends CI_Controller {
             // Logika admin fee
             $isAdminLow = true; 
             // Cek bank yang kena 2500 (BIF)
-            $banks2500 = ["Bank Mandiri", "Bank BCA", "Bank Jatim", "Bank Muamalat", "Bank BTN", "Bank CIMB", "Bank BNI", "Bank Syari'ah Indonesia"];
+            $banks2500 = ["Bank Mandiri", "Bank BCA", "Bank Jatim", "Bank Muamalat", "Bank BTN", "Bank CIMB", "Bank BNI"];
             
             $nominal = $sow->diterima;
             $adminFee = 1000;
