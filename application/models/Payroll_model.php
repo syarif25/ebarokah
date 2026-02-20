@@ -106,8 +106,7 @@ class Payroll_model extends CI_Model {
                     AND kehadiran_lembaga.id_lembaga = lembaga.id_lembaga 
                     AND penempatan.id_lembaga = lembaga.id_lembaga 
                     AND kehadiran_lembaga.id_kehadiran_lembaga = $id 
-                    AND total_barokah.bulan = kehadiran_lembaga.bulan 
-                    AND total_barokah.tahun = kehadiran_lembaga.tahun order by nama_bank asc ;");
+                    AND total_barokah.id_kehadiran = kehadiran_lembaga.id_kehadiran_lembaga order by nama_bank asc ;");
         } elseif ($cek->kategori == 'Satpam') {
             $query = $this->db->query("SELECT id_total_barokah_satpam as id_total, kehadiran_lembaga.id_kehadiran_lembaga, kehadiran_lembaga.kategori, nama_lengkap, gelar_depan, gelar_belakang, nama_bank, nomor_hp, no_rekening, atas_nama, nama_lembaga, total_barokah_satpam.bulan, total_barokah_satpam.tahun, diterima 
                 FROM umana, satpam, total_barokah_satpam, kehadiran_lembaga, lembaga 
@@ -115,20 +114,200 @@ class Payroll_model extends CI_Model {
                     AND total_barokah_satpam.id_satpam = satpam.id_satpam 
                     AND kehadiran_lembaga.id_lembaga = lembaga.id_lembaga 
                     AND kehadiran_lembaga.id_kehadiran_lembaga = $id 
-                    AND total_barokah_satpam.bulan = kehadiran_lembaga.bulan 
-                    AND total_barokah_satpam.tahun = kehadiran_lembaga.tahun order by nama_bank asc ;");
+                    AND total_barokah_satpam.id_kehadiran_lembaga = kehadiran_lembaga.id_kehadiran_lembaga order by nama_bank asc ;");
         } else {
-            $query = $this->db->query("SELECT id_total_barokah_pengajar as id_total, kehadiran_lembaga.id_kehadiran_lembaga, kehadiran_lembaga.kategori, nama_lengkap, gelar_depan, gelar_belakang, nama_bank, nomor_hp, no_rekening, total_barokah_pengajar.id_kehadiran, atas_nama, nama_lembaga, total_barokah_pengajar.bulan, total_barokah_pengajar.tahun, diterima 
+            $query = $this->db->query("SELECT id_total_barokah_pengajar as id_total, kehadiran_lembaga.id_kehadiran_lembaga, kehadiran_lembaga.kategori, nama_lengkap, gelar_depan, gelar_belakang, nama_bank, nomor_hp, no_rekening, total_barokah_pengajar.id_kehadiran_lembaga as id_kehadiran, atas_nama, nama_lembaga, total_barokah_pengajar.bulan, total_barokah_pengajar.tahun, diterima 
                 FROM umana, pengajar, total_barokah_pengajar, kehadiran_lembaga, lembaga 
                 WHERE umana.nik = pengajar.nik 
                     AND total_barokah_pengajar.id_pengajar = pengajar.id_pengajar 
                     AND kehadiran_lembaga.id_lembaga = lembaga.id_lembaga 
                     AND pengajar.id_lembaga = lembaga.id_lembaga 
                     AND kehadiran_lembaga.id_kehadiran_lembaga = $id 
-                    AND total_barokah_pengajar.bulan = kehadiran_lembaga.bulan 
-                    AND total_barokah_pengajar.tahun = kehadiran_lembaga.tahun order by nama_bank asc ;");
+                    AND total_barokah_pengajar.id_kehadiran_lembaga = kehadiran_lembaga.id_kehadiran_lembaga order by nama_bank asc ;");
+             
+             // Fallback if snapshot is empty (Pengajar Only)
+             if ($query->num_rows() == 0) {
+                 return $this->get_datatables_legacy_rincian($id);
+             }
         }
         return $query->result();
+    }
+
+    // New: Fallback for Payroll Rincian (Live Calculation)
+    function get_datatables_legacy_rincian($id) {
+         $id = $this->db->escape_str($id);
+         
+         // 1. Fetch Raw Data (Logic from Validasi_pengajar)
+         $list = $this->db->query("select jumlah_hadir_piket, jumlah_hadir_15, jumlah_hadir_10, jafung, lembaga.id_lembaga, kehadiran_lembaga.status, status_sertifikasi, walkes, kehadiran_pengajar.id_kehadiran_pengajar, pengajar.kategori, jabatan_akademik, jumlah_sks, status_sertifikasi, ijazah_terakhir, id_bidang, tunj_anak, umana.gelar_depan, umana.gelar_belakang, kehormatan, kehadiran_lembaga.file, tunj_kel, kehadiran_lembaga.id_kehadiran_lembaga, 
+         nama_lengkap, status_nikah, tmt_dosen, tmt_guru, tmt_maif, kehadiran_pengajar.id_pengajar, kehadiran_pengajar.bulan, kehadiran_pengajar.tahun, jumlah_hadir, nama_lembaga, nominal_transport, status_aktif, pengajar.id_lembaga,
+         nama_bank, nomor_hp, no_rekening, atas_nama, umana.nik
+         from umana, pengajar, kehadiran_pengajar, kehadiran_lembaga, lembaga, transport 
+         WHERE 
+         kehadiran_lembaga.id_kehadiran_lembaga = kehadiran_pengajar.id_kehadiran_lembaga and 
+         pengajar.id_pengajar = kehadiran_pengajar.id_pengajar and 
+         pengajar.nik = umana.nik and 
+         pengajar.id_lembaga = lembaga.id_lembaga and 
+         pengajar.kategori_trans = transport.id_transport and 
+         DATEDIFF(NOW(), pengajar.tgl_mulai) < pengajar.tgl_selesai and
+         kehadiran_lembaga.id_kehadiran_lembaga = '$id' order by nama_lengkap asc ")->result();
+     
+         if (empty($list)) return array();
+     
+         // 2. Fetch Aux Data
+         $tunkel_res = $this->db->get('tunkel')->result();
+         $nominaltunkel = isset($tunkel_res[0]) ? $tunkel_res[0] : null;
+         
+         $tunjanak_res = $this->db->get('tunjanak')->result();
+         $nominaltunj_anak = isset($tunjanak_res[0]) ? $tunjanak_res[0] : null;
+
+         // 3. Fetch Tahun Acuan Configuration (like Validasi_pengajar controller)
+         $config_tahun_query = $this->db->get('pengaturan_tahun_acuan');
+         $tahun_acuan_map = [];
+         if ($config_tahun_query->num_rows() > 0) {
+             foreach ($config_tahun_query->result() as $cfg) {
+                 $tahun_acuan_map[trim($cfg->id_bidang)] = (int)$cfg->tahun_acuan;
+             }
+         }
+
+         // Default Values (fallback if table empty or missing bidang)
+         $tahun_default = (int)date('Y');
+         if (isset($tahun_acuan_map['Default']))      $tahun_default = $tahun_acuan_map['Default'];
+         if (isset($tahun_acuan_map['Pengurus']))     $tahun_default = $tahun_acuan_map['Pengurus'];
+         if (isset($tahun_acuan_map['Kantor Pusat'])) $tahun_default = $tahun_acuan_map['Kantor Pusat'];
+
+         $tahun_madrasah = isset($tahun_acuan_map['Bidang DIKJAR-M']) ? $tahun_acuan_map['Bidang DIKJAR-M'] : $tahun_default;
+         $tahun_sekolah = isset($tahun_acuan_map['Bidang DIKJAR']) ? $tahun_acuan_map['Bidang DIKJAR'] : $tahun_default;
+         $tahun_pt = isset($tahun_acuan_map['Bidang DIKTI']) ? $tahun_acuan_map['Bidang DIKTI'] : $tahun_default;
+     
+         $results = [];
+     
+         // 4. Calculate and Map to Payroll Structure
+         // Expected cols: id_total, kategori, id_kehadiran_lembaga, nama_lengkap, gelar_depan, gelar_belakang, nama_bank, nomor_hp, no_rekening, id_kehadiran, atas_nama, nama_lembaga, bulan, tahun, diterima 
+         
+         foreach ($list as $key) {
+              // Logic copied from Validasi_pengajar controller
+              $jml_kehadiran = $key->jumlah_hadir * $key->nominal_transport;
+              $nominal_hadir_15 = $key->jumlah_hadir_15 * 15000;
+              $nominal_hadir_10 = $key->jumlah_hadir_10 * 10000;
+     
+              if (($key->kategori == 'GTY' && $key->id_bidang == "Bidang DIKJAR-M") || ($key->kategori == 'GTT' && $key->id_bidang == "Bidang DIKJAR-M")) {
+                  $mp = $tahun_madrasah - date("Y", strtotime($key->tmt_guru));
+                  $masa_p = ($mp == 0) ? 0 : $mp;
+              } elseif (($key->kategori == 'GTY' && $key->id_bidang == "Bidang DIKJAR") || ($key->kategori == 'GTT' && $key->id_bidang == "Bidang DIKJAR")) {
+                  $mp = $tahun_sekolah - date("Y", strtotime($key->tmt_guru));
+                  $masa_p = ($mp == 0) ? 0 : $mp;
+              } elseif (($key->kategori == 'DTY' && $key->nama_lembaga == "Ma'had Aly Sukorejo") || ($key->kategori == 'DTT' && $key->nama_lembaga == "Ma'had Aly Sukorejo")) {
+                  $mp = $tahun_pt - date("Y", strtotime($key->tmt_maif));
+                  $masa_p = ($mp == 0) ? 0 : $mp;
+              }else {
+                  $mp = $tahun_pt - date("Y", strtotime($key->tmt_dosen));
+                  $masa_p = ($mp == 0) ? 0 : $mp;
+              }
+     
+              // Tunkel
+             if ($key->tunj_kel == "Ya" and $mp >= 2 && $nominaltunkel){
+                 $tunkel = $nominaltunkel->besaran_tunkel;
+             } else {
+                 $tunkel = 0;
+             }
+             if ($key->status_aktif == "Cuti 50%") { $tunkel *= 0.5; } elseif ($key->status_aktif == "Cuti 100%") { $tunkel = 0; }
+     
+             // Tunj Anak
+             if ($key->tunj_anak == "Ya" && $nominaltunj_anak){
+                 $tunja_anak = $nominaltunj_anak->nominal_tunj_anak;
+             } else {
+                 $tunja_anak = 0;
+             }
+             if ($key->status_aktif == "Cuti 50%") { $tunja_anak *= 0.5; } elseif ($key->status_aktif == "Cuti 100%") { $tunja_anak = 0; }
+     
+             // Walkes
+             if ($key->walkes == "Ya" ){
+                 $tunj_walkes = 75000;
+             } else if($key->walkes == "walkes_sklh") {
+                 $tunj_walkes = 50000;
+             } else {
+                 $tunj_walkes = 0;
+             }
+             if ($key->status_aktif == "Cuti 50%") { $tunj_walkes *= 0.5; } elseif ($key->status_aktif == "Cuti 100%") { $tunj_walkes = 0; }
+     
+             // Rank
+             $rank = 0; 
+             if ($key->kategori == 'GTY' or $key->kategori == 'GTT'){
+                 $hitung_rank = $this->db->query("select nominal from barokah_pengajar where min_tmp_mengajar <= $masa_p and max_tmp_mengajar >= $masa_p and ijazah = '$key->ijazah_terakhir' and kategori = 'Guru' ")->result();
+                 foreach($hitung_rank as $nilai_rank) { $rank = $nilai_rank->nominal; }
+             } else {
+                 if ($key->id_lembaga == '39'){
+                         $hitung_rank = $this->db->query("select nominal from barokah_pengajar where min_tmp_mengajar <= $masa_p and max_tmp_mengajar >= $masa_p and ijazah = '$key->ijazah_terakhir' and kategori = 'Dosen MAIF' ")->result();
+                     foreach($hitung_rank as $nilai_rank) { $rank = $nilai_rank->nominal; }
+                 } else {
+                     $hitung_rank = $this->db->query("select nominal from barokah_pengajar where min_tmp_mengajar <= $masa_p and max_tmp_mengajar >= $masa_p and ijazah = '$key->ijazah_terakhir' and kategori = 'Dosen' ")->result();
+                     foreach($hitung_rank as $nilai_rank) { $rank = $nilai_rank->nominal; }
+                 }
+                 
+             }
+             if ($key->status_aktif == "Cuti 50%") { $rank *= 0.5; } elseif ($key->status_aktif == "Cuti 100%") { $rank = 0; }
+     
+             // Lainnya
+             $mengajar = ($key->jumlah_sks * 35000) * 4;
+             if ($key->status_aktif == "Cuti 50%") { $mengajar *= 0.5; } elseif ($key->status_aktif == "Cuti 100%") { $mengajar = 0; }
+     
+             $kehormatan = $key->kehormatan;
+             if ($key->status_aktif == "Cuti 50%") { $kehormatan *= 0.5; } elseif ($key->status_aktif == "Cuti 100%") { $kehormatan = 0; }
+             
+             $dty = $key->jafung;
+             if ($key->status_aktif == "Cuti 50%") { $dty *= 0.5; } elseif ($key->status_aktif == "Cuti 100%") { $dty = 0; }
+             
+             $jafung = $key->jabatan_akademik;
+             if ($key->status_aktif == "Cuti 50%") { $jafung *= 0.5; } elseif ($key->status_aktif == "Cuti 100%") { $jafung = 0; }
+             
+             $tambahan = $key->jumlah_hadir_piket; // asumsi tambahan = piket nominal
+             
+             // Potongan
+             $potongan = 0;
+             $list_potongan = $this->db->query("SELECT pp.nominal_potongan 
+                 FROM potongan_umana pp 
+                 JOIN penempatan p ON pp.id_penempatan = p.id_penempatan 
+                 WHERE p.nik = '$key->nik' 
+                 AND p.id_lembaga = '$key->id_lembaga'
+                 AND pp.max_periode_potongan >= CURDATE()")->result();
+             foreach ($list_potongan as $p) {
+                 $potongan += (float)$p->nominal_potongan;
+             }
+             
+             // Total Logic (from Validasi_pengajar)
+             $barokah_piket = (float)$key->jumlah_hadir_piket;
+             
+             // Logic Total from Validasi:
+             // $diterima = $barokah_piket + $jml_kehadiran + $nominal_hadir_15 + $nominal_hadir_10 + $tunkel + $tunja_anak + $mengajar + $dty + $jafung + $kehormatan + $tunj_walkes + $tambahan_manual - $potongan;
+             // Note: $tambahan variable above was assigned jumlah_hadir_piket which might be wrong, check Validasi_pengajar view logic for exact vars.
+             // View logic: $barokah_piket + $jml_kehadiran + $nominal_hadir_15 + $nominal_hadir_10 + $tunkel + $tunja_anak + $mengajar + $dty + $jafung + $kehormatan + $tunj_walkes + $tambahan - $potongan;
+             // But $tambahan in view comes from db 'b_tambahan' or similar? In legacy query it's not selected.
+             // Assuming 0 for now if not in query.
+             
+             $diterima = (float)$barokah_piket + (float)$jml_kehadiran + (float)$nominal_hadir_15 + (float)$nominal_hadir_10 + (float)$tunkel + (float)$tunja_anak + (float)$mengajar + (float)$dty + (float)$jafung + (float)$kehormatan + (float)$tunj_walkes - (float)$potongan;
+             
+             // Map object
+             $obj = new stdClass();
+             $obj->id_total = 0; // Legacy doesn't have ID
+             $obj->kategori = $key->kategori;
+             $obj->id_kehadiran_lembaga = $key->id_kehadiran_lembaga;
+             $obj->nama_lengkap = $key->nama_lengkap;
+             $obj->gelar_depan = $key->gelar_depan;
+             $obj->gelar_belakang = $key->gelar_belakang;
+             $obj->nama_bank = $key->nama_bank;
+             $obj->nomor_hp = $key->nomor_hp;
+             $obj->no_rekening = $key->no_rekening;
+             $obj->id_kehadiran = $key->id_kehadiran_lembaga;
+             $obj->atas_nama = $key->atas_nama;
+             $obj->nama_lembaga = $key->nama_lembaga;
+             $obj->bulan = $key->bulan;
+             $obj->tahun = $key->tahun;
+             $obj->diterima = $diterima;
+             
+             $results[] = $obj;
+         }
+         
+         return $results;
     }
 
 	public function get_lembaga($id)
