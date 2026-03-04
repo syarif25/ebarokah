@@ -33,18 +33,18 @@ class Laporan_lembaga extends CI_Controller {
 		$isi['lembaga_list'] = $this->get_lembaga_list();
 		$isi['tahun_list'] = $this->get_tahun_list();
 		
-		$isi['css'] 	= 'laporan_lembaga/Css';
-		$isi['content'] = 'laporan_lembaga/Index';
-		$isi['ajax'] 	= 'laporan_lembaga/Ajax';
+		$isi['css'] 	= 'Laporan_lembaga/Css';
+		$isi['content'] = 'Laporan_lembaga/Index';
+		$isi['ajax'] 	= 'Laporan_lembaga/Ajax';
 		$this->load->view('Template',$isi);
 	}
 	
 	public function per_bulan(){
 		$this->Login_model->getsqurity() ;
 		
-		$isi['css'] 	= 'laporan_lembaga/Css';
-		$isi['content'] = 'laporan_lembaga/Per_bulan';
-		$isi['ajax'] 	= 'laporan_lembaga/Ajax_per_bulan';
+		$isi['css'] 	= 'Laporan_lembaga/Css';
+		$isi['content'] = 'Laporan_lembaga/Per_bulan';
+		$isi['ajax'] 	= 'Laporan_lembaga/Ajax_per_bulan';
 		$this->load->view('Template',$isi);
 	}
 	
@@ -199,9 +199,9 @@ class Laporan_lembaga extends CI_Controller {
 		$isi['data_rincian'] = $this->Laporan_model->get_datatables_rincian($id);
 		$isi['encrypted_id'] = $encrypted_id; // Pass encrypted ID to view for print button
 		
-		$isi['content'] = 'laporan_lembaga/Rincian';
-		$isi['css'] 	= 'laporan_lembaga/Css';
-		$isi['ajax'] 	= 'laporan_lembaga/Ajax';
+		$isi['content'] = 'Laporan_lembaga/Rincian';
+		$isi['css'] 	= 'Laporan_lembaga/Css';
+		$isi['ajax'] 	= 'Laporan_lembaga/Ajax';
 		$this->load->view('Template',$isi);
 	}
 	
@@ -220,6 +220,6 @@ class Laporan_lembaga extends CI_Controller {
 		$data['data_rincian'] = $this->Laporan_model->get_datatables_rincian($id);
 		
 		// Load print view (without template)
-		$this->load->view('laporan_lembaga/Cetak', $data);
+		$this->load->view('Laporan_lembaga/Cetak', $data);
 	}
 }

@@ -50,13 +50,7 @@
         $pdf->Line(9,27,340,27);
 
 
-        if (!empty($isilist)) {
-            $periode = $isilist[0];
-        } else {
-             $pdf->Cell(200, 10, 'Tidak ada data potongan', 0, 1, 'L', false);
-             $pdf->Output();
-             return;
-        }
+        foreach ($isilist as $periode) {}
 
             $pdf->ln(5);
             
@@ -77,13 +71,13 @@
             // $pdf->Cell(50, 2, 'Bulan : '.$periode->bulan.' '.$periode->tahun, '0', '1', 'L', false);
 
             $pdf->Cell(1,7,'',0,1);
-            $pdf->Cell(15, 2, '', '0', '0', 'L', false); // Spacer
-            $pdf->SetFont('arial','B',8);
-            
-            $pdf->Cell(10,7,'NO',1,0,'C');
-            $pdf->Cell(80,7,'NAMA LENGKAP',1,0,'C');
-            $pdf->Cell(60,7,'NAMA POTONGAN',1,0,'C');
-            $pdf->Cell(30,7,'NOMINAL',1,0,'C');
+            $pdf->Cell(40, 2, '', '0', '0', 'L', false);
+            $pdf->SetFont('arial','B',6);
+            // $pdf->SetFillColor(128, 128, 128);
+            $pdf->Cell(7,7,'N0',1,0,'C');
+            $pdf->Cell(40,7,'NAMA LENGKAP',1,0,'C');
+            $pdf->Cell(40,7,'NAMA POTONGAN',1,0,'C');
+            $pdf->Cell(40,7,'NOMINAL',1,0,'C');
             $pdf->Cell(0,1,'',0,1);
             
             $no = 1;
@@ -91,40 +85,77 @@
             $jumlah_total = 0;
             $pdf->ln(7);
             
-            $pdf->SetFont('arial','',8);
             foreach($isilist as $key){
-                $pdf->Cell(15, 2, '', '0', '0', 'L', false); // Spacer
-                $pdf->Cell(10,7,$no++,1,0,'C');
-                $pdf->Cell(80,7,'  '.$key->nama_lengkap,1,0,'L');
-                $pdf->Cell(60,7,'  '.$key->nama_potongan,1,0,'L');
-                $pdf->Cell(30,7,rupiah($key->nominal_potongan).'  ',1,0,'R');
-                $pdf->Cell(0,7,'',0,1);
+            $pdf->Cell(40, 2, '', '0', '0', 'L', false);
+            $pdf->Cell(7,7,$no++,1,0,'C');
+            $pdf->Cell(40,7,$key->nama_lengkap,1,0,'L');
+            $pdf->Cell(40,7,$key->nama_potongan,1,0,'L');
+            $pdf->Cell(40,7,rupiah($key->nominal_potongan),1,0,'C');
+            $pdf->Cell(0,7,'',0,1);
 
-                $jumlah_total = $jumlah_total + $key->nominal_potongan;
+            $jumlah_total = $jumlah_total + $key->nominal_potongan;
             }
 
-        $pdf->ln(0);
-        $pdf->Cell(15, 2, '', '0', '0', 'L', false); // Spacer
+        $pdf->ln(1);
         $pdf->SetFont('arial','B',9);
-        $pdf->Cell(150,7,'TOTAL SELURUHNYA',1,0,'C');
-        $pdf->Cell(30,7,rupiah($jumlah_total).'  ',1,0,'R');
+        $pdf->Cell(87,7,'',0,0,'C');
+        $pdf->Cell(40,7,'Total',1,0,'C');
+        $pdf->Cell(40,7,rupiah($jumlah_total),1,0,'C');
         $pdf->Cell(0,1,'',0,1);
-        
-        $tgl1 = gmdate("d-m-Y");
-        $bln = date('m');
-        $bulan_indo = [
-            '1' => 'Januari', '2' => 'Februari', '3' => 'Maret', '4' => 'April', 
-            '5' => 'Mei', '6' => 'Juni', '7' => 'Juli', '8' => 'Agustus', 
-            '9' => 'September', '10' => 'Oktober', '11' => 'Nopember', '12' => 'Desember'
-        ];
-        $b1 = isset($bulan_indo[$bln]) ? $bulan_indo[$bln] : '';
-        $tgl = date('d');
-        $thn = date('Y');
+        $tgl1=gmdate("d-m-Y");
 
-        $pdf->Ln(10);
-        $pdf->SetFont('arial','I',8);
-        $pdf->Cell(195,5,'Dicetak pada: '.$tgl." " .$b1." ".$thn,0,1,'R');
+                    $bln = date('m');
+                     switch ($bln) {
+                         case '1':
+                             $b1 = 'Januari';
+                             break;
+                         case '2':
+                             $b1 = 'Februari';
+                             break;
+                        case '3':
+                            $b1 = 'Maret';
+                            break;
+                        case '4':
+                            $b1 = 'April';
+                            break;
+                        case '5':
+                            $b1 = 'Mei';
+                            break;
+                        case '6':
+                            $b1 = 'Juni';
+                            break;
+                        case '7':
+                            $b1 = 'Juli';
+                            break;
+                        case '8':
+                            $b1 = 'Agustus';
+                            break;
+                        case '9':
+                            $b1 = 'September';
+                            break;
+                        case '10':
+                            $b1 = 'Oktober';
+                            break;
+                        case '11':
+                            $b1 = 'Nopember';
+                            break;
+                         default:
+                             $b1 = 'Desember';
+                             break;
+                     }
+                        $tgl = date('d');
+                        $thn = date('Y');
+
+        $pdf->Ln(30);
+        $pdf->SetFont('arial','i',5);
+        $pdf->Cell(22,-40,' dicetak pada:, '.$tgl." " .$b1." ".$thn,0,0,'R');
         
+        // $pdf->Ln(5);
+        // $pdf->SetFont('arial','',12);
+        // $pdf->Cell(270,-40,'Kepala Bidang,',0,0,'R');
+        //  $pdf->SetFont('tahoma','B',12);
+        // $pdf->Cell(14,0,'Dr. Maskuri, M.Pd.I.',0,0,'R');
+
         $pdf->Output();
 
 ?>

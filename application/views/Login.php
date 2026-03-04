@@ -8,9 +8,9 @@
     <meta name="author" content="eBarokah Team" />
     <meta name="robots" content="index, follow" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="eBarokah: Aplikasi Penggajian untuk Pondok Pesantren dengan fitur lengkap dan mudah digunakan" />
-    <meta property="og:title" content="eBarokah: Aplikasi Penggajian untuk Pondok Pesantren" />
-    <meta property="og:description" content="eBarokah: Solusi Penggajian Terbaik untuk Pondok Pesantren dengan fitur lengkap dan mudah digunakan." />
+    <meta name="description" content="eBarokah: Aplikasi Barokah Pondok Pesantren" />
+    <meta property="og:title" content="eBarokah: Aplikasi Barokah  Pondok Pesantren" />
+    <meta property="og:description" content="eBarokah: Aplikasi Barokah Pondok Pesantren." />
     <meta property="og:image" content="https://ebarokah.com/images/social-image.png" />
     <meta name="format-detection" content="telephone=no">
 

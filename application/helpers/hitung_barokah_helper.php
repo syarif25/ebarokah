@@ -13,12 +13,19 @@ if (!function_exists('hitung_wajib_hadir_bulanan')) {
      */
     function hitung_wajib_hadir_bulanan($bulan, $tahun, $wajib_hadir_per_minggu)
     {
+        // Konversi String Bulan (e.g. 'Januari') ke Angka (1-12)
+        $map_bulan = [
+            'januari'=>1, 'februari'=>2, 'maret'=>3, 'april'=>4, 'mei'=>5, 'juni'=>6,
+            'juli'=>7, 'agustus'=>8, 'september'=>9, 'oktober'=>10, 'november'=>11, 'desember'=>12
+        ];
+        $bln = isset($map_bulan[strtolower($bulan)]) ? $map_bulan[strtolower($bulan)] : (int)date('n');
+
         // Total hari dalam bulan (tanpa dependency calendar extension)
-        $total_hari = (int)date('t', mktime(0, 0, 0, $bulan, 1, $tahun));
+        $total_hari = (int)date('t', mktime(0, 0, 0, $bln, 1, $tahun));
         
         // Hitung jumlah Jumat dalam bulan
         $jumlah_jumat = 0;
-        $hari_pertama_bulan = mktime(0, 0, 0, $bulan, 1, $tahun);
+        $hari_pertama_bulan = mktime(0, 0, 0, $bln, 1, $tahun);
         $nama_hari_pertama = date('N', $hari_pertama_bulan); // 1=Senin, 5=Jumat, 6=Sabtu, 7=Minggu
         
         // Cari Jumat pertama dalam bulan
@@ -59,7 +66,7 @@ if (!function_exists('hitung_periode_barokah')) {
         // ambil data utama (persis seperti koreksi())
         $sql = "
         SELECT 
-            kl.id_kehadiran_lembaga, kl.bulan, kl.tahun, kl.file, kl.status as status_pengajuan,
+            kl.id_kehadiran_lembaga, kl.bulan, kl.tahun, kl.file, kl.status as status_pengajuan, kl.catatan_umum_pimpinan,
             l.id_lembaga, l.nama_lembaga, l.id_bidang,
             k.id_kehadiran, k.jumlah_hadir, k.jumlah_tugas, k.jumlah_izin, k.jumlah_sakit, k.id_penempatan,
             u.nik, u.nama_lengkap, u.gelar_depan, u.gelar_belakang,
@@ -105,6 +112,63 @@ if (!function_exists('hitung_periode_barokah')) {
             $tahun_default = $tahun_acuan_map['Kantor Pusat'];
         } else {
             $tahun_default = (int)date('Y');
+        }
+
+        // ==========================================
+        // Ambil Data Perbandingan Komponen Bulan Lalu & Catatan
+        // ==========================================
+        $komponen_sebelumnya = [];
+        $catatan_khusus = [];
+
+        // Cari ID Kehadiran Lembaga bulan sebelumnya yang sudah valid
+        // Kita menggunakan id_kehadiran_lembaga yg paling terakhir yg BUKAN current ID
+        // BUB FIX: Pastikan status 'acc'/'selesai' DAN benar-benar sudah ada datanya di total_barokah
+        $last_periode = $CI->db->query("
+            SELECT DISTINCT kl.id_kehadiran_lembaga 
+            FROM kehadiran_lembaga kl
+            JOIN total_barokah tb ON kl.id_kehadiran_lembaga = tb.id_kehadiran
+            WHERE kl.id_lembaga = ? 
+            AND kl.id_kehadiran_lembaga < ? 
+            AND kl.status IN ('acc', 'selesai', 'Sudah')
+            ORDER BY kl.id_kehadiran_lembaga DESC 
+            LIMIT 1
+        ", [$rows[0]->id_lembaga, $idL])->row();
+
+        if ($last_periode) {
+            $tb_prev = $CI->db->query("
+                SELECT p.nik, 
+                       tb.tunjab AS tunjab_prev, 
+                       tb.tmp AS tmp_prev, 
+                       tb.tunkel AS tunkel_prev, 
+                       tb.tunj_anak AS tunj_anak_prev, 
+                       tb.kehormatan AS kehormatan_prev,
+                       (tb.tunjab + tb.tmp + tb.tunkel + tb.tunj_anak + tb.kehormatan) AS total_tetap_prev 
+                FROM total_barokah tb
+                JOIN penempatan p ON p.id_penempatan = tb.id_penempatan
+                WHERE tb.id_kehadiran = ?
+            ", [$last_periode->id_kehadiran_lembaga])->result();
+            
+            foreach ($tb_prev as $p) {
+                // Simpan dalam format Array Associative untuk melacak detail tiap komponen
+                $komponen_sebelumnya[$p->nik] = [
+                    'tunjab' => (int)$p->tunjab_prev,
+                    'tmp' => (int)$p->tmp_prev,
+                    'tunkel' => (int)$p->tunkel_prev,
+                    'tunj_anak' => (int)$p->tunj_anak_prev,
+                    'kehormatan' => (int)$p->kehormatan_prev,
+                    'total_tetap_prev' => (int)$p->total_tetap_prev
+                ];
+            }
+        }
+
+        // Ambil Catatan Khusus Umana yg sudah tersimpan di bulan INI (jika ada)
+        $tb_current = $CI->db->query("
+            SELECT id_penempatan, catatan_khusus_umana 
+            FROM total_barokah 
+            WHERE id_kehadiran = ?
+        ", [$idL])->result();
+        foreach ($tb_current as $tc) {
+            $catatan_khusus[$tc->id_penempatan] = $tc->catatan_khusus_umana;
         }
 
         // agregat
@@ -198,6 +262,33 @@ if (!function_exists('hitung_periode_barokah')) {
 
             $r->diterima = (int)$r->jumlah_barokah - (int)$r->potongan;
 
+            // ==========================================
+            // Logika Evaluasi Warning & Map Catatan
+            // ==========================================
+            $r->catatan_khusus = isset($catatan_khusus[$r->id_penempatan]) ? $catatan_khusus[$r->id_penempatan] : '';
+            
+            $total_tetap_sekarang = (int)$r->tunjab + (int)$r->tmp + (int)$r->tunkel + (int)$r->tunj_anak + (int)$r->nilai_kehormatan;
+            $r->is_warning = false;
+            $r->selisih_komponen = 0;
+            $r->komponen_berubah = []; // Array pelacak sel HTML mana yang harus di-highlight merah
+
+            if (isset($komponen_sebelumnya[$r->nik])) {
+                $prev = $komponen_sebelumnya[$r->nik];
+                
+                // Deteksi satu-persatu komponen
+                if ((int)$r->tunjab !== $prev['tunjab'])             $r->komponen_berubah[] = 'tunjab';
+                if ((int)$r->tmp !== $prev['tmp'])                   $r->komponen_berubah[] = 'tmp';
+                if ((int)$r->tunkel !== $prev['tunkel'])             $r->komponen_berubah[] = 'tunkel';
+                if ((int)$r->tunj_anak !== $prev['tunj_anak'])       $r->komponen_berubah[] = 'tunj_anak';
+                if ((int)$r->nilai_kehormatan !== $prev['kehormatan']) $r->komponen_berubah[] = 'kehormatan';
+
+                $tetap_prev = $prev['total_tetap_prev'];
+                if ($total_tetap_sekarang !== $tetap_prev) {
+                    $r->is_warning = true;
+                    $r->selisih_komponen = $total_tetap_sekarang - $tetap_prev;
+                }
+            } // Hapus else-if (jika data lama kosong, abaikan warning agar tidak semua kuning)
+
             // agregat
             $total_tunjab     += (int)$r->tunjab;
             $total_tmp        += (int)$r->tmp;
@@ -218,6 +309,7 @@ if (!function_exists('hitung_periode_barokah')) {
             'status'=> $rows[0]->status_pengajuan,
             'id_kehadiran_lembaga' => $rows[0]->id_kehadiran_lembaga,
             'id_lembaga'           => $rows[0]->id_lembaga,
+            'catatan_umum_pimpinan'=> $rows[0]->catatan_umum_pimpinan ?? ''
         ];
 
         return [
@@ -236,5 +328,31 @@ if (!function_exists('hitung_periode_barokah')) {
                 'grand_total'     => $grand_total,
             ]
         ];
+    }
+}
+
+if ( ! function_exists('catat_riwayat_barokah')) {
+    /**
+     * Helper untuk mencatat jejak rekam (Audit Trail) alur usulan kehadiran barokah.
+     * @param int $id_kehadiran_lembaga ID master periode absensi
+     * @param string $status_aksi Status (Belum, Sudah, Terkirim, Revisi, acc)
+     * @param string $catatan (Opsional) Alasan atau catatan khusus
+     */
+    function catat_riwayat_barokah($id_kehadiran_lembaga, $status_aksi, $catatan = '') {
+        $CI =& get_instance();
+        // Ambil session username atau id_user, menyesuaikan key yang ada di sistem E-Barokah
+        $id_pengguna = $CI->session->userdata('id_user') ? $CI->session->userdata('id_user') : ($CI->session->userdata('id_admin') ? $CI->session->userdata('id_admin') : NULL);
+        
+        // Pastikan tz jakarta
+        date_default_timezone_set('Asia/Jakarta');
+
+        $data = array(
+            'id_kehadiran_lembaga' => (int)$id_kehadiran_lembaga,
+            'status_aksi'          => $status_aksi,
+            'waktu_eksekusi'       => date('Y-m-d H:i:s'),
+            'id_pengguna'          => (int)$id_pengguna,
+            'catatan_log'          => $catatan
+        );
+        return $CI->db->insert('log_riwayat_barokah', $data);
     }
 }

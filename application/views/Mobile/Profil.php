@@ -146,14 +146,14 @@
                             <!--    <div class="col-sm-9 col-7"><span>: <?php echo $umana->jabatan_akademik; ?></span>-->
                             <!--    </div>-->
                             <!--</div>-->
-                            <div class="row mb-2">
-                                <div class="col-sm-3 col-5">
-                                    <h5 class="f-w-500">Status Sertifikasi<span class="pull-end"></span>
-                                    </h5>
-                                </div>
-                                <div class="col-sm-9 col-7"><span>: <?php echo $umana->status_sertifikasi; ?></span>
-                                </div>
-                            </div>
+                            <!--<div class="row mb-2">-->
+                            <!--    <div class="col-sm-3 col-5">-->
+                            <!--        <h5 class="f-w-500">Status Sertifikasi<span class="pull-end"></span>-->
+                            <!--        </h5>-->
+                            <!--    </div>-->
+                            <!--    <div class="col-sm-9 col-7"><span>: <?php echo $umana->status_sertifikasi; ?></span>-->
+                            <!--    </div>-->
+                            <!--</div>-->
                             <div class="row mb-2">
                                 <div class="col-sm-3 col-5">
                                     <h5 class="f-w-500">Status Pernikahan<span class="pull-end"></span>
@@ -194,7 +194,14 @@
                                 <div class="col-sm-9 col-7"><span>: <?php echo $umana->nama_bank; ?></span>
                                 </div>
                             </div>
-                            
+                            <div class="row mb-2">
+                                <div class="col-sm-3 col-5">
+                                    <h5 class="f-w-500">KTP<span class="pull-end"></span>
+                                    </h5>
+                                </div>
+                                <div class="col-sm-9 col-7"><span>: - </span>
+                                </div>
+                            </div>
                         </div>
                         <!-- <div class="">
                             <div class="profile-personal-info">
@@ -208,55 +215,9 @@
                             </div>
                         </div> -->
                        
-                        
+                        <a href="#" onclick="edit_pwd(<?php echo $umana->nik ?>)" class="btn btn-primary light btn-rounded"><i class="fas fa-key scale5 me-3"></i>Edit Password</a>
+                        <a href="#" class="btn btn-secondary  btn-rounded disabled"><i class="fas fa-user scale5 me-3"></i>Edit Data Diri</a>
                     </div>
-                   
-                    <div class="card-body">
-                            <h5 class="text-primary d-inline">Riwayat Pendidikan</h5>
-                        <hr>
-                        <div class="">
-                            <div class="profile-personal-info">
-                                <div class="row mb-2">
-                                    <div class="col-5">
-                                        <h5 class="f-w-500">Prodi S1</h5>
-                                    </div>
-                                    <div class="col-5"><span> Pendidikan Agama Islam </span>
-                                    </div>
-                                </div>
-                                <div class="row mb-2">
-                                    <div class="col-5">
-                                        <h5 class="f-w-500">Prodi S2</h5>
-                                    </div>
-                                    <div class="col-5"><span> Manajemen Pendidikan Islam </span>
-                                    </div>
-                                </div>
-                                <div class="row mb-2">
-                                    <div class="col-5">
-                                        <h5 class="f-w-500">Prodi S3</h5>
-                                    </div>
-                                    <div class="col-5"><span> Hukum Islam </span>
-                                    </div>
-                                </div>
-                                <div class="row mb-2">
-                                    <div class="col-5">
-                                        <h5 class="f-w-500">Madrasah</h5>
-                                    </div>
-                                    <div class="col-5"><span>: Madrasah Aliyah Salafiyah Sukorejo</span>
-                                    </div>
-                                </div>
-
-                                <div class="row mb-2">
-                                    <div class="col-5">
-                                        <h5 class="f-w-500">Mapel yang diampu saat ini</h5>
-                                    </div>
-                                    <div class="col-5"><span>: Aqidah Akhlak</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <a href="#" onclick="edit_pwd(<?php echo $umana->nik ?>)" class="btn btn-primary light btn-rounded"><i class="fas fa-key scale5 me-3"></i>Edit Password</a>
-                    <a href="#" class="btn btn-secondary  btn-rounded disabled"><i class="fas fa-edit scale5 me-3"></i>Edit Pendidikan</a>
                 </div>
             </div>
         </div>
@@ -299,9 +260,6 @@
             </div>
             <br><br><br><br><br><br><br>
         </div>
-
-        
-        
         
     </div>
 </div>

@@ -14,6 +14,7 @@
                 <div class="card-header">
                     <h4 class="card-title"><?php echo $periode->nama_lembaga ?></h4>
                     <a href="<?php echo base_url() ?>Kehadiran/Cetak/<?php echo $periode->id_kehadiran_lembaga; ?>" class="btn btn-warning text-dark"><i class="fas fa-print"></i> Cetak</a> 
+                    <a href="<?php echo base_url() ?>upload/<?php echo $periode->file; ?>" target="_blank" class="btn btn-twitter me-1 px-3"><i class="fa fa-file m-0"></i> Lihat File Absensi</a> 
                 </div>
                 <form action="#" id="form">
                     <div class="card-body">

@@ -1,0 +1,1 @@
+ALTER TABLE kehadiran_lembaga ADD COLUMN catatan_umum_pimpinan TEXT NULL DEFAULT NULL AFTER jumlah_total; ALTER TABLE total_barokah ADD COLUMN catatan_khusus_umana TEXT NULL DEFAULT NULL AFTER diterima;

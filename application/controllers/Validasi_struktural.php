@@ -67,6 +67,11 @@ class Validasi_struktural extends CI_Controller {
                 ->set_output(json_encode(['status'=>false,'message'=>'ID periode tidak dikirim.']));
         }
 
+        // Tangkap catatan jika disertakan oleh Pimpinan
+        $catatan_umum = $this->input->post('catatan_umum_pimpinan', true);
+        $catatan_khusus = $this->input->post('catatan_khusus'); // array
+        $action_type = $this->input->post('action_type', true) ?: 'setuju'; // 'setuju' | 'revisi'
+
         // (opsional) guard role & status 'Terkirim' di sini
 
         $res = hitung_periode_barokah($this, $idL);
@@ -86,6 +91,9 @@ class Validasi_struktural extends CI_Controller {
 
         // insert rekap sesuai angka yang TAMPIL di view
         foreach ($rows as $r) {
+            // Ektraksi catatan untuk id_penempatan ini (jika ada)
+            $catatan_khusus_umana = isset($catatan_khusus[$r->id_penempatan]) ? $catatan_khusus[$r->id_penempatan] : '';
+            
             $this->db->insert('total_barokah', [
                 // 'id_total_barokah' => AI,
                 'id_penempatan'        => $r->id_penempatan,
@@ -104,14 +112,19 @@ class Validasi_struktural extends CI_Controller {
                 'potongan'             => (int)$r->potongan,
                 'barokah_khusus'       => 0,
                 'diterima'             => (int)$r->diterima,
+                'catatan_khusus_umana' => $catatan_khusus_umana,
             ]);
         }
 
+        // Tentukan status berdasarkan aksi: Jika revisi kembali jadi 'Revisi', jika setuju jadi 'acc'
+        $status_baru = ($action_type === 'revisi') ? 'Revisi' : 'acc';
+
         // update status & total periode
         $this->db->where('id_kehadiran_lembaga', $idL)->update('kehadiran_lembaga', [
-            'status'       => 'acc',
+            'status'       => $status_baru,
             'jumlah_total' => (int)$totals['grand_total'],
             'tgl_input'    => date('Y-m-d H:i:s'),
+            'catatan_umum_pimpinan' => $catatan_umum
         ]);
 
         if ($this->db->trans_status() === FALSE) {
@@ -121,10 +134,19 @@ class Validasi_struktural extends CI_Controller {
         }
         $this->db->trans_commit();
 
+        $this->load->helper('hitung_barokah_helper');
+        $keterangan_log = ($action_type === 'revisi') ? 'Dokumen dikembalikan u/ revisi.' : 'Dokumen disetujui (ACC).';
+        if (!empty($catatan_umum)) {
+            $keterangan_log .= ' Catatan: ' . $catatan_umum;
+        }
+        catat_riwayat_barokah($idL, $status_baru, $keterangan_log);
+
+        $msg_sukses = ($action_type === 'revisi') ? 'Dokumen dikembalikan ke Admin Lembaga untuk revisi.' : 'Periode berhasil disetujui & disimpan.';
+
         return $this->output->set_content_type('application/json')
             ->set_output(json_encode([
                 'status'=>true,
-                'message'=>'Periode berhasil disetujui & disimpan.',
+                'message'=> $msg_sukses,
                 'summary'=>[
                     'jumlah_total'=>(int)$totals['grand_total'],
                     'jumlah_baris'=>count($rows)
@@ -236,6 +258,9 @@ class Validasi_struktural extends CI_Controller {
 
         $data = ['status' => 'Terkirim'];
         $this->db->update('kehadiran_lembaga', $data, ['id_kehadiran_lembaga' => $id]);
+
+        $this->load->helper('hitung_barokah_helper');
+        catat_riwayat_barokah($id, 'Terkirim', 'Dikirim ulang oleh Admin Lembaga untuk direview Evaluator / SuperAdmin');
 
         echo json_encode(['status' => true, 'message' => 'Periode berhasil dikirim.']);
     }

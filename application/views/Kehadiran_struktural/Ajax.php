@@ -429,6 +429,26 @@ $(document).ready(function() {
     });
 });
 
+function lihat_riwayat(id) {
+    $('#riwayat_timeline_container').html('<li class="text-center text-muted py-4"><i class="fa fa-circle-o-notch fa-spin fa-2x mb-2 d-block"></i>Memuat Riwayat...</li>');
+    $('#modal_riwayat').modal('show');
+    
+    $.ajax({
+        url: "<?= site_url('Kehadiran_struktural/ajax_riwayat') ?>/" + id,
+        type: "GET",
+        dataType: "json",
+        success: function(res) {
+            if(res.status) {
+                $('#riwayat_timeline_container').html(res.html);
+            } else {
+                $('#riwayat_timeline_container').html('<li class="text-center text-danger py-4">Gagal memuat riwayat.</li>');
+            }
+        },
+        error: function() {
+            $('#riwayat_timeline_container').html('<li class="text-center text-danger py-4">Terjadi kesalahan jaringan/server saat memuat riwayat.</li>');
+        }
+    });
+}
 </script>
 
 

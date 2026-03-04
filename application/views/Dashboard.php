@@ -5,7 +5,7 @@
 				<div class="card-header border-0 pb-0 flex-wrap">
 					<div>
 						<span class="mb-3 d-block fs-16">Jumlah Barokah Bulan ini</span>
-						<h4 class="fs-24 font-w700 mb-3">Rp. <?php echo rupiah($total->bulan_ini+$total_guru->guru); ?> </h4>
+						<!--<h4 class="fs-24 font-w700 mb-3">Rp. <?php echo rupiah($total->bulan_ini+$total_guru->guru); ?> </h4>-->
 						<!--<span><small class="text-success">+2.7%</small>  Bulan Kemarin</span>-->
 					</div>
 					<div class="current-icon">
@@ -21,7 +21,7 @@
 				<div class="card-header border-0 pb-0 flex-wrap">
 					<div>
 						<span class="mb-3 d-block fs-16">Jumlah Barokah Bulan Lalu</span>
-						<h4 class="fs-24 font-w700 mb-3">Rp <?php echo rupiah($total_lalu->bulan_lalu); ?></h4>
+						<!--<h4 class="fs-24 font-w700 mb-3">Rp <?php echo rupiah($total_lalu->bulan_lalu); ?></h4>-->
 						<!--<span><small class="text-success">+2.7%</small>  Bulan Kemarin</span>-->
 					</div>
 					<div class="current-icon">

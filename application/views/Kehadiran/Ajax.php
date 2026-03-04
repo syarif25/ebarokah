@@ -9,9 +9,7 @@
     <script src="<?php echo base_url() ?>assets/js/jquery.mask.js"></script>
 
 	<script src="<?php echo base_url() ?>assets/vendor/jquery-nice-select/js/jquery.nice-select.min.js"></script>
-
-    <!-- Tambahkan ini sebelum script kehadiran.js -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script src="<?php echo base_url() ?>assets/js/custom.min.js"></script>
 	<script src="<?php echo base_url() ?>assets/js/dlabnav-init.js"></script>
@@ -82,118 +80,117 @@
     }
 
     function save() {
-  // Ubah state tombol
-  $('#btnSave').text('Proses menyimpan...').prop('disabled', true);
-
-  // Guard klien: file wajib (sinkron dengan controller)
-  var fileInput = document.getElementById('file-input');
-  if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-    $('#btnSave').text('Simpan').prop('disabled', false);
-    Swal.fire({
-      icon: 'warning',
-      title: 'File belum dipilih',
-      text: 'File absensi (PDF) wajib diunggah sebelum menyimpan.'
-    });
-    return;
-  }
-
-  $.ajax({
-    url: "<?php echo site_url('kehadiran/ajax_add')?>",
-    type: "POST",
-    data: new FormData($('#form')[0]),
-    contentType: false,
-    processData: false,
-    dataType: "json",
-    success: function (data) {
-      // Kembalikan state tombol
-      $('#btnSave').text('Simpan').prop('disabled', false);
-
-      if (data && data.status) {
-        Swal.fire({
-          icon: 'success',
-          title: 'Tersimpan',
-          text: data.message || 'Rekap kehadiran berhasil disimpan.'
-        }).then(() => {
-          // Kembali ke daftar kehadiran
-          window.location = "<?php echo site_url('kehadiran')?>";
-        });
-      } else {
-        // Gagal logis/validasi dari server (_do_upload / payload / dll.)
+      // Ubah state tombol
+      $('#btnSave').text('Proses menyimpan...').prop('disabled', true);
+    
+      // Guard klien: file wajib (sinkron dengan controller)
+      var fileInput = document.getElementById('file-input');
+      if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        $('#btnSave').text('Simpan').prop('disabled', false);
         Swal.fire({
           icon: 'warning',
-          title: 'Gagal menyimpan',
-          text: (data && data.message) ? data.message : 'Periksa kembali isian form dan file PDF.'
+          title: 'File belum dipilih',
+          text: 'File absensi (PDF) wajib diunggah sebelum menyimpan.'
         });
+        return;
       }
-    },
-    error: function () {
-      // Kembalikan state tombol
-      $('#btnSave').text('Simpan').prop('disabled', false);
-
-      // Error jaringan / server
-      Swal.fire({
-        icon: 'error',
-        title: 'Terjadi kesalahan',
-        text: 'Gagal menghubungi server. Coba lagi beberapa saat.'
+    
+      $.ajax({
+        url: "<?php echo site_url('kehadiran/ajax_add')?>",
+        type: "POST",
+        data: new FormData($('#form')[0]),
+        contentType: false,
+        processData: false,
+        dataType: "json",
+        success: function (data) {
+          // Kembalikan state tombol
+          $('#btnSave').text('Simpan').prop('disabled', false);
+    
+          if (data && data.status) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Tersimpan',
+              text: data.message || 'Rekap kehadiran berhasil disimpan.'
+            }).then(() => {
+              // Kembali ke daftar kehadiran
+              window.location = "<?php echo site_url('kehadiran')?>";
+            });
+          } else {
+            // Gagal logis/validasi dari server (_do_upload / payload / dll.)
+            Swal.fire({
+              icon: 'warning',
+              title: 'Gagal menyimpan',
+              text: (data && data.message) ? data.message : 'Periksa kembali isian form dan file PDF.'
+            });
+          }
+        },
+        error: function () {
+          // Kembalikan state tombol
+          $('#btnSave').text('Simpan').prop('disabled', false);
+    
+          // Error jaringan / server
+          Swal.fire({
+            icon: 'error',
+            title: 'Terjadi kesalahan',
+            text: 'Gagal menghubungi server. Coba lagi beberapa saat.'
+          });
+        }
       });
     }
-  });
-}
 
 
     function simpan() {
-    $('#btnSave').text('Proses menyimpan...');
-    $('#btnSave').attr('disabled', true);
-
-    var url = "<?php echo site_url('kehadiran/blanko_add')?>";
-    var formData = new FormData($('#form')[0]);
-
-    $.ajax({
-        url: url,
-        type: "POST",
-        data: formData,
-        contentType: false,
-        processData: false,
-        dataType: "JSON",
-        success: function (data) {
-            $('#btnSave').text('Simpan');
-            $('#btnSave').attr('disabled', false);
-
-            if (data.status) {
-                // Jika berhasil membuat blanko
+        $('#btnSave').text('Proses menyimpan...');
+        $('#btnSave').attr('disabled', true);
+    
+        var url = "<?php echo site_url('kehadiran/blanko_add')?>";
+        var formData = new FormData($('#form')[0]);
+    
+        $.ajax({
+            url: url,
+            type: "POST",
+            data: formData,
+            contentType: false,
+            processData: false,
+            dataType: "JSON",
+            success: function (data) {
+                $('#btnSave').text('Simpan');
+                $('#btnSave').attr('disabled', false);
+    
+                if (data.status) {
+                    // jika berhasil membuat blanko
+                    Swal.fire({
+                        title: "Berhasil!",
+                        text: "Blanko input barokah berhasil dibuat untuk periode ini.",
+                        icon: "success",
+                        confirmButtonColor: "#3085d6",
+                        confirmButtonText: "OK"
+                    }).then(() => {
+                        $('#modal_kehadiran').modal('hide');
+                        reload_table();
+                    });
+                } else {
+                    // Jika data sudah ada
+                    Swal.fire({
+                        title: "Data Sudah Ada",
+                        text: "Blanko untuk lembaga dan periode tersebut sudah dibuat sebelumnya.",
+                        icon: "warning",
+                        confirmButtonColor: "#d33",
+                        confirmButtonText: "Tutup"
+                    });
+                }
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                $('#btnSave').text('Simpan');
+                $('#btnSave').attr('disabled', false);
                 Swal.fire({
-                    title: "Berhasil!",
-                    text: "Blanko input barokah berhasil dibuat untuk periode ini.",
-                    icon: "success",
-                    confirmButtonColor: "#3085d6",
-                    confirmButtonText: "OK"
-                }).then(() => {
-                    $('#modal_kehadiran').modal('hide');
-                    reload_table();
-                });
-            } else {
-                //  Jika data sudah ada / duplikat
-                Swal.fire({
-                    title: "Data Sudah Ada",
-                    text: "Blanko untuk lembaga dan periode tersebut sudah dibuat sebelumnya.",
-                    icon: "warning",
-                    confirmButtonColor: "#d33",
-                    confirmButtonText: "Tutup"
+                    title: "Terjadi Kesalahan!",
+                    text: "Gagal menambah blanko. Coba lagi nanti.",
+                    icon: "error"
                 });
             }
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-            $('#btnSave').text('Simpan');
-            $('#btnSave').attr('disabled', false);
-            Swal.fire({
-                title: "Terjadi Kesalahan!",
-                text: "Gagal menambah blanko. Coba lagi nanti.",
-                icon: "error"
-            });
-        }
-    });
-}
-
+        });
+    }
 
     function edit_user(id)
     {
@@ -275,7 +272,7 @@
         table.ajax.reload(null,false); //reload datatable ajax 
         // notif(pesan);
     }
-
+    
     $(document).on('click', '.btn-reset', function () {
         const idL = $(this).data('id');
         const status = ($(this).data('status') || '').toLowerCase();
@@ -291,11 +288,11 @@
             <div class="text-left">
                 <label class="d-block">
                 <input type="radio" name="resetmode" value="kehadiran" checked>
-                Hapus <b>kehadiran</b> periode ini saja
+                Hapus isian rekap <b>kehadiran</b> periode ini saja
                 </label>
                 <label class="d-block mt-2">
                 <input type="radio" name="resetmode" value="total">
-                Hapus <b>total_barokah</b> periode ini
+                Hapus <b>total_barokah</b> periode ini (sudah acc)
                 </label>
             </div>
             `,
@@ -335,6 +332,27 @@
             });
         });
     });
+
+    function lihat_riwayat(id) {
+        $('#riwayat_timeline_container').html('<li class="text-center text-muted py-4"><i class="fa fa-circle-o-notch fa-spin fa-2x mb-2 d-block"></i>Memuat Riwayat...</li>');
+        $('#modal_riwayat').modal('show');
+        
+        $.ajax({
+            url: "<?= site_url('Kehadiran/ajax_riwayat') ?>/" + id,
+            type: "GET",
+            dataType: "json",
+            success: function(res) {
+                if(res.status) {
+                    $('#riwayat_timeline_container').html(res.html);
+                } else {
+                    $('#riwayat_timeline_container').html('<li class="text-center text-danger py-4">Gagal memuat riwayat.</li>');
+                }
+            },
+            error: function() {
+                $('#riwayat_timeline_container').html('<li class="text-center text-danger py-4">Terjadi kesalahan jaringan/server saat memuat riwayat.</li>');
+            }
+        });
+    }
 </script>
 
 
@@ -402,8 +420,8 @@
                                             <select name="tahun" class="form-control">
                                                     <!--<option></option>-->
                                                     <!--<option >2022/2023</option>-->
-                                                    <option >2023/2024</option>
-                                                    <option >2024/2025</option>
+                                                    <!--<option >2023/2024</option>-->
+                                                    <!--<option >2024/2025</option>-->
                                                     <option>2026</option>
                                             </select>
                                             <span class="help-block text-danger" style="color:red"></span>

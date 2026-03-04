@@ -44,14 +44,13 @@
     </div>
 
     <?php $this->load->view($content); ?>
-    <!-- Modal Sedang Dalam Perbaikan -->
     <div id="modalMaintenance" class="modal fade" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered d-flex align-items-center justify-content-center" 
             style="min-height: 100vh; margin: 0;">
             <div class="modal-content shadow-lg border-0" 
                 style="border-radius: 18px; text-align: center; padding: 1.5rem; max-width: 320px; margin:auto;">
             <i class="fa fa-tools color-highlight" style="font-size: 42px; margin-bottom: 12px; color:#3366ff;"></i>
-            <h5 style="font-weight: 700;">Sedang Dalam Perbaikan</h5>
+            <h5 style="font-weight: 700;">Sedang Dalam Pengembangan</h5>
             <p style="font-size: 14px; opacity: .8; margin-bottom: 1rem;">
                 Fitur ini sedang diperbarui.<br>Silakan coba lagi nanti.
             </p>
@@ -59,7 +58,6 @@
             </div>
         </div>
     </div>
-
     <script>
     var baseUrl = "<?php echo base_url(); ?>"; 
     function showMaintenanceModal() {

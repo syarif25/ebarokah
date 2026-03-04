@@ -22,27 +22,21 @@
                             <table id="tabel_rek" class="table table-striped table-responsive-sm table-bordered">
                                 <thead>
                                     <tr>
-                                    <th rowspan="2">No</th>
-                                        <th rowspan="2" scope="col">Nama Lengkap</th>
-                                        <th rowspan="2" scope="col">Eselon</th>
-                                        <th rowspan="2" scope="col">TMT</th>
-                                        <th rowspan="2" scope="col">Tunjab</th>
-                                        <th rowspan="2" scope="col">MP</th>
-                                         <th rowspan="2" scope="col">TMP</th>
-                                        <th colspan="4" class="text-center" scope="col">Kehadiran</th>
-                                        <th rowspan="2" scope="col">Tunkel</th>
-                                        <th rowspan="2" scope="col">Tunj Anak</th>
-                                        <th rowspan="2" scope="col">Kehormatan</th>
-                                        <th rowspan="2" scope="col">TBK</th>
-                                        <th rowspan="2" scope="col">Jumlah Barokah</th>
-                                        <th rowspan="2" scope="col">Potongan</th>
-                                        <th rowspan="2" scope="col">Diterima</th>
-                                    </tr>
-                                    <tr>
-                                        <th scope="col">Hadir</th>
-                                        <th scope="col">Izin</th>
-                                        <th scope="col">Sakit</th>
-                                        <th scope="col">Nominal</th>
+                                    <th>No</th>
+                                        <th scope="col">Nama Lengkap</th>
+                                        <th scope="col">Eselon</th>
+                                        <th scope="col">TMT</th>
+                                        <th scope="col">Tunjab</th>
+                                        <th scope="col">MP</th>
+                                         <th scope="col">TMP</th>
+                                        <th colspan="2" class="text-center" scope="col">Kehadiran</th>
+                                        <th scope="col">Tunkel</th>
+                                        <th scope="col">Tunj Anak</th>
+                                        <th scope="col">Kehormatan</th>
+                                        <th scope="col">TBK</th>
+                                        <th scope="col">Jumlah Barokah</th>
+                                        <th scope="col">Potongan</th>
+                                        <th scope="col">Diterima</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -52,9 +46,22 @@
                                     foreach($isitunj_anak as $nominaltunj_anak);
                                     foreach($isilist as $key){
                                             $jml_kehadiran = $key->jumlah_hadir * $key->nominal_transport;
-                                        $sekolah = 2025;
-                                        $madrasah = 2025;
-                                        $fakultas = 2025;
+                                            // $awal  = date_create($key->tmt_struktural);
+                                            // $akhir = date_create(); // waktu sekarang
+                                            // $diff  = date_diff($awal, $akhir );
+                                            // $mp = $diff->y;
+                                        //   if ($key->nama_lembaga == "Ma'had Aly Sukorejo"){
+                                        //         $mp = date("Y") - date("Y", strtotime($key->tmt_struktural)) + 1 ;
+                                        //         if($mp == '0' ){
+                                        //             $masa_p = 0 ;
+                                        //             }else {
+                                        //                 $masa_p = $mp;
+                                        //             }
+                                        //     } else 
+                                        
+                                        $sekolah = 2026;
+                                        $madrasah = 2026;
+                                        $fakultas = 2026;
                                         $kantor_pusat = 2025;
                                             
                                             if ($key->id_bidang == "Bidang DIKTI") {
@@ -211,14 +218,6 @@
                                             <input type="hidden" name="jml_hadir[]" value="<?php echo $key->jumlah_hadir ?>">
                                         </td>
                                         <td>
-                                            <?php echo htmlentities($key->jumlah_izin ?? 0); ?>
-                                            <input type="hidden" name="jml_izin[]" value="<?php echo $key->jumlah_izin ?? 0 ?>">
-                                        </td>
-                                        <td>
-                                            <?php echo htmlentities($key->jumlah_sakit ?? 0); ?>
-                                            <input type="hidden" name="jml_sakit[]" value="<?php echo $key->jumlah_sakit ?? 0 ?>">
-                                        </td>
-                                        <td>
                                             <?php echo htmlentities(rupiah($jml_kehadiran)); ?>
                                             <input type="hidden" name="nominal_kehadiran[]" value="<?php echo $jml_kehadiran ?>">
                                         </td>
@@ -257,9 +256,7 @@
                                     <td><?php echo htmlentities(rupiah($jumlah_tunjab)); ?></td>
                                     <td></td>
                                      <td><?php echo htmlentities(rupiah($jumlah_tmp)); ?></td>
-                                    <td></td>  <!-- Hadir (sum not shown) -->
-                                    <td></td>  <!-- Izin (sum not shown) -->
-                                    <td></td>  <!-- Sakit (sum not shown) -->
+                                    <td></td>
                                     <td>
                                         <?php echo htmlentities(rupiah($jumlah_kehadiran)); ?>
                                     </td>

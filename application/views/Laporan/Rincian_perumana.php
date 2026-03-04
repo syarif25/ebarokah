@@ -12,14 +12,11 @@
         <div class="col-lg-12">
 						<div class="card">
 							<div class="card-header">
-            					<div class="col-4 text-center">
+            					<div class="col-6 text-center">
             						<a class="btn btn-danger btn-lg btn-rounded mb-2" href="<?php echo base_url()?>Laporan/kehadiran_pengajar"> Struktural</a>
             						</div>
-            						<div class="col-4">
+            						<div class="col-6">
             							<a class="btn light btn-warning btn-lg btn-rounded mb-2" href="<?php echo base_url()?>Laporan/kehadiran_pengajar" > Pengajar</a>
-            						</div>
-                                    <div class="col-4">
-            							<a class="btn light btn-info btn-lg btn-rounded mb-2" href="<?php echo base_url()?>Laporan/kehadiran_pengajar" > Lainnya</a>
             						</div>
             					</div>
             				</div>

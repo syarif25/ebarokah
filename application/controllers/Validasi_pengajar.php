@@ -7,18 +7,15 @@ class Validasi_pengajar extends CI_Controller {
     {
         parent::__construct();
         $this->load->model('Login_model');
-        // Load models/helpers as needed later
     }
 
     public function index()
     {
-        // Default redirect or error
         redirect('Kehadiran/pengajar');
     }
 
 
 
-    // Helper from Kehadiran.php (Custom implementation)
     function decrypt_url($string) {
         $key = '874jzceroier38!@#%*bjkdwdw)'; // Ganti dengan kunci enkripsi yang diinginkan
         $string = str_replace(array('-', '_'), array('+', '/'), $string);
@@ -31,7 +28,7 @@ class Validasi_pengajar extends CI_Controller {
     {
         $this->Login_model->getsqurity();
 
-        // 0. Ambil Input
+        
         $id_kehadiran_pengajar = $this->input->post('id_kehadiran_pengajar');
         $jumlah_hadir          = (int)$this->input->post('jumlah_hadir');
         $jumlah_hadir_15       = (int)$this->input->post('jumlah_hadir_15');
@@ -43,7 +40,7 @@ class Validasi_pengajar extends CI_Controller {
             return;
         }
 
-        // 1. Update Database
+        
         $update_data = [
             'jumlah_hadir'       => $jumlah_hadir,
             'jumlah_hadir_15'    => $jumlah_hadir_15,
@@ -53,8 +50,6 @@ class Validasi_pengajar extends CI_Controller {
         $this->db->where('id_kehadiran_pengajar', $id_kehadiran_pengajar);
         $this->db->update('kehadiran_pengajar', $update_data);
 
-        // 2. Fetch Single Row Data (Query copied from index/cetak/view)
-        // Note: Using the same query structure but filtering by id_kehadiran_pengajar
         $key = $this->db->query("select tmt_maif, jumlah_hadir_piket, jumlah_hadir_15, jumlah_hadir_10, jafung, lembaga.id_lembaga, kehadiran_lembaga.status, status_sertifikasi, walkes, kehadiran_pengajar.id_kehadiran_pengajar, pengajar.kategori, jabatan_akademik, jumlah_sks, status_sertifikasi, ijazah_terakhir, lembaga.id_bidang, tunj_anak, umana.gelar_depan, umana.gelar_belakang, kehormatan, kehadiran_lembaga.file, tunj_kel, kehadiran_lembaga.id_kehadiran_lembaga, 
 		nama_lengkap, status_nikah, tmt_dosen, tmt_guru, kehadiran_pengajar.id_pengajar, kehadiran_pengajar.bulan, kehadiran_pengajar.tahun, jumlah_hadir, nama_lembaga, nominal_transport, status_aktif, pengajar.id_lembaga 
         from umana, pengajar, kehadiran_pengajar, kehadiran_lembaga, lembaga, transport 
@@ -72,14 +67,12 @@ class Validasi_pengajar extends CI_Controller {
              return;
         }
 
-        // 3. Fetch Master Data
         $tunkel_get = $this->db->get('tunkel')->result();
         if(isset($tunkel_get)) foreach($tunkel_get as $nominaltunkel);
 
         $tunj_anak_get = $this->db->get('tunjanak')->result();
         if(isset($tunj_anak_get)) foreach($tunj_anak_get as $nominaltunj_anak);
 
-        // 4. Recalculate Logic using Shared Helper
         $config_tahun_query = $this->db->get('pengaturan_tahun_acuan');
         $tahun_acuan_map = [];
         if ($config_tahun_query->num_rows() > 0) {

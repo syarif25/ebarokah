@@ -11,8 +11,8 @@ if (!function_exists('rupiah')) {
         $tgl = date_create($date);
         return date_format($tgl, "d M Y");
     }
-    
-    function date_singkat($date)
+
+	function date_singkat($date)
     {
         $tgl = date_create($date);
         return date_format($tgl, "d-m-Y");

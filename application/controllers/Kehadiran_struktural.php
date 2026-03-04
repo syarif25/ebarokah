@@ -128,6 +128,7 @@ class Kehadiran_struktural extends CI_Controller {
 			
 				// tambahkan tombol reset hanya untuk SuperAdmin/Evaluasi
 				if (in_array($jabatanUser, ['SuperAdmin', 'Evaluasi'])) {
+				    $aksi .= ' - <button type="button" class="btn btn-outline-info btn-xs ml-1" onclick="lihat_riwayat('."'".$encrypted_id."'".')"><i class="fa fa-history"></i> Riwayat</button>';
 					$aksi .= ' - <button type="button" class="btn btn-sm btn-outline-danger ml-2 btn-reset" '.
 							 'data-id="'.$datanya->id_kehadiran_lembaga.'" '.
 							 'data-status="'.$datanya->status.'">'.
@@ -136,13 +137,16 @@ class Kehadiran_struktural extends CI_Controller {
 			
 				$row[] = $aksi;
 			
-			} elseif ($datanya->status == "Terkirim" || $datanya->status == "acc") {
-				$row[] = "<span class='badge badge-warning text-dark'>Sedang dikoreksi <i class='fa fa-sync ms-1'></i></span>";
+			} elseif ($datanya->status == "Terkirim" || $datanya->status == "acc" || $datanya->status == "Revisi") {
+				// Status bisa jadi Revisi, perlu disesuaikan labelnya jika Revisi
+				$status_teks = ($datanya->status == 'Revisi') ? 'Terdapat Revisi' : 'Sedang dikoreksi';
+				$row[] = "<span class='badge badge-warning text-dark'>".$status_teks." <i class='fa fa-sync ms-1'></i></span>";
 			
 				$aksi  = '<a type="button" class="btn btn-success btn-xs" href="Validasi_struktural/koreksi/'.$encrypted_id.'">';
 				$aksi .= '<i class="mdi mdi-checkbox-marked-circle mr-1"></i> Cek Barokah</a> ';
 			
 				if (in_array($jabatanUser, ['SuperAdmin', 'Evaluasi'])) {
+				    $aksi .= ' - <button type="button" class="btn btn-outline-info btn-xs ml-1" onclick="lihat_riwayat('."'".$encrypted_id."'".')"><i class="fa fa-history"></i> Riwayat</button>';
 					$aksi .= ' - <button type="button" class="btn btn-sm btn-outline-danger ml-2 btn-reset" '.
 							 'data-id="'.$datanya->id_kehadiran_lembaga.'" '.
 							 'data-status="'.$datanya->status.'">'.
@@ -157,7 +161,9 @@ class Kehadiran_struktural extends CI_Controller {
 				// Redirect ke Laporan Per Lembaga untuk data yang sudah selesai (menggunakan snapshot dari total_barokah)
 				$aksi  = '<a type="button" class="btn btn-info btn-sm" href="'.site_url('laporan_lembaga/rincian/'.$encrypted_id).'">';
 				$aksi .= '<i class="mdi mdi-file-document-box mr-1"></i> Lihat Laporan Final</a>';
+				
 				if (in_array($jabatanUser, ['SuperAdmin', 'Evaluasi'])) {
+				    $aksi .= ' - <button type="button" class="btn btn-outline-info btn-sm ml-1" onclick="lihat_riwayat('."'".$encrypted_id."'".')"><i class="fa fa-history"></i> Riwayat</button>';
 					$aksi .= ' - <button type="button" class="btn btn-sm btn-outline-danger ml-2 btn-reset" '.
 							 'data-id="'.$datanya->id_kehadiran_lembaga.'" '.
 							 'data-status="'.$datanya->status.'">'.
@@ -621,5 +627,60 @@ class Kehadiran_struktural extends CI_Controller {
 
    
 
+	public function ajax_riwayat($id)
+    {
+        $decrypted_id = $this->decrypt_url($id);
+        
+        $this->db->select('log_riwayat_barokah.*'); 
+        $this->db->from('log_riwayat_barokah');
+        $this->db->where('id_kehadiran_lembaga', $decrypted_id);
+        $this->db->order_by('waktu_eksekusi', 'DESC');
+        $logs = $this->db->get()->result();
+
+        $html = '';
+        if(empty($logs)){
+            $html = '<div class="text-center text-muted py-4"><i class="fa fa-info-circle fa-2x mb-2 d-block"></i>Belum ada riwayat tercatat.</div>';
+        } else {
+            foreach($logs as $log) {
+                $status_class = 'status-Belum';
+                $icon = 'fa-circle';
+                $title = $log->status_aksi;
+                $text_color = 'text-dark';
+                
+                if($log->status_aksi == 'Belum'){
+                    $status_class = 'status-Belum'; $icon = 'fa-file-o'; $title = 'Blanko Dibuat'; $text_color = 'text-secondary';
+                } elseif($log->status_aksi == 'Sudah'){
+                    $status_class = 'status-Sudah'; $icon = 'fa-save'; $title = 'Disimpan (Draf)'; $text_color = 'text-info';
+                } elseif($log->status_aksi == 'Terkirim'){
+                    $status_class = 'status-Terkirim'; $icon = 'fa-paper-plane'; $title = 'Terkirim ke Pimpinan / Evaluator'; $text_color = 'text-warning';
+                } elseif($log->status_aksi == 'Revisi'){
+                    $status_class = 'status-Revisi'; $icon = 'fa-undo'; $title = 'Dikembalikan / Revisi (Ditolak)'; $text_color = 'text-danger';
+                } elseif($log->status_aksi == 'acc'){
+                    $status_class = 'status-acc'; $icon = 'fa-check-circle'; $title = 'Disetujui (ACC)'; $text_color = 'text-success';
+                }
+                
+                $date_fmt = date('d M Y H:i:s', strtotime($log->waktu_eksekusi));
+                
+                $html .= '<li class="timeline-item">
+                            <div class="timeline-indicator '.$status_class.'"></div>
+                            <div class="timeline-content shadow-sm">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="timeline-title '.$text_color.'"><i class="fa '.$icon.' mr-1"></i> '.$title.'</span>
+                                <span class="timeline-date"><i class="fa fa-clock-o"></i> '.$date_fmt.'</span>
+                            </div>';
+                            
+                if (!empty($log->id_pengguna)) {
+                    $html .= '<div class="timeline-user mb-2 text-muted" style="font-size: 0.8rem;"><i class="fa fa-user-circle-o"></i> dieksekusi oleh User ID: '.$log->id_pengguna.'</div>';
+                }
+                
+                if(!empty($log->catatan_log)) {
+                    $html .= '<p class="mb-0 small text-dark border-top pt-2 mt-2" style="background: #f8f9fa; padding: 6px; border-radius: 4px;"><em>"'.htmlentities($log->catatan_log).'"</em></p>';
+                }
+                $html .= '</div></li>';
+            }
+        }
+
+        echo json_encode(['status' => true, 'html' => $html]);
+    }
 
 }

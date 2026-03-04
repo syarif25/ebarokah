@@ -6,15 +6,12 @@
 								<a type="button" href="#" onclick="#" class="btn btn-info dark px-3" >
 									<i class="fa fa-filter"></i> Filter<b class="caret m-l-5"></b>
 								</a> -->
-								<div class="col-4 text-center">
+								<div class="col-6 text-center">
 									<a class="btn light btn-warning btn-lg btn-rounded mb-2" href="<?php echo base_url()?>Laporan/kehadiran"> Struktural</a>
 									</div>
-									<div class="col-4">
+									<div class="col-6">
 										<button class="btn btn-danger btn-lg btn-rounded mb-2"> Pengajar</button>
 									</div>
-									<div class="col-4">
-            							<a class="btn light btn-info btn-lg btn-rounded mb-2" href="<?php echo base_url()?>Laporan/kehadiran_pengajar" > Lainnya</a>
-            						</div>
 								</div>
 							</div>
 						</div>

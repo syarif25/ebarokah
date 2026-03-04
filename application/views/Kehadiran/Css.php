@@ -7,23 +7,22 @@
 <link href="<?php echo base_url() ?>assets/css/style.css" rel="stylesheet">
 <style>
 .table-scroll{
-  max-height: 70vh;          /* cukup tinggi, biar enak scroll */
+  max-height: 70vh;        
   overflow-y: auto;          /* scroll vertikal */
 }
 
 .table-scroll table{
-  border-collapse: separate; /* penting agar sticky+border rapi */
+  border-collapse: separate; 
   border-spacing: 0;
 }
 
 .table-scroll thead th{
   position: sticky;
-  top: 0;                    /* nempel di atas container scroll */
-  background: #fff;          /* atau var(--bs-body-bg) kalau pakai bootstrap var */
-  z-index: 2;                /* di atas isi tabel */
+  top: 0;                    
+  background: #fff;          
+  z-index: 2;                
 }
 
-/* garis bawah halus di header agar tetap “terlihat header” saat scroll */
 .table-scroll thead th::after{
   content: "";
   position: absolute;

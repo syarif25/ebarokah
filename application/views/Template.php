@@ -261,10 +261,11 @@
 							<span class="nav-text">Laporan</span>
 						</a>
                         <ul aria-expanded="false">
-                            <li><a href="<?php echo base_url() ?>Laporan_lembaga/per_bulan">Per Bulan</a></li>
+                            <!--<li><a href="<?php echo base_url() ?>Laporan_lembaga/per_bulan">Per Bulan</a></li>-->
                             <li><a href="<?php echo base_url() ?>Laporan_lembaga">Per Lembaga</a></li>
                             <li><a href="<?php echo base_url() ?>Laporan_satpam/index">Laporan Satpam</a></li>
 							<li><a href="<?php echo base_url() ?>Laporan/per_umana">Per Umana</a></li>
+							
                         </ul>
                     </li>
                     <li><a class="has-arrow" href="javascript:void()">
@@ -279,6 +280,11 @@
 							<li><a href="<?php echo base_url() ?>Log_kehadiran_lemb">Kehadiran Lembaga</a></li>
 							
                         </ul>
+                    </li>
+                    <li><a class="" href="<?php echo base_url()?>Usulan_approval" aria-expanded="false">
+							<i class="fas fa-check-double"></i>
+							<span class="nav-text">Approval Usulan</span>
+						</a>
                     </li>
                      <li><a class="" href="<?php echo base_url()?>personalia" aria-expanded="false">
 							<i class="fas fa-user-check"></i>
@@ -308,7 +314,7 @@
 						</a>
                         <ul aria-expanded="false">
                             <li><a href="<?php echo base_url() ?>kehadiran_struktural">Struktural</a></li>
-							<li><a href="<?php echo base_url() ?>Kehadiran_pengajar">Pengajar</a></li>
+							<li><a href="<?php echo base_url() ?>kehadiran/pengajar">Pengajar</a></li>
                         </ul>
                     </li>
                     <li><a class="has-arrow" href="javascript:void()">
@@ -335,6 +341,11 @@
 							<span class="nav-text">Barokah Tambahan</span>
 						</a>
                     </li>
+                    <li><a class="" href="<?php echo base_url()?>Usulan_tmt" aria-expanded="false">
+							<i class="fas fa-file-signature"></i>
+							<span class="nav-text">Usulan Perubahan Komponen Barokah</span>
+						</a>
+                    </li>
                     <?php }else if ($this->session->userdata('jabatan') == 'AdminLembaga' and $this->session->userdata('tenaga_pengajar') != 'Ya'){ ?>
                     <!-- ********************** LEMBAGA ******************************************** -->
                     <li><a class="" href="<?php echo base_url()?>Dashboard/lembaga" aria-expanded="false">
@@ -359,8 +370,11 @@
 							<span class="nav-text">Potongan</span>
 						</a>
                         <ul aria-expanded="false">
-                            <li><a href="<?php echo base_url() ?>Potongan_umana">Struktural</a></li>
-							<!--<li><a href="<?php echo base_url() ?>Potongan_pengajar">Pengajar</a></li>-->
+                             <?php if ($this->session->userdata('username') == 'Satpam') { ?>
+                                <li><a href="<?php echo base_url('kehadiran_satpam'); ?>">Satpam</a></li>
+                            <?php } else { ?>
+                                <li><a href="<?php echo base_url() ?>Potongan_umana">Struktural</a></li>
+                            <?php } ?>
                         </ul>
                     </li>
                     <li><a class="" href="<?php echo base_url()?>Tunjangan_bk" aria-expanded="false">
@@ -368,20 +382,12 @@
 							<span class="nav-text">Tunjangan Beban Kerja</span>
 						</a>
                     </li>
-	<!-- START MENU LAPORAN SATPAM -->
-					<?php if ($this->session->userdata('lembaga') == 59) { ?>
-                    <li><a class="has-arrow" href="javascript:void()">
-						<i class="fas fa-chart-line"></i>
-							<span class="nav-text">Laporan</span>
+                    <li><a class="" href="<?php echo base_url()?>Usulan_tmt" aria-expanded="false">
+							<i class="fas fa-file-signature"></i>
+							<span class="nav-text">Usulan Perubahan Komponen Barokah</span>
 						</a>
-                        <ul aria-expanded="false">
-                            <li><a href="<?php echo base_url() ?>Laporan_satpam/index">Laporan Satpam</a></li>
-                        </ul>
                     </li>
-					<?php } ?>
-					<!-- END MENU LAPORAN SATPAM -->
-					
-                     <!-- ********************** EVALUASI ******************************************** -->
+                         <!--BAGIAN EVALUASI ***********************************-->
                     <?php }else if ($this->session->userdata('jabatan') == 'Evaluasi'){ ?>
                     <!-- ********************** EVALUASI ******************************************** -->
                     <li><a class="" href="<?php echo base_url()?>Dashboard/petugas" aria-expanded="false">
@@ -404,6 +410,7 @@
 							<li><a href="<?php echo base_url() ?>Kehormatan">Kehormatan</a></li>
                             <!--<li><a href="<?php echo base_url() ?>Potongan">Potongan Barokah</a></li>-->
 							<li><a href="<?php echo base_url() ?>Transport">Transport</a></li>
+                           
                         </ul>
                     </li>
 					<li><a class="has-arrow" href="javascript:void()">
@@ -430,6 +437,11 @@
                             <li><a href="<?php echo base_url() ?>Laporan_lembaga">Per Lembaga</a></li>
 							<li><a href="<?php echo base_url() ?>Laporan/per_umana">Per Umana</a></li>
                         </ul>
+                    </li>
+                    <li><a class="" href="<?php echo base_url()?>Usulan_approval" aria-expanded="false">
+							<i class="fas fa-check-double"></i>
+							<span class="nav-text">Approval Usulan </span>
+						</a>
                     </li>
                     <?php }else if ($this->session->userdata('jabatan') == 'Kasir'){ ?>
                     <!-- ********************** KASIR ******************************************** -->
@@ -466,7 +478,7 @@
 						</a>
                         <ul aria-expanded="false">
                             <li><a href="<?php echo base_url() ?>kehadiran_struktural">Struktural</a></li>
-                            <li><a href="<?php echo base_url() ?>Kehadiran_pengajar">Pengajar</a></li>
+							<li><a href="<?php echo base_url() ?>kehadiran/pengajar">Pengajar</a></li>
                         </ul>
                     </li>
                     <?php } else { ?>
@@ -544,12 +556,8 @@
     <!--**********************************
         Scripts
     ***********************************-->
-    <!-- Global Vendor -->
-    <script src="<?php echo base_url() ?>assets/vendor/global/global.min.js"></script>
+	
 
-    <script src="<?php echo base_url() ?>assets/js/custom.min.js"></script>
-	<script src="<?php echo base_url() ?>assets/js/dlabnav-init.js"></script>
-    
     <?php $this->load->view($ajax); ?>
    <!-- Toastr -->
    <script src="<?php echo base_url() ?>assets/vendor/toastr/js/toastr.min.js"></script>

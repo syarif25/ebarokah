@@ -81,26 +81,17 @@
 
   <!-- INFO PERIODE -->
   <?php
-    // Hitung info bulan untuk transparency
     $bulan_nama = $periode->bulan ?? '';
-    $tahun_nama = $periode->tahun ?? date('Y');
-    $bulan_int = is_numeric($bulan_nama) ? (int)$bulan_nama : date('n', strtotime($bulan_nama));
+    // Konversi string bulan ke angka untuk kalender
+    $map_b = ['januari'=>1, 'februari'=>2, 'maret'=>3, 'april'=>4, 'mei'=>5, 'juni'=>6, 'juli'=>7, 'agustus'=>8, 'september'=>9, 'oktober'=>10, 'november'=>11, 'desember'=>12];
+    $bulan_int = isset($map_b[strtolower(trim($bulan_nama))]) ? $map_b[strtolower(trim($bulan_nama))] : (int)date('m');
     
-    $total_hari = (int)date('t', mktime(0, 0, 0, $bulan_int, 1, (int)$tahun_nama));
+    $thn_int = (int)substr($periode->tahun ?? date('Y'), 0, 4);
+    $total_hari = (int)date('t', mktime(0, 0, 0, $bulan_int, 1, $thn_int));
     
-    // Hitung Jumat
     $jumlah_jumat = 0;
-    $hari_pertama = mktime(0, 0, 0, $bulan_int, 1, (int)$tahun_nama);
-    $nama_hari = date('N', $hari_pertama);
-    
-    if ($nama_hari <= 5) {
-        $jumat_pertama = 5 - $nama_hari + 1;
-    } else {
-        $jumat_pertama = 12 - $nama_hari + 1;
-    }
-    
-    for ($tgl = $jumat_pertama; $tgl <= $total_hari; $tgl += 7) {
-        $jumlah_jumat++;
+    for($i=1; $i<=$total_hari; $i++){
+      if(date('N', mktime(0,0,0, $bulan_int, $i, $thn_int)) == 5) $jumlah_jumat++;
     }
     
     $hari_kerja = $total_hari - $jumlah_jumat;
@@ -108,17 +99,17 @@
   <div class="alert alert-info py-2 px-3 mb-3 d-flex align-items-center">
     <i class="fa fa-info-circle mr-2" style="font-size: 1.2rem;"></i>
     <div>
-      <strong><i class="fa fa-calendar mr-1"></i> Info Periode: <?php echo htmlentities($bulan_nama.' '.$tahun_nama); ?></strong>
+      <strong><i class="fa fa-calendar mr-1"></i> Info Periode: <?= htmlentities($bulan_nama.' '.$thn_int) ?></strong>
       <span class="ml-3">
-        <i class="fa fa-calendar-o mr-1"></i> Total Hari: <strong><?php echo $total_hari; ?></strong>
+        <i class="fa fa-calendar-o mr-1"></i> Total Hari: <strong><?= $total_hari ?></strong>
       </span>
       <span class="ml-2">|</span>
       <span class="ml-2">
-        <i class="fa fa-ban mr-1 text-danger"></i> Jumat (Libur): <strong><?php echo $jumlah_jumat; ?></strong>
+        <i class="fa fa-ban mr-1 text-danger"></i> Jumat (Libur): <strong><?= $jumlah_jumat ?></strong>
       </span>
       <span class="ml-2">|</span>
       <span class="ml-2">
-        <i class="fa fa-check-circle mr-1 text-success"></i> Hari Kerja: <strong><?php echo $hari_kerja; ?></strong> (Sabtu-Kamis)
+        <i class="fa fa-check-circle mr-1 text-success"></i> Hari Kerja: <strong><?= $hari_kerja ?></strong> (Sabtu-Kamis)
       </span>
     </div>
   </div>
@@ -157,18 +148,25 @@
           </tr>
         </thead>
         <tbody>
-            <?php if(!empty($isilist)): $no=1; foreach($isilist as $row): ?>
-            <tr id="row-<?php echo $row->id_kehadiran; ?>">
-                <td class="cell-center"><?php echo $no++; ?></td>
-                <td><?php echo htmlentities(trim(($row->gelar_depan ?? '').' '.($row->nama_lengkap ?? '').' '.($row->gelar_belakang ?? ''))); ?></td>
+            <?php if(!empty($isilist)): $no=1; foreach($isilist as $row): 
+                $changed = isset($row->komponen_berubah) ? $row->komponen_berubah : [];
+            ?>
+            <tr id="row-<?php echo $row->id_kehadiran; ?>" class="<?= (!empty($row->is_warning)) ? 'bg-warning' : '' ?>">
+                <td class="cell-center <?= (!empty($row->is_warning)) ? 'text-dark font-weight-bold' : '' ?>"><?php echo $no++; ?></td>
+                <td class="<?= (!empty($row->is_warning)) ? 'text-dark' : '' ?>">
+                    <?php echo htmlentities(trim(($row->gelar_depan ?? '').' '.($row->nama_lengkap ?? '').' '.($row->gelar_belakang ?? ''))); ?>
+                    <?php if(!empty($row->is_warning)): ?>
+                        <br><span class="badge badge-danger shadow-sm mt-1 px-2 py-1"><i class="fa fa-exclamation-triangle"></i> Perubahan Komponen (<?= ($row->selisih_komponen > 0 ? '+' : '').number_format($row->selisih_komponen,0,',','.') ?>)</span>
+                    <?php endif; ?>
+                </td>
                 <td><?php echo htmlentities($row->nama_jabatan ?? '-'); ?></td>
                 <td class="cell-center">
                 <?php echo !empty($row->tmt_struktural) ? htmlentities(date('Y', strtotime($row->tmt_struktural))) : '-'; ?>
                 </td>
 
-                <td class="cell-right"><?php echo number_format((int)$row->tunjab,0,',','.'); ?></td>
+                <td class="cell-right <?= in_array('tunjab', $changed) ? 'text-danger font-weight-bold' : '' ?>" <?= in_array('tunjab', $changed) ? 'title="Nominal berubah dari bulan sebelumnya"' : '' ?>><?php echo number_format((int)$row->tunjab,0,',','.'); ?></td>
                 <td class="cell-center"><?php echo (int)$row->mp; ?></td>
-                <td class="cell-right"><?php echo number_format((int)$row->tmp,0,',','.'); ?></td>
+                <td class="cell-right <?= in_array('tmp', $changed) ? 'text-danger font-weight-bold' : '' ?>" <?= in_array('tmp', $changed) ? 'title="Nominal berubah dari bulan sebelumnya"' : '' ?>><?php echo number_format((int)$row->tmp,0,',','.'); ?></td>
 
                 <td class="cell-center text-success"><?php echo (int)($row->wajib_hadir_bulanan ?? 0); ?></td>
                 <td class="cell-center" id="hari-<?= $row->id_kehadiran ?>"><?php echo (int)$row->jumlah_hadir; ?></td>
@@ -185,9 +183,9 @@
                 </td>
                 <td class="cell-right" id="jmlhadir-<?= $row->id_kehadiran ?>"><?php echo number_format((int)$row->nominal_kehadiran,0,',','.'); ?></td>
 
-                <td class="cell-right"><?php echo number_format((int)$row->tunkel,0,',','.'); ?></td>
-                <td class="cell-right"><?php echo number_format((int)$row->tunj_anak,0,',','.'); ?></td>
-                <td class="cell-right"><?php echo number_format((int)$row->nilai_kehormatan,0,',','.'); ?></td>
+                <td class="cell-right <?= in_array('tunkel', $changed) ? 'text-danger font-weight-bold' : '' ?>" <?= in_array('tunkel', $changed) ? 'title="Nominal berubah dari bulan sebelumnya"' : '' ?>><?php echo number_format((int)$row->tunkel,0,',','.'); ?></td>
+                <td class="cell-right <?= in_array('tunj_anak', $changed) ? 'text-danger font-weight-bold' : '' ?>" <?= in_array('tunj_anak', $changed) ? 'title="Nominal berubah dari bulan sebelumnya"' : '' ?>><?php echo number_format((int)$row->tunj_anak,0,',','.'); ?></td>
+                <td class="cell-right <?= in_array('kehormatan', $changed) ? 'text-danger font-weight-bold' : '' ?>" <?= in_array('kehormatan', $changed) ? 'title="Nominal berubah dari bulan sebelumnya"' : '' ?>><?php echo number_format((int)$row->nilai_kehormatan,0,',','.'); ?></td>
                 <td class="cell-right">
                 <a href="javascript:void(0)" 
                     class="text-primary link-tbk" 
@@ -202,26 +200,48 @@
                 <td class="cell-right font-weight-bold" id="diterima-<?= $row->id_kehadiran ?>"><?php echo number_format((int)$row->diterima,0,',','.'); ?></td>
 
                 <td class="cell-center">
-                <?php if ($periode->status !== 'acc' && $periode->status !== 'selesai'): ?>
-                    <button type="button" class="btn btn-sm btn-outline-primary btn-edit"
-                            data-toggle="tooltip"
-                            title="Koreksi jumlah kehadiran"
-                            data-id="<?= $row->id_kehadiran ?>"
-                            data-lembaga="<?= $row->id_kehadiran_lembaga ?>"
-                            data-hari="<?= (int)$row->jumlah_hadir ?>"
-                            data-tugas="<?= (int)($row->jumlah_tugas ?? 0) ?>"
-                            data-izin="<?= (int)($row->jumlah_izin ?? 0) ?>"
-                            data-sakit="<?= (int)($row->jumlah_sakit ?? 0) ?>">
-                    Edit
-                    </button>
-                <?php else: ?>
-                    <button type="button"
-                            class="btn btn-sm btn-outline-secondary"
-                            disabled
-                            title="Data sudah disetujui">
-                    Edit
-                    </button>
-                <?php endif; ?>
+                    <div class="d-flex justify-content-center">
+                    <?php if ($periode->status !== 'acc' && $periode->status !== 'selesai'): ?>
+                        <button type="button" class="btn btn-sm btn-outline-primary btn-edit mr-1"
+                                data-toggle="tooltip"
+                                title="Koreksi jumlah kehadiran"
+                                data-id="<?= $row->id_kehadiran ?>"
+                                data-lembaga="<?= $row->id_kehadiran_lembaga ?>"
+                                data-hari="<?= (int)$row->jumlah_hadir ?>"
+                                data-tugas="<?= (int)($row->jumlah_tugas ?? 0) ?>"
+                                data-izin="<?= (int)($row->jumlah_izin ?? 0) ?>"
+                                data-sakit="<?= (int)($row->jumlah_sakit ?? 0) ?>">
+                        Edit
+                        </button>
+                        <!-- Form input Hidden u/ Catatan & Tombol Modal Catatan -->
+                        <input type="hidden" name="catatan_khusus[<?= $row->id_penempatan ?>]" id="catatan_val_<?= $row->id_penempatan ?>" value="<?= htmlentities($row->catatan_khusus ?? '') ?>">
+                        
+                        <!-- Logika penandaan tombol catatan -->
+                        <?php 
+                            $has_note = !empty(trim($row->catatan_khusus));
+                            $btn_class = $has_note ? 'btn-info shadow-sm' : 'btn-outline-info';
+                            $icon_class = $has_note ? 'fa-commenting' : 'fa-comment-o';
+                        ?>
+                        
+                        <button type="button" class="btn btn-sm <?= $btn_class ?> btn-catatan position-relative"
+                                title="Catatan Evaluasi"
+                                data-id="<?= $row->id_penempatan ?>"
+                                data-nama="<?= htmlentities(trim(($row->gelar_depan ?? '').' '.($row->nama_lengkap ?? '').' '.($row->gelar_belakang ?? ''))) ?>">
+                            <i class="fa <?= $icon_class ?> icon-catatan-<?= $row->id_penempatan ?>"></i>
+                            <!-- Badge Bintang jika ada catatan -->
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none badge-catatan-<?= $row->id_penempatan ?>" style="font-size: 0.5rem; transform: translate(-30%, -30%);">★</span>
+                            <?php if($has_note): ?>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger badge-catatan-<?= $row->id_penempatan ?>" style="font-size: 0.5rem; transform: translate(-30%, -30%);">★</span>
+                            <?php endif; ?>
+                        </button>
+                    <?php else: ?>
+                        <button type="button" class="btn btn-sm btn-outline-secondary mr-1" disabled title="Data sudah disetujui">Edit</button>
+                        <!-- Jika di-acc tapi ada catatannya bisa diprint out atau dilihat -->
+                        <?php if(!empty($row->catatan_khusus)): ?>
+                            <button type="button" class="btn btn-sm btn-info" onclick="Swal.fire('Catatan', '<?= htmlspecialchars($row->catatan_khusus, ENT_QUOTES) ?>', 'info')"><i class="fa fa-comment"></i></button>
+                        <?php endif; ?>
+                    <?php endif; ?>
+                    </div>
                 </td>
 
 
@@ -258,6 +278,23 @@
             </tfoot>
 
       </table>
+
+      <!-- Catatan Pimpinan (Keseluruhan) -->
+      <?php if ($periode->status !== 'acc' && $periode->status !== 'selesai'): ?>
+      <div class="card mt-3 border-left-primary shadow-sm border-0">
+        <div class="card-body bg-light p-3">
+            <label class="font-weight-bold text-primary"><i class="fa fa-commenting"></i> Catatan Evaluasi</label>
+            <textarea name="catatan_umum_pimpinan" class="form-control" rows="2" placeholder="" <?= (in_array($this->session->userdata('jabatan'), ['SuperAdmin', 'Evaluasi'])) ? '' : 'readonly' ?>><?= htmlentities($periode->catatan_umum_pimpinan ?? '') ?></textarea>
+        </div>
+      </div>
+      <?php else: ?>
+        <?php if(!empty($periode->catatan_umum_pimpinan)): ?>
+        <div class="alert alert-warning mt-3">
+            <h6 class="font-weight-bold"><i class="fa fa-commenting"></i> Catatan :</h6>
+            <p class="mb-0"><?= nl2br(htmlentities($periode->catatan_umum_pimpinan)) ?></p>
+        </div>
+        <?php endif; ?>
+      <?php endif; ?>
     </form>
 
     <!-- Info untuk operator -->
@@ -273,14 +310,18 @@
     ?>
 
     <div class="sticky-actions d-flex justify-content-end">
-    <?php if ($statusPeriode === 'Sudah' && $jabatanUser !== 'SDM'): ?>
-        <button type="button" id="btnKirim" class="btn btn-primary">
-        <i class="mdi mdi-send mr-1"></i> Kirim
+    <?php if (($statusPeriode === 'Sudah' || $statusPeriode === 'Revisi') && $jabatanUser !== 'SDM'): ?>
+        <?php $btn_teks = ($statusPeriode === 'Revisi') ? 'Kirim Hasil Revisi' : 'Kirim'; ?>
+        <button type="button" id="btnKirim" class="btn btn-primary font-weight-bold shadow-sm">
+        <i class="mdi mdi-send mr-1"></i> <?= $btn_teks ?>
         </button>
     <?php elseif ($jabatanUser === 'SDM'): ?>
         <!-- SDM: tidak tampil tombol apa pun (mengikuti alur lama) -->
     <?php elseif ($statusPeriode === 'Terkirim' && $jabatanUser !== 'AdminLembaga'): ?>
-        <button type="button" id="btnSetujui" class="btn btn-success">
+        <button type="button" id="btnKembalikan" class="btn btn-warning mr-2 text-dark font-weight-bold">
+        <i class="fa fa-undo mr-1"></i> Kembalikan (Revisi)
+        </button>
+        <button type="button" id="btnSetujui" class="btn btn-success font-weight-bold shadow-sm">
         <i class="fa fa-check mr-1"></i> Setujui
         </button>
     <?php else: ?>
@@ -315,6 +356,33 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-light" data-dismiss="modal">Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Catatan Spesifik Umana -->
+<div class="modal fade" id="modalCatatan" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Catatan Spesifik Umana</h5>
+        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Umana:</strong> <span id="cat-nama"></span></p>
+        <input type="hidden" id="cat-id">
+        <div class="form-group">
+          <label class="font-weight-bold">Catatan</label>
+          <?php $placeholder_teks = (in_array($this->session->userdata('jabatan'), ['SuperAdmin', 'Evaluasi'])) ? 'Tuliskan catatan khusus atau peringatan jika ada koreksi penerimaan...' : ''; ?>
+          <textarea id="cat-val" class="form-control" rows="4" placeholder="<?= $placeholder_teks ?>" <?= (in_array($this->session->userdata('jabatan'), ['SuperAdmin', 'Evaluasi'])) ? '' : 'readonly' ?>></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-dismiss="modal">Tutup</button>
+        <?php if (in_array($this->session->userdata('jabatan'), ['SuperAdmin', 'Evaluasi'])): ?>
+        <button type="button" id="btnSimpanCatatan" class="btn btn-primary">Simpan Catatan</button>
+        <?php endif; ?>
       </div>
     </div>
   </div>
@@ -403,7 +471,7 @@
         Swal.fire({icon:'success', title:'Terkirim', text: res.message || 'Periode berhasil dikirim.', timer:1400, showConfirmButton:false})
         .then(()=>{ 
             // window.location.reload(); 
-            window.location.href = "<?= site_url('Kehadiran') ?>";
+            window.location.href = "<?= site_url('Kehadiran_struktural') ?>";
         });
         } else {
         Swal.fire('Gagal', (res && res.message) ? res.message : 'Gagal mengirim periode.','error');
@@ -418,6 +486,50 @@
     });
     });
 
+    // Helper u/ LocalStorage auto-save
+    const id_leb_storage = "<?= $periode->id_kehadiran_lembaga ?? '' ?>";
+
+    // Restore catatan dari Local Storage saat halaman di-load
+    $(function() {
+        if (!id_leb_storage) return;
+
+        // Restore Catatan Umum
+        let savedUmum = localStorage.getItem('catatan_umum_' + id_leb_storage);
+        if (savedUmum) {
+            $('textarea[name="catatan_umum_pimpinan"]').val(savedUmum);
+        }
+
+        // Auto-save Catatan Umum saat mengetik
+        $('textarea[name="catatan_umum_pimpinan"]').on('keyup change', function() {
+            localStorage.setItem('catatan_umum_' + id_leb_storage, $(this).val());
+        });
+
+        // Restore Catatan Khusus
+        $('.btn-catatan').each(function() {
+            let id = $(this).data('id');
+            let savedKhusus = localStorage.getItem('catatan_pegawai_' + id_leb_storage + '_' + id);
+            
+            if (savedKhusus !== null) {
+                $('#catatan_val_' + id).val(savedKhusus);
+                
+                // Render visual tombol (Info menyala atau outline mati)
+                let btn = $(this);
+                let icon = $('.icon-catatan-' + id);
+                let badge = $('.badge-catatan-' + id);
+                
+                if (savedKhusus.trim() !== '') {
+                    btn.removeClass('btn-outline-info').addClass('btn-info shadow-sm');
+                    icon.removeClass('fa-comment-o').addClass('fa-commenting');
+                    badge.removeClass('d-none');
+                } else {
+                    btn.removeClass('btn-info shadow-sm').addClass('btn-outline-info');
+                    icon.removeClass('fa-commenting').addClass('fa-comment-o');
+                    badge.addClass('d-none');
+                }
+            }
+        });
+    });
+
     // SETUJUI (finalisasi: tulis total_barokah + update status acc)
     $(document).on('click', '#btnSetujui', function(){
     const $btn = $(this);
@@ -428,14 +540,22 @@
         url: "<?= site_url('Validasi_struktural/save_data') ?>",
         type: "POST",
         dataType: "json",
-        data: { id_kehadiran_lembaga: idL }
+        data: $('#form').serialize() + '&id_kehadiran_lembaga=' + idL
     })
     .done(function(res){
         if(res && res.status){
+        // Jika status success, bersihkan riwayat local storage pada periode ini
+        if (id_leb_storage) {
+            localStorage.removeItem('catatan_umum_' + id_leb_storage);
+            $('.btn-catatan').each(function() {
+                localStorage.removeItem('catatan_pegawai_' + id_leb_storage + '_' + $(this).data('id'));
+            });
+        }
+        
         Swal.fire({icon:'success', title:'Berhasil!', text: res.message || 'Periode disetujui & disimpan.', timer:1500, showConfirmButton:false})
         .then(()=>{ 
             // window.location.reload();
-            window.location.href = "<?= site_url('Kehadiran') ?>"; 
+            window.location.href = "<?= site_url('Kehadiran_struktural') ?>"; 
         });
         } else {
         Swal.fire('Gagal', (res && res.message) ? res.message : 'Validasi gagal.','error');
@@ -447,6 +567,59 @@
     })
     .always(function(){
         $btn.prop('disabled', false).html('<i class="fa fa-check mr-1"></i> Setujui');
+    });
+    });
+
+    // KEMBALIKAN (REVISI: kembalikan ke Admin Lembaga u/ diperbaiki)
+    $(document).on('click', '#btnKembalikan', function(){
+    const $btn = $(this);
+    if(!idL){ Swal.fire('Error','ID periode tidak ditemukan.','error'); return; }
+
+    Swal.fire({
+        title: 'Kembalikan untuk Revisi?',
+        text: "Pastikan sudah menulis catatan pada kolom evaluasi agar Admin Lembaga mengerti apa yang harus diperbaiki.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ffc107',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, Kembalikan!',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $btn.prop('disabled', true).text('Memproses...');
+            $.ajax({
+                url: "<?= site_url('Validasi_struktural/save_data') ?>",
+                type: "POST",
+                dataType: "json",
+                // Kirimkan state 'revisi'
+                data: $('#form').serialize() + '&id_kehadiran_lembaga=' + idL + '&action_type=revisi'
+            })
+            .done(function(res){
+                if(res && res.status){
+                // Jika status success, bersihkan riwayat local storage pada periode ini
+                if (id_leb_storage) {
+                    localStorage.removeItem('catatan_umum_' + id_leb_storage);
+                    $('.btn-catatan').each(function() {
+                        localStorage.removeItem('catatan_pegawai_' + id_leb_storage + '_' + $(this).data('id'));
+                    });
+                }
+                
+                Swal.fire({icon:'success', title:'Dikembalikan!', text: res.message || 'Dokumen dikembalikan ke Admin Lembaga.', timer:1500, showConfirmButton:false})
+                .then(()=>{ 
+                    window.location.href = "<?= site_url('Kehadiran_struktural') ?>"; 
+                });
+                } else {
+                Swal.fire('Gagal', (res && res.message) ? res.message : 'Proses gagal.','error');
+                }
+            })
+            .fail(function(xhr){
+                console.error(xhr.responseText);
+                Swal.fire('Error','Gagal menghubungi server.','error');
+            })
+            .always(function(){
+                $btn.prop('disabled', false).html('<i class="fa fa-undo mr-1"></i> Kembalikan (Revisi)');
+            });
+        }
     });
     });
 
@@ -475,6 +648,50 @@
     }).fail(function(){
         $('#tbkBody').html('<tr><td colspan="3" class="text-center text-danger">Gagal memuat data TBK.</td></tr>');
     });
+    });
+
+    // === MODAL CATATAN KHUSUS ===
+    $(document).on('click', '.btn-catatan', function() {
+        let id = $(this).data('id');
+        let nama = $(this).data('nama');
+        let currentVal = $('#catatan_val_' + id).val();
+        
+        $('#cat-id').val(id);
+        $('#cat-nama').text(nama);
+        $('#cat-val').val(currentVal);
+        $('#modalCatatan').modal('show');
+    });
+
+    $('#btnSimpanCatatan').on('click', function() {
+        let id = $('#cat-id').val();
+        let val = $('#cat-val').val();
+        
+        // Simpan nilai ke input hidden
+        $('#catatan_val_' + id).val(val);
+        
+        // AUTO-SAVE Local Storage
+        if (id_leb_storage) {
+            localStorage.setItem('catatan_pegawai_' + id_leb_storage + '_' + id, val);
+        }
+
+        // Ubah tampilan tombol secara dinamis
+        let btn = $('.btn-catatan[data-id="'+id+'"]');
+        let icon = $('.icon-catatan-'+id);
+        let badge = $('.badge-catatan-'+id);
+        
+        if (val.trim() !== '') {
+            // Jika ada isinya (Solid) -> Indikator Menyala
+            btn.removeClass('btn-outline-info').addClass('btn-info shadow-sm');
+            icon.removeClass('fa-comment-o').addClass('fa-commenting');
+            badge.removeClass('d-none'); // Tampilkan bintang merah
+        } else {
+            // Jika dikosongkan (Outline) -> Indikator Mati
+            btn.removeClass('btn-info shadow-sm').addClass('btn-outline-info');
+            icon.removeClass('fa-commenting').addClass('fa-comment-o');
+            badge.addClass('d-none'); // Sembunyikan bintang merah
+        }
+        
+        $('#modalCatatan').modal('hide');
     });
 
     // === KOREKSI KEHADIRAN ===

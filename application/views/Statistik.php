@@ -48,7 +48,7 @@
 			</div>
 		</div>
 		<?php }	?>
-		<div class="col-xl-6">
+		<div class="col-xl-12">
 			<div class="row">
 				<!-- <div class="col-xl-12"> -->
 					<div class="col-xl-6">
@@ -152,57 +152,36 @@
 						</div>
 					</div>
 				</div>
-				<!-- Widget Cuti Akan Habis -->
-				<div class="col-xl-12">
-					<div class="card">
-						<div class="card-header border-0 pb-0">
-							<h4 class="fs-20 font-w700 text-danger">
-								<i class="fa fa-calendar-times"></i> Cuti Umana Akan Habis
-							</h4>
-							<span class="badge badge-rounded badge-warning">Perhatian!</span>
-						</div>
-						<div class="card-body pt-2">
-							<div id="cuti-alert-container">
-								<div class="text-center py-3">
-									<div class="spinner-border text-primary" role="status">
-										<span class="sr-only">Loading...</span>
-									</div>
-									<p class="text-muted mt-2">Memuat data...</p>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
 			</div>
 		</div>
-		<div class="col-xl-6">
-			<div class="row">
-				<div class="col-xl-12">
+		<!--<div class="col-xl-6">-->
+		<!--	<div class="row">-->
+		<!--		<div class="col-xl-12">-->
 					
-				</div>
-				<div class="col-xl-12">
-					<div class="card">
-						<div class="card-header border-0">
-							<h4 class="fs-20 font-w700"> Statistik Barokah</h4>
-							<div class="dropdown ">
-								<div class="btn-link" data-bs-toggle="dropdown">
-									<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-										<circle cx="12.4999" cy="3.5" r="2.5" fill="#A5A5A5"/>
-										<circle cx="12.4999" cy="11.5" r="2.5" fill="#A5A5A5"/>
-										<circle cx="12.4999" cy="19.5" r="2.5" fill="#A5A5A5"/>
-									</svg>
-								</div>
+		<!--		</div>-->
+		<!--		<div class="col-xl-12">-->
+		<!--			<div class="card">-->
+		<!--				<div class="card-header border-0">-->
+		<!--					<h4 class="fs-20 font-w700"> Statistik Barokah</h4>-->
+		<!--					<div class="dropdown ">-->
+		<!--						<div class="btn-link" data-bs-toggle="dropdown">-->
+		<!--							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">-->
+		<!--								<circle cx="12.4999" cy="3.5" r="2.5" fill="#A5A5A5"/>-->
+		<!--								<circle cx="12.4999" cy="11.5" r="2.5" fill="#A5A5A5"/>-->
+		<!--								<circle cx="12.4999" cy="19.5" r="2.5" fill="#A5A5A5"/>-->
+		<!--							</svg>-->
+		<!--						</div>-->
 								
-							</div>
-						</div>
-						<div class="card-body p-2">
-							<div id="reservationChart" class="reservationChart"></div>
-						</div>
-					</div>
-				</div>
+		<!--					</div>-->
+		<!--				</div>-->
+		<!--				<div class="card-body p-2">-->
+		<!--					<div id="reservationChart" class="reservationChart"></div>-->
+		<!--				</div>-->
+		<!--			</div>-->
+		<!--		</div>-->
 				
-			</div>
-		</div>
+		<!--	</div>-->
+		<!--</div>-->
 		<div class="col-xl-6">
 			<div class="row">
 				<div class="col-xl-12">

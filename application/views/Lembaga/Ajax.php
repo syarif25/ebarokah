@@ -162,6 +162,7 @@
                                     <option></option>
                                     <option >Bidang DIKTI</option>
                                     <option >Bidang DIKJAR</option>
+                                    <option>Bidang DIKJAR-M</option>
                                     <option >Bidang Kepesantrenan dan PU</option>
                                     <option >Bidang KAMTIB</option>
                                     <option>Bidang Usaha</option>

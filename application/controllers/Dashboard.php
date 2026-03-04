@@ -259,17 +259,4 @@ public function index(){
 		);
 		echo json_encode($output);
 	}
-
-	public function get_cuti_akan_habis()
-	{
-		$this->load->model('Cuti_model');
-		
-		// Auto-selesaikan cuti yang sudah lewat tanggal
-		$this->Cuti_model->selesaikan_cuti_otomatis();
-		
-		// Get cuti yang akan habis dalam 14 hari
-		$data = $this->Cuti_model->get_cuti_akan_habis(14);
-		echo json_encode($data);
-	}
 }
-

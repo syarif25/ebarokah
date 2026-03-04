@@ -622,9 +622,9 @@ if (isset($isilist) && !empty($isilist)) {
                                 if ($key->status_aktif == "Cuti 50%") { $tunja_anak *= 0.5; } elseif ($key->status_aktif == "Cuti 100%") { $tunja_anak = 0; }
                                 
                                 if ($key->walkes == "Ya") {
-                                    $tunj_walkes = 75000;
+                                    $tunj_walkes = 100000;
                                 } else if($key->walkes == "walkes_sklh") {
-                                    $tunj_walkes = 50000;
+                                    $tunj_walkes = 75000;
                                 } else if($key->walkes == "walkes_amsilati") {
                                     $tunj_walkes = 25000;
                                 } else {

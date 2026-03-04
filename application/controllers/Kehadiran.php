@@ -122,8 +122,9 @@ class Kehadiran extends CI_Controller {
 			
 				$row[] = $aksi;
 			
-			} elseif ($datanya->status == "Sudah") {
-				$row[] = "<span class='badge badge-danger'>Belum dikirim <i class='fa fa-exclamation-circle ms-1'></i></span>";
+			} elseif ($datanya->status == "Sudah" || $datanya->status == "Revisi") {
+                $status_label = ($datanya->status == "Revisi") ? "Revisi / Belum dikirim" : "Belum dikirim";
+				$row[] = "<span class='badge badge-danger'>".$status_label." <i class='fa fa-exclamation-circle ms-1'></i></span>";
 			
 				// rangkai aksi dasar
 				$aksi  = '<a type="button" class="btn btn-success btn-xs" href="Validasi_struktural/koreksi/'.$encrypted_id.'">';
@@ -132,6 +133,7 @@ class Kehadiran extends CI_Controller {
 			
 				// tambahkan tombol reset hanya untuk SuperAdmin/Evaluasi
 				if (in_array($jabatanUser, ['SuperAdmin', 'Evaluasi'])) {
+				    $aksi .= ' - <button type="button" class="btn btn-outline-info btn-xs ml-1" onclick="lihat_riwayat('."'".$encrypted_id."'".')"><i class="fa fa-history"></i> Riwayat</button>';
 					$aksi .= ' - <button type="button" class="btn btn-sm btn-outline-danger ml-2 btn-reset" '.
 							 'data-id="'.$datanya->id_kehadiran_lembaga.'" '.
 							 'data-status="'.$datanya->status.'">'.
@@ -147,6 +149,7 @@ class Kehadiran extends CI_Controller {
 				$aksi .= '<i class="mdi mdi-checkbox-marked-circle mr-1"></i> Cek Barokah</a> ';
 			
 				if (in_array($jabatanUser, ['SuperAdmin', 'Evaluasi'])) {
+				    $aksi .= ' - <button type="button" class="btn btn-outline-info btn-xs ml-1" onclick="lihat_riwayat('."'".$encrypted_id."'".')"><i class="fa fa-history"></i> Riwayat</button>';
 					$aksi .= ' - <button type="button" class="btn btn-sm btn-outline-danger ml-2 btn-reset" '.
 							 'data-id="'.$datanya->id_kehadiran_lembaga.'" '.
 							 'data-status="'.$datanya->status.'">'.
@@ -161,6 +164,7 @@ class Kehadiran extends CI_Controller {
 				$aksi  = '<a type="button" class="btn btn-info btn-sm" href="Validasi_struktural/koreksi/'.$encrypted_id.'">';
 				$aksi .= '<i class="mdi mdi-file-document-box mr-1"></i> Lihat Rekap Barokah</a>';
 				if (in_array($jabatanUser, ['SuperAdmin', 'Evaluasi'])) {
+				    $aksi .= ' - <button type="button" class="btn btn-outline-info btn-sm ml-1" onclick="lihat_riwayat('."'".$encrypted_id."'".')"><i class="fa fa-history"></i> Riwayat</button>';
 					$aksi .= ' - <button type="button" class="btn btn-sm btn-outline-danger ml-2 btn-reset" '.
 							 'data-id="'.$datanya->id_kehadiran_lembaga.'" '.
 							 'data-status="'.$datanya->status.'">'.
@@ -198,51 +202,32 @@ class Kehadiran extends CI_Controller {
 			$row[] = htmlentities($datanya->jml)." org";
 			$row[] = htmlentities($datanya->bulan);
 			$row[] = htmlentities($datanya->tahun);
-			if ($datanya->status == 'Belum'){
+		if ($datanya->status == 'Belum'){
 			$row[] = "<span class='badge badge-secondary'>Belum diisi<span class='ms-1 fa fa-times'></span></span>";
 			//pengajar
 			$row[] = '<a type="button" class="btn btn-outline-secondary btn-sm" href="#" 
 			title="Rekap" onclick="rekap_pengajar('."'".$encrypted_id."'".')"><i class="mdi mdi-file-document-box mr-1" ></i> Isi Rekap Kehadiran</a>';
-		}	elseif ($datanya->status == "Sudah") {
-			$row[] = "<span class='badge badge-danger'>Belum dikirim <i class='mdi mdi-alert-circle' data-name='mdi-alert-circle'></i></span>";
-            
-            $aksi = '<a type="button" class="btn btn-success btn-xs" href="'.base_url().'Validasi_pengajar/koreksi/'.$encrypted_id.'"><i class="mdi mdi-checkbox-marked-circle mr-1" ></i> Cek Barokah</a>';
-            
-            // Tambah tombol reset (SuperAdmin/Evaluasi Only)
-            if (in_array($this->session->userdata('jabatan'), ['SuperAdmin', 'Evaluasi'])) {
-                 $aksi .= ' - <button type="button" class="btn btn-sm btn-outline-danger ml-2 btn-reset" '.
-                          'data-id="'.$datanya->id_kehadiran_lembaga.'" '.
-                          'data-nama="'.$datanya->nama_lembaga.'">'.
-                          '<i class="fa fa-undo mr-1"></i> Reset</button>';
-            }
+		}	elseif ($datanya->status == "Sudah" || $datanya->status == "Revisi") {
+            $status_label = ($datanya->status == "Revisi") ? "Revisi / Belum dikirim" : "Belum dikirim";
+			$row[] = "<span class='badge badge-danger'>".$status_label." <i class='mdi mdi-alert-circle' data-name='mdi-alert-circle'></i></span>";
+			$aksi = '<a type="button" class="btn btn-success btn-xs" href="koreksi_pengajar/'.$encrypted_id.'")"><i class="mdi mdi-checkbox-marked-circle mr-1" ></i> Cek Barokah</a>';
+			if (in_array($this->session->userdata('jabatan'), ['SuperAdmin', 'Evaluasi'])) {
+			    $aksi .= ' - <button type="button" class="btn btn-outline-info btn-xs ml-1" onclick="lihat_riwayat('."'".$encrypted_id."'".')"><i class="fa fa-history"></i> Riwayat</button>';
+			}
 			$row[] = $aksi;
-
 		}  elseif ($datanya->status == "Terkirim" || $datanya->status == 'acc') {
 			$row[] = "<span class='badge badge-warning text-dark'>Sedang dikoreksi<span class='ms-1 fa fa-redo'></span></span>";
-            
-            $aksi = '<a type="button" class="btn btn-success btn-sm" href="'.base_url().'Validasi_pengajar/koreksi/'.$encrypted_id.'"><i class="mdi mdi-file-document-box mr-1" ></i> Lihat Rekap Kehadiran</a>';
-            
-            // Tambah tombol reset (SuperAdmin/Evaluasi Only)
-             if (in_array($this->session->userdata('jabatan'), ['SuperAdmin', 'Evaluasi'])) {
-                 $aksi .= ' - <button type="button" class="btn btn-sm btn-outline-danger ml-2 btn-reset" '.
-                          'data-id="'.$datanya->id_kehadiran_lembaga.'" '.
-                          'data-nama="'.$datanya->nama_lembaga.'">'.
-                          '<i class="fa fa-undo mr-1"></i> Reset</button>';
-            }
+			$aksi = '<a type="button" class="btn btn-success btn-sm" href="koreksi_pengajar/'.$encrypted_id.'")"><i class="mdi mdi-file-document-box mr-1" ></i> Lihat Rekap Kehadiran</a>';
+			if (in_array($this->session->userdata('jabatan'), ['SuperAdmin', 'Evaluasi'])) {
+			    $aksi .= ' - <button type="button" class="btn btn-outline-info btn-sm ml-1" onclick="lihat_riwayat('."'".$encrypted_id."'".')"><i class="fa fa-history"></i> Riwayat</button>';
+			}
 			$row[] = $aksi;
-
 		} else {
 			$row[] = "<span class='badge badge-success'>Sudah ditransfer<span class='ms-1 fa fa-check'></span></span>";
-            
-            $aksi = '<a type="button" class="btn btn-info btn-sm" href="'.base_url().'Laporan_pengajar/rincian/'.$encrypted_id.'"><i class="mdi mdi-eye mr-1" ></i> Lihat Rekap Barokah</a>';
-
-             // Tambah tombol reset (SuperAdmin/Evaluasi Only)
-             if (in_array($this->session->userdata('jabatan'), ['SuperAdmin', 'Evaluasi'])) {
-                 $aksi .= ' - <button type="button" class="btn btn-sm btn-outline-danger ml-2 btn-reset" '.
-                          'data-id="'.$datanya->id_kehadiran_lembaga.'" '.
-                          'data-nama="'.$datanya->nama_lembaga.'">'.
-                          '<i class="fa fa-undo mr-1"></i> Reset</button>';
-            }
+			$aksi = '<a type="button" class="btn btn-info btn-sm" href="koreksi_pengajar/'.$encrypted_id.'"<i class="mdi mdi-file-document-box mr-1" ></i> Lihat Rekap Barokah</a>';
+			if (in_array($this->session->userdata('jabatan'), ['SuperAdmin', 'Evaluasi'])) {
+			    $aksi .= ' - <button type="button" class="btn btn-outline-info btn-sm ml-1" onclick="lihat_riwayat('."'".$encrypted_id."'".')"><i class="fa fa-history"></i> Riwayat</button>';
+			}
 			$row[] = $aksi;
 		}
 			//add html for action
@@ -427,6 +412,10 @@ class Kehadiran extends CI_Controller {
 			echo json_encode(["status"=>false, "message"=>"Gagal menyimpan data kehadiran."]);
 		} else {
 			$this->db->trans_commit();
+			
+			$this->load->helper('hitung_barokah_helper');
+			catat_riwayat_barokah($id_kehadiran_lembaga, 'Sudah', 'Admin Lembaga menyimpan Draf kehadiran Struktural.');
+
 			echo json_encode(["status"=>true, "message"=>"Rekap kehadiran berhasil disimpan."]);
 		}
 	}
@@ -519,6 +508,10 @@ class Kehadiran extends CI_Controller {
 			]);
 		} else {
 			$this->db->trans_commit();
+			
+			$this->load->helper('hitung_barokah_helper');
+			catat_riwayat_barokah($id_kehadiran_lembaga, 'Sudah', 'Admin Lembaga menyimpan Draf kehadiran Pengajar.');
+
 			echo json_encode([
 				"status" => true,
 				"message" => "Rekap kehadiran pengajar berhasil disimpan."
@@ -533,7 +526,12 @@ class Kehadiran extends CI_Controller {
 			'status' 	=> "Terkirim", 	
 		);
         
-		$this->db->update('kehadiran_lembaga',$data, array('id_kehadiran_lembaga' => $this->input->post('id_kehadiran_lembaga')));
+		$id_keh = $this->input->post('id_kehadiran_lembaga');
+		$this->db->update('kehadiran_lembaga',$data, array('id_kehadiran_lembaga' => $id_keh));
+		
+		$this->load->helper('hitung_barokah_helper');
+		catat_riwayat_barokah($id_keh, 'Terkirim', 'Dokumen terkirim ke meja Evaluator untuk diperiksa.');
+
 		echo json_encode(array("status" => TRUE));
 	}
 	
@@ -653,6 +651,10 @@ class Kehadiran extends CI_Controller {
 				'status' 	    => 'Belum',
 			);
 			$simpan = $this->kehadiran_model->create('kehadiran_lembaga',$data);
+			
+			$this->load->helper('hitung_barokah_helper');
+			catat_riwayat_barokah($simpan, 'Belum', 'Blanko absensi Struktural dibuat.');
+			
 			echo json_encode(array("status" => TRUE));
 		}
 	}
@@ -678,9 +680,68 @@ class Kehadiran extends CI_Controller {
 				'status' 	    => 'Belum',
 			);
 			$simpan = $this->kehadiran_model->create('kehadiran_lembaga',$data);
+
+			$this->load->helper('hitung_barokah_helper');
+			catat_riwayat_barokah($simpan, 'Belum', 'Blanko absensi Pengajar dibuat.');
+
 			echo json_encode(array("status" => TRUE));
 		}
 	}
+
+    public function ajax_riwayat($id)
+    {
+        $decrypted_id = $this->decrypt_url($id);
+        
+        // Ambil riwayat log beserta join pelengkap tabel admin/umana untuk nama jika memungkinkan
+        $this->db->select('log_riwayat_barokah.*'); 
+        $this->db->from('log_riwayat_barokah');
+        $this->db->where('id_kehadiran_lembaga', $decrypted_id);
+        $this->db->order_by('waktu_eksekusi', 'DESC');
+        $logs = $this->db->get()->result();
+
+        $html = '';
+        if(empty($logs)){
+            $html = '<div class="text-center text-muted py-4"><i class="fa fa-info-circle fa-2x mb-2 d-block"></i>Belum ada riwayat tercatat.</div>';
+        } else {
+            foreach($logs as $log) {
+                $status_class = 'status-Belum';
+                $icon = 'fa-circle';
+                $title = $log->status_aksi;
+                $text_color = 'text-dark';
+                
+                if($log->status_aksi == 'Belum'){
+                    $status_class = 'status-Belum'; $icon = 'fa-file-o'; $title = 'Blanko Dibuat'; $text_color = 'text-secondary';
+                } elseif($log->status_aksi == 'Sudah'){
+                    $status_class = 'status-Sudah'; $icon = 'fa-save'; $title = 'Disimpan (Draf)'; $text_color = 'text-info';
+                } elseif($log->status_aksi == 'Terkirim'){
+                    $status_class = 'status-Terkirim'; $icon = 'fa-paper-plane'; $title = 'Terkirim ke Pimpinan / Evaluator'; $text_color = 'text-warning';
+                } elseif($log->status_aksi == 'Revisi'){
+                    $status_class = 'status-Revisi'; $icon = 'fa-undo'; $title = 'Dikembalikan / Revisi (Ditolak)'; $text_color = 'text-danger';
+                } elseif($log->status_aksi == 'acc'){
+                    $status_class = 'status-acc'; $icon = 'fa-check-circle'; $title = 'Disetujui (ACC)'; $text_color = 'text-success';
+                }
+                
+                $date_fmt = date('d M Y H:i:s', strtotime($log->waktu_eksekusi));
+                $admin_teks = ($log->id_pengguna) ? "diekseskusi oleh User ID: ".$log->id_pengguna : "diekseskusi oleh Sistem";
+                
+                $html .= '<li class="timeline-item">
+                            <div class="timeline-indicator '.$status_class.'"></div>
+                            <div class="timeline-content shadow-sm">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="timeline-title '.$text_color.'"><i class="fa '.$icon.' mr-1"></i> '.$title.'</span>
+                                <span class="timeline-date"><i class="fa fa-clock-o"></i> '.$date_fmt.'</span>
+                            </div>
+                            <div class="timeline-user mb-2 text-muted" style="font-size: 0.8rem;"><i class="fa fa-user-circle-o"></i> '.$admin_teks.'</div>';
+                
+                if(!empty($log->catatan_log)) {
+                    $html .= '<p class="mb-0 small text-dark border-top pt-2 mt-2" style="background: #f8f9fa; padding: 6px; border-radius: 4px;"><em>"'.htmlentities($log->catatan_log).'"</em></p>';
+                }
+                $html .= '</div></li>';
+            }
+        }
+
+        echo json_encode(['status' => true, 'html' => $html]);
+    }
 
 
 	public function ajax_edit($id)
@@ -712,8 +773,25 @@ class Kehadiran extends CI_Controller {
 	}
 	
 	public function cetak_pengajar($id){
-		// Redirect to new module
-		redirect('Laporan_pengajar/cetak/'.$id);
+		$list2 = $this->db->query("select tmt_maif, status_aktif, jumlah_hadir_piket, jumlah_hadir_15, jumlah_hadir_10, jafung, kehadiran_lembaga.status, status_sertifikasi, walkes, kehadiran_pengajar.id_kehadiran_pengajar, pengajar.kategori, jabatan_akademik, jumlah_sks, status_sertifikasi, ijazah_terakhir, id_bidang, tunj_anak, umana.gelar_depan, umana.gelar_belakang, kehormatan, kehadiran_lembaga.file, tunj_kel, kehadiran_lembaga.id_kehadiran_lembaga, 
+		nama_lengkap, status_nikah, tmt_dosen, tmt_guru, kehadiran_pengajar.id_pengajar, kehadiran_pengajar.bulan, kehadiran_pengajar.tahun, jumlah_hadir, nama_lembaga, nominal_transport from umana, pengajar, kehadiran_pengajar, kehadiran_lembaga,
+		lembaga, transport WHERE 
+		kehadiran_lembaga.id_kehadiran_lembaga = kehadiran_pengajar.id_kehadiran_lembaga and 
+		pengajar.id_pengajar = kehadiran_pengajar.id_pengajar and 
+		pengajar.nik = umana.nik and 
+		pengajar.id_lembaga = lembaga.id_lembaga and 
+		pengajar.kategori_trans = transport.id_transport and 
+		DATEDIFF(NOW(), pengajar.tgl_mulai) < pengajar.tgl_selesai and
+		kehadiran_lembaga.id_kehadiran_lembaga = $id order by nama_lengkap asc ")->result();
+		$tunkel_get = $this->db->get('tunkel')->result();
+		$tunj_anak_get = $this->db->get('tunjanak')->result();
+		// $kehormatan = $this->db->query('select * from ');
+		$this->Login_model->getsqurity() ;
+
+		$isi['isitunkel']  = $tunkel_get;
+		$isi['isitunj_anak']  = $tunj_anak_get;
+		$isi['isilist']  = $list2;
+		$this->load->view('Kehadiran_pengajar/Cetak',$isi);	
 	}
 	
 	public function cetak_potongan_pengajar($id){

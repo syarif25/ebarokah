@@ -161,6 +161,7 @@
                                         <option >Struktural</option>
                                         <option >Guru</option>
                                         <option >Dosen</option>
+                                        <option >Satpam</option>
                                     </select>
                                     <span class="help-block text-danger" style="color:red"></span>
                                 </div>

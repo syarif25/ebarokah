@@ -19,9 +19,9 @@ class Laporan_satpam extends CI_Controller {
 		$this->Login_model->getsqurity();
         $id_lembaga_satpam = 59; // Hardcoded Satpam ID
         
-        $isi['css'] 	= 'laporan_satpam/Css';
-		$isi['content'] = 'laporan_satpam/Index';
-		$isi['ajax'] 	= 'laporan_satpam/Ajax';
+        $isi['css'] 	= 'Laporan_satpam/Css';
+		$isi['content'] = 'Laporan_satpam/Index';
+		$isi['ajax'] 	= 'Laporan_satpam/Ajax';
         
         $data_period = $this->db->query("
             SELECT kl.*, l.nama_lembaga 
@@ -101,7 +101,7 @@ class Laporan_satpam extends CI_Controller {
         $data['header'] = $header;
         $data['data'] = $this->Laporan_model->get_datatables_rincian_satpam($decrypted_id);
     
-        $this->load->view('laporan_satpam/Cetak_pdf', $data);
+        $this->load->view('Laporan_satpam/Cetak_pdf', $data);
     }
     
     // AJAX Method for DataTable

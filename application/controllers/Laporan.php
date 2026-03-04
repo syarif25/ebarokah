@@ -79,9 +79,7 @@ class laporan extends CI_Controller {
 			$row[] = $no++;
 			$row[] = htmlentities($datanya->nik);
 			$row[] = htmlentities($datanya->nama_lengkap);
-			$row[] = htmlentities(mb_strlen($datanya->alamat_domisili, 'UTF-8') > 20 
-					? mb_substr($datanya->alamat_domisili, 0, 20, 'UTF-8') . '...' 
-					: $datanya->alamat_domisili);
+			$row[] = htmlentities($datanya->alamat_domisili);
 			//add html for action
 			$row[] = '<a type="button" class="btn btn-outline-danger btn-sm" href="rincian_umana/'.$datanya->nik.'"
 			title="Track" ><i class="bx bx-edit mr-1" ></i> Rincian</a>';
@@ -90,10 +88,6 @@ class laporan extends CI_Controller {
 		}
 			$output = array("data" => $data);
 		echo json_encode($output);
-	}
-
-	public function fullscreen(){
-		$this->load->view('Detail_fullscreen.php');
 	}
 
     public function rincian($id)
@@ -128,7 +122,7 @@ class laporan extends CI_Controller {
 		$this->load->view('Template',$isi);
 	}
 	
-	public function get_kehadiran_data()
+		public function get_kehadiran_data()
 	{
 		$id = $this->session->userdata('nik');
 		$list = $this->Laporan_model->get_datatables_rincian_perumana($id);

@@ -21,18 +21,10 @@
         >
   </div>
 
-  <!-- <div class="page-title page-title-fixed">
-    <h1>Ebarokah</h1>
-    <a href="<?php echo base_url() ?>/Login/logout" class="header-icon header-icon-2">
-        <i class="fa fa-sign-out"></i>
-        </a>
-  </div> -->
   <div class="page-title page-title-fixed" style="opacity: 1;">
       <h1>Ebarokah</h1>
       <a href="<?php echo base_url() ?>/Login/logout" class="page-title-icon shadow-xl bg-theme color-theme" data-menu="menu-main"><i class="fa fa-sign-out"></i></a>
   </div>
-
-
   <div class="page-title-clear"></div>
 
     <div class="page-content">
@@ -141,7 +133,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // ===== Header angka (nama/total/barokah) =====
+  // ===== Header angka  =====
   const elNama    = document.getElementById('namaGelar');
   const elAktif   = document.getElementById('lembagaAktif');
   const elIni     = document.getElementById('barokahIni');
@@ -165,7 +157,6 @@ document.addEventListener('DOMContentLoaded', function () {
         elLalu.textContent  = res.total_bulan_lalu_formatted || 'Rp. 0';
         document.getElementById('barokahIni').textContent = res.total_bulan_ini_formatted || 'Rp. 0';
         document.getElementById('barokahLalu').textContent = res.total_bulan_lalu_formatted || 'Rp. 0';
-        // Tambahkan label periode
         const pIni = document.getElementById('periodeIni');
         const pLalu = document.getElementById('periodeLalu');
         if (pIni)  pIni.textContent  = `${res.label_bulan_ini || '-'} ${res.label_tahun_ini || ''}`;
@@ -195,17 +186,14 @@ document.addEventListener('DOMContentLoaded', function () {
   .then(res => {
     if (!res.ok) return;
 
-    // Header angka
     elIni.textContent  = res.total_bulan_ini_formatted  || 'Rp. 0';
     elLalu.textContent = res.total_bulan_lalu_formatted || 'Rp. 0';
 
-    // Heading & badge total
     if (headIni)  headIni.textContent  = `${res.label_bulan_ini || 'Bulan Ini'} ${res.label_tahun_ini || ''}`.trim();
     if (headLalu) headLalu.textContent = `${res.label_bulan_lalu || 'Bulan Lalu'} ${res.label_tahun_lalu || ''}`.trim();
     if (badgeIni)  badgeIni.textContent  = res.total_bulan_ini_formatted  || 'Rp. 0';
     if (badgeLalu) badgeLalu.textContent = res.total_bulan_lalu_formatted || 'Rp. 0';
 
-    // Helper render list
     const render = (ul, rows, emptyText) => {
       ul.innerHTML = '';
       if (!rows || !rows.length) {

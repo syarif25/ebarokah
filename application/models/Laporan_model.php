@@ -102,7 +102,7 @@ class Laporan_model extends CI_Model {
             tbp.jumlah_hadir_10, tbp.nominal_hadir_10,
             tbp.jumlah_hadir_piket, tbp.rank_piket, tbp.barokah_piket,
             tbp.tunkel, tbp.tun_anak, tbp.kehormatan, tbp.walkes, tbp.khusus, tbp.potongan,
-            tbp.diterima, tbp.status, u.status_aktif, p.ijazah_terakhir
+            tbp.diterima, tbp.status, u.status_aktif, u.ijazah_terakhir
             FROM kehadiran_lembaga kl
             JOIN kehadiran_pengajar kp ON kl.id_kehadiran_lembaga = kp.id_kehadiran_lembaga
             JOIN pengajar p ON kp.id_pengajar = p.id_pengajar

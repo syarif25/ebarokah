@@ -65,7 +65,7 @@ class Validasi extends CI_Controller {
             $row[] = htmlentities($datanya->bulan." ".$datanya->tahun);
 			// $row[] = htmlentities($datanya->jml)." org";
 			$row[] = htmlentities($datanya->kategori);
-			if ($datanya->status == 'acc'){
+		    if ($datanya->status == 'acc'){
 				$row[] = '<a class="btn btn-success  me-1 px-3"><i class="fa fa-check m-0"></i> Jml Kehadiran</a>';
 				$row[] = '<span class="text-success">Sudah dikoreksi </span><br><small>(Menunggu ditransfer)</small>';
 			} elseif ($datanya->status == 'Terkirim') {
@@ -74,7 +74,7 @@ class Validasi extends CI_Controller {
 				} elseif ($datanya->kategori == 'Satpam'){
 					$row[] = '<a href="validasi_satpam/koreksi_satpam/'.$encrypted_id.'"  target="_blank" class="btn btn-secondary  me-1 px-3"><i class="fa fa-clipboard m-0"></i> Jml Kehadiran</a>';
 				} else {
-					$row[] = '<a href="validasi/koreksi_pengajar/'.$encrypted_id.'"  class="btn btn-info  me-1 px-3"><i class="fa fa-clipboard m-0"></i> Jml Kehadiran</a>';
+					$row[] = '<a href="validasi_pengajar/koreksi/'.$encrypted_id.'"  class="btn btn-info  me-1 px-3"><i class="fa fa-clipboard m-0"></i> Jml Kehadiran</a>';
 				}
 				$row[] = '<span class="text-danger">Belum dikoreksi</span>';
 			} else {
@@ -121,13 +121,8 @@ class Validasi extends CI_Controller {
     // 		$isi['isitbk']  = $data_elemen;
     		$this->load->view('Template',$isi);
 		}
+		
 	}
-
-	public function koreksi_fullscreen(){
-		$this->load->view('Validasi_fullscreen/Validasi_fullscreen.php');
-	}
-
-	
 
 	public function save_data() {
 		$id = $this->input->post('id_kehadiran_lembaga');

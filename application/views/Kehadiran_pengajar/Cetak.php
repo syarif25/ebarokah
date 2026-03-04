@@ -150,11 +150,11 @@
             foreach($isitunj_anak as $nominaltunj_anak);
             foreach($isilist as $key){
                 $jml_kehadiran = $key->jumlah_hadir * $key->nominal_transport;
-                $jml_kehadiran_15 = $key->jumlah_hadir_15 * 15000;
-                $jml_kehadiran_10 = $key->jumlah_hadir_10 * 10000;
-                $tahun_madrasah = 2025;
-                $tahun_sekolah = 2025;
-                $tahun_pt = 2025;
+                $nominal_hadir_15 = $key->jumlah_hadir_15 * 15000;
+                $nominal_hadir_10 = $key->jumlah_hadir_10 * 10000;
+                $tahun_madrasah = 2026;
+                $tahun_sekolah = 2026;
+                $tahun_pt = 2026;
                 
                 if (($key->kategori == 'GTY' && $key->id_bidang == "Bidang DIKJAR-M") || ($key->kategori == 'GTT' && $key->id_bidang == "Bidang DIKJAR-M")) {
                     $mp = $tahun_madrasah - date("Y", strtotime($key->tmt_guru));
@@ -220,8 +220,6 @@
                     $tunj_walkes = 75000;
                 } else if($key->walkes == "walkes_sklh") {
                     $tunj_walkes = 50000;
-                } else if($key->walkes == "walkes_amsilati") {
-                    $tunj_walkes = 25000;
                 } else {
                     $tunj_walkes = 0;
                 }
@@ -376,8 +374,8 @@
                 }
                 //   ==================================================================================================================  
                 
-                $diterima = $barokah_piket + $jml_kehadiran + $jml_kehadiran_15 + $jml_kehadiran_10 + $tunkel + $tunja_anak + $mengajar + $dty + $jafung + $kehormatan + $tunj_walkes + $tambahan - $potongan;
-                $jumlah = $barokah_piket + $jml_kehadiran + $jml_kehadiran_15 + $jml_kehadiran_10 + $tunkel + $tunja_anak + $mengajar + $dty + $jafung + $kehormatan + $tunj_walkes + $tambahan ;
+                $diterima = $barokah_piket + $jml_kehadiran + $nominal_hadir_15 + $nominal_hadir_10 + $tunkel + $tunja_anak + $mengajar + $dty + $jafung + $kehormatan + $tunj_walkes + $tambahan - $potongan;
+                $jumlah = $barokah_piket + $jml_kehadiran + $nominal_hadir_15 + $nominal_hadir_10 + $tunkel + $tunja_anak + $mengajar + $dty + $jafung + $kehormatan + $tunj_walkes + $tambahan ;
                 
 
             $pdf->Cell(1,7,'',0,1);
