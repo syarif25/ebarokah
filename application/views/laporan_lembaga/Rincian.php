@@ -17,6 +17,16 @@
                         <p class="text-muted mb-0"><i class="fas fa-calendar"></i> Periode: <?php echo isset($data_rincian[0]) ? htmlentities($data_rincian[0]->bulan . ' ' . $data_rincian[0]->tahun) : '-'; ?></p>
                     </div>
                     <div>
+                        <?php 
+                            $id_lembaga_rincian   = isset($data_rincian[0]->id_lembaga)            ? $data_rincian[0]->id_lembaga            : null;
+                            $id_kehadiran_rincian = isset($data_rincian[0]->id_kehadiran_lembaga)   ? $data_rincian[0]->id_kehadiran_lembaga  : null;
+                            $status_rincian       = isset($data_rincian[0]->status)                 ? $data_rincian[0]->status                : '-';
+                        ?>
+                        <?php if ($id_lembaga_rincian): ?>
+                        <a href="<?php echo base_url('Kehadiran_struktural/cetak_potongan/'.$id_lembaga_rincian.'/'.$id_kehadiran_rincian); ?>" target="_blank" class="btn btn-danger text-white btn-sm me-2 mr-1">
+                            <i class="fas fa-cut mr-1"></i> Potongan
+                        </a>
+                        <?php endif; ?>
                         <a href="<?php echo base_url('laporan_lembaga/cetak/' . $encrypted_id); ?>" target="_blank" class="btn btn-warning text-dark btn-sm me-2">
                             <i class="fas fa-print"></i> Cetak
                         </a>
@@ -63,7 +73,14 @@
                         <div class="col-md-3">
                             <div class="alert alert-info">
                                 <strong><i class="fas fa-calendar-check"></i> Status:</strong><br>
-                                <h5 class="mb-0 mt-2"><span class="badge badge-success">Selesai</span></h5>
+                                <?php 
+                                    $badge_color = 'success';
+                                    if ($status_rincian == 'Terkirim') $badge_color = 'warning';
+                                    elseif ($status_rincian == 'Revisi') $badge_color = 'danger';
+                                    elseif ($status_rincian == 'Sudah') $badge_color = 'info';
+                                    elseif ($status_rincian == 'Belum') $badge_color = 'secondary';
+                                ?>
+                                <h5 class="mb-0 mt-2"><span class="badge badge-<?= $badge_color ?>"><?= htmlentities($status_rincian) ?></span></h5>
                             </div>
                         </div>
                     </div>

@@ -52,30 +52,34 @@
 
         foreach ($isilist as $periode) {}
 
-            $pdf->ln(5);
+            $pdf->ln(3);
             
-            $pdf->SetFont('arial', '', 10);
-            // $pdf->Cell(200, 2, '', '0', '0', 'L', false);
-            $pdf->Cell(50, 2, 'RINCIAN POTONGAN BAROKAH UMANA STRUKTURAL', '0', '0', 'L', false);
-            $pdf->ln(5);
-            $pdf->SetFont('arial', 'B', 10);
-            $pdf->Cell(200, 2, strtoupper($periode->nama_lembaga), '0', '0', 'L', false);
-            $pdf->Cell(50, 2, '', '0', '0', 'L', false);
-            if ($periode->id_bidang == "Bidang DIKTI"){
-                $pdf->Cell(50, 2,'Barokah Dosen', '0', '1', 'L', false);
-            } else {
-                $pdf->Cell(50, 2,'Barokah Guru', '0', '1', 'L', false);
-            }
-        
+            $pdf->SetFont('arial', '', 9);
+            $pdf->Cell(0, 5, 'RINCIAN POTONGAN BAROKAH UMANA STRUKTURAL', '0', '1', 'L', false);
             
-            // $pdf->Cell(50, 2, 'Bulan : '.$periode->bulan.' '.$periode->tahun, '0', '1', 'L', false);
+            // Gunakan $lembaga_info (dikirim terpisah dari controller) agar aman walau $isilist kosong
+            $nama_lembaga_header = isset($lembaga_info->nama_lembaga) ? strtoupper($lembaga_info->nama_lembaga) : '';
+            $id_bidang_header    = isset($lembaga_info->id_bidang)    ? $lembaga_info->id_bidang : '';
+            // $jenis_barokah       = ($id_bidang_header == "Bidang DIKTI") ? 'Barokah Dosen' : 'Barokah Guru';
 
-            $pdf->Cell(1,7,'',0,1);
+            // Baris: Nama Lembaga (kiri) | Jenis Barokah (kanan)
+            $pdf->SetFont('arial', 'B', 10);
+            $pdf->Cell(160, 6, $nama_lembaga_header, '0', '0', 'L', false);
+            $pdf->SetFont('arial', '', 9);
+            $pdf->Cell(0, 6, 'Barokah Struktural', '0', '1', 'R', false);
+
+            // Baris: Periode (jika ada)
+            if (!empty($bulan_laporan) || !empty($tahun_laporan)) {
+                $pdf->SetFont('arial', 'I', 9);
+                $pdf->Cell(0, 5, 'Periode : ' . ucfirst($bulan_laporan ?? '') . ' ' . ($tahun_laporan ?? ''), '0', '1', 'L', false);
+            }
+
+            $pdf->ln(3);
             $pdf->Cell(40, 2, '', '0', '0', 'L', false);
             $pdf->SetFont('arial','B',6);
             // $pdf->SetFillColor(128, 128, 128);
             $pdf->Cell(7,7,'N0',1,0,'C');
-            $pdf->Cell(40,7,'NAMA LENGKAP',1,0,'C');
+            $pdf->Cell(55,7,'NAMA LENGKAP',1,0,'C');
             $pdf->Cell(40,7,'NAMA POTONGAN',1,0,'C');
             $pdf->Cell(40,7,'NOMINAL',1,0,'C');
             $pdf->Cell(0,1,'',0,1);
@@ -86,9 +90,14 @@
             $pdf->ln(7);
             
             foreach($isilist as $key){
+            // Gabungkan gelar depan + nama + gelar belakang, format proper case
+            $gelar_depan   = !empty($key->gelar_depan)   ? trim($key->gelar_depan).' '   : '';
+            $gelar_belakang = !empty($key->gelar_belakang) ? ', '.trim($key->gelar_belakang) : '';
+            $nama_tampil   = $gelar_depan . ucwords(strtolower(trim($key->nama_lengkap))) . $gelar_belakang;
+
             $pdf->Cell(40, 2, '', '0', '0', 'L', false);
             $pdf->Cell(7,7,$no++,1,0,'C');
-            $pdf->Cell(40,7,$key->nama_lengkap,1,0,'L');
+            $pdf->Cell(55,7,$nama_tampil,1,0,'L');
             $pdf->Cell(40,7,$key->nama_potongan,1,0,'L');
             $pdf->Cell(40,7,rupiah($key->nominal_potongan),1,0,'C');
             $pdf->Cell(0,7,'',0,1);

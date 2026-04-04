@@ -94,7 +94,9 @@
       if(date('N', mktime(0,0,0, $bulan_int, $i, $thn_int)) == 5) $jumlah_jumat++;
     }
     
-    $hari_kerja = $total_hari - $jumlah_jumat;
+    $libur_pesantren = isset($periode->libur_pesantren) ? (int)$periode->libur_pesantren : 0;
+    $hari_kerja = $total_hari - $jumlah_jumat - $libur_pesantren;
+    if ($hari_kerja < 0) $hari_kerja = 0;
   ?>
   <div class="alert alert-info py-2 px-3 mb-3 d-flex align-items-center">
     <i class="fa fa-info-circle mr-2" style="font-size: 1.2rem;"></i>
@@ -107,6 +109,12 @@
       <span class="ml-2">
         <i class="fa fa-ban mr-1 text-danger"></i> Jumat (Libur): <strong><?= $jumlah_jumat ?></strong>
       </span>
+      <?php if($libur_pesantren > 0): ?>
+      <span class="ml-2">|</span>
+      <span class="ml-2">
+        <i class="fa fa-calendar-minus-o mr-1 text-warning"></i> Libur Pesantren: <strong><?= $libur_pesantren ?></strong>
+      </span>
+      <?php endif; ?>
       <span class="ml-2">|</span>
       <span class="ml-2">
         <i class="fa fa-check-circle mr-1 text-success"></i> Hari Kerja: <strong><?= $hari_kerja ?></strong> (Sabtu-Kamis)
@@ -164,7 +172,23 @@
                 <?php echo !empty($row->tmt_struktural) ? htmlentities(date('Y', strtotime($row->tmt_struktural))) : '-'; ?>
                 </td>
 
-                <td class="cell-right <?= in_array('tunjab', $changed) ? 'text-danger font-weight-bold' : '' ?>" <?= in_array('tunjab', $changed) ? 'title="Nominal berubah dari bulan sebelumnya"' : '' ?>><?php echo number_format((int)$row->tunjab,0,',','.'); ?></td>
+                <?php
+                    // Cek punishment tunjab (kehadiran < 50%)
+                    $is_punish       = !empty($row->is_punishment_tunjab);
+                    $tunjab_asli     = (int)($row->tunjab_asli ?? $row->tunjab);
+                    $tunjab_class    = $is_punish
+                        ? 'text-danger font-weight-bold'
+                        : (in_array('tunjab', $changed) ? 'text-warning font-weight-bold' : '');
+                    $tunjab_title    = $is_punish
+                        ? 'title="⚠️ Punishment Kehadiran < 50%. Tunjab Asli: ' . number_format($tunjab_asli, 0, ',', '.') . '"'
+                        : (in_array('tunjab', $changed) ? 'title="Nominal berubah dari bulan sebelumnya"' : '');
+                ?>
+                <td class="cell-right <?= $tunjab_class ?>" <?= $tunjab_title ?>>
+                    <?php if ($is_punish): ?>
+                        <i class="fa fa-exclamation-triangle text-danger mr-1" title="Punishment Kehadiran < 50%"></i>
+                    <?php endif; ?>
+                    <?= number_format((int)$row->tunjab, 0, ',', '.') ?>
+                </td>
                 <td class="cell-center"><?php echo (int)$row->mp; ?></td>
                 <td class="cell-right <?= in_array('tmp', $changed) ? 'text-danger font-weight-bold' : '' ?>" <?= in_array('tmp', $changed) ? 'title="Nominal berubah dari bulan sebelumnya"' : '' ?>><?php echo number_format((int)$row->tmp,0,',','.'); ?></td>
 

@@ -510,11 +510,37 @@ class Kehadiran_struktural extends CI_Controller {
 	
 	
 
-    public function cetak_potongan($id){
+    public function cetak_potongan($id, $id_kehadiran = null){
+		// Jika dipanggil dari Laporan (ada id_kehadiran), 
+		// cari periode bulan/tahun laporan agar potongan historis bisa ikut tampil
+		$filter_tanggal = "DATE_FORMAT(NOW(), '%Y-%m-01')"; // Default: potongan aktif saat ini
+
+		if (!empty($id_kehadiran)) {
+			$periode_laporan = $this->db->get_where('kehadiran_lembaga', ['id_kehadiran_lembaga' => $id_kehadiran])->row();
+			if ($periode_laporan) {
+				// Konversi nama bulan Indonesia ke angka untuk membuat tanggal awal periode
+				$map_bulan = [
+					'januari'=>'01','februari'=>'02','maret'=>'03','april'=>'04','mei'=>'05','juni'=>'06',
+					'juli'=>'07','agustus'=>'08','september'=>'09','oktober'=>'10','november'=>'11','desember'=>'12'
+				];
+				$bln_raw = strtolower(trim($periode_laporan->bulan));
+				$bln_num = is_numeric($bln_raw) ? str_pad((int)$bln_raw, 2 ,'0', STR_PAD_LEFT)
+						 : ($map_bulan[$bln_raw] ?? date('m'));
+				$thn_str = (int)$periode_laporan->tahun;
+				// Filter: tampilkan potongan yang berlaku pada bulan laporan tsb
+				$filter_tanggal = "'{$thn_str}-{$bln_num}-01'";
+				// Simpan info periode untuk ditampilkan di PDF
+				$isi['bulan_laporan'] = ucfirst($bln_raw);
+				$isi['tahun_laporan'] = $thn_str;
+			}
+		}
+
 		// Query to get the deduction data of the teachers
 		$query = "
 			SELECT 
 				u.nama_lengkap, 
+				u.gelar_depan,
+				u.gelar_belakang,
 				pot.nama_potongan, 
 				pp.nominal_potongan,
 				l.nama_lembaga,
@@ -530,19 +556,23 @@ class Kehadiran_struktural extends CI_Controller {
 			JOIN
 				lembaga l ON p.id_lembaga = l.id_lembaga
 			WHERE 
-				pp.max_periode_potongan >= DATE_FORMAT(NOW(), '%Y-%m-01')
+				pp.max_periode_potongan >= {$filter_tanggal}
 				AND p.id_lembaga = ?
 			ORDER BY u.nama_lengkap ASC
 		";
 	
 		// Execute the query with parameter binding
 		$list2 = $this->db->query($query, array($id))->result();
+
+		// Fetch lembaga info secara terpisah agar tetap tersedia walau $isilist kosong
+		$lembaga_info = $this->db->get_where('lembaga', ['id_lembaga' => $id])->row();
 	
 		// Login security
 		$this->Login_model->getsqurity();
 	
 		// Store the query result in an array to send to the view
-		$isi['isilist'] = $list2;
+		$isi['isilist']      = $list2;
+		$isi['lembaga_info'] = $lembaga_info;
 	
 		// Load the view with the prepared data
 		$this->load->view('Kehadiran_struktural/Potongan_struktural', $isi);

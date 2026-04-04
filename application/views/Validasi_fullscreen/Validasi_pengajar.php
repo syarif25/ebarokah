@@ -309,17 +309,10 @@ if (isset($isilist) && !empty($isilist)) {
         }
         if ($key->status_aktif == "Cuti 50%") { $tunja_anak *= 0.5; } elseif ($key->status_aktif == "Cuti 100%") { $tunja_anak = 0; }
 
-        // Walkes
-        if ($key->walkes == "Ya" ){
-            $tunj_walkes = 100000;
-        } else if($key->walkes == "walkes_sklh") {
-            $tunj_walkes = 75000;
-        } else if($key->walkes == "walkes_amsilati") {
-            $tunj_walkes = 25000;
-        } else {
-            $tunj_walkes = 0;
-        }
-        if ($key->status_aktif == "Cuti 50%") { $tunj_walkes *= 0.5; } elseif ($key->status_aktif == "Cuti 100%") { $tunj_walkes = 0; }
+        // Walkes — dari $walkes_config yang dikirim controller (sumber: tabel master_tarif_walkes)
+        $walkes_key  = $key->walkes ?? '';
+        $tunj_walkes = (int)(isset($walkes_config[$walkes_key]) ? $walkes_config[$walkes_key] : 0);
+        if ($key->status_aktif == "Cuti 50%") { $tunj_walkes = (int)round($tunj_walkes * 0.5); } elseif ($key->status_aktif == "Cuti 100%") { $tunj_walkes = 0; }
         
         // Rank / Honor Mengajar
         $rank = 0; // Default
@@ -379,14 +372,14 @@ if (isset($isilist) && !empty($isilist)) {
         }
         if ($key->status_aktif == "Cuti 50%") { $jafung *= 0.5; } elseif ($key->status_aktif == "Cuti 100%") { $jafung = 0; }
         
-        // Potongan
+        // Potongan — filter historis pakai $periode_date, bukan CURDATE()
             $potongan = 0;
-            $hitung_potongan = $this->db->query("SELECT SUM(nominal_potongan) as jumlah from potongan_pengajar, pengajar where potongan_pengajar.id_pengajar = pengajar.id_pengajar and potongan_pengajar.id_pengajar = $key->id_pengajar and potongan_pengajar.max_periode_potongan >= CURDATE() ")->result();
+            $hitung_potongan = $this->db->query("SELECT SUM(nominal_potongan) as jumlah from potongan_pengajar where id_pengajar = $key->id_pengajar and (max_periode_potongan IS NULL OR max_periode_potongan >= '$periode_date') ")->result();
         if(!empty($hitung_potongan)) { foreach($hitung_potongan as $jumlah_potongan) { $potongan = $jumlah_potongan->jumlah; } }
         
-        // Tambahan / BK
+        // Tambahan — filter historis pakai $periode_date
             $tambahan = 0;
-        $hitung_tambahan = $this->db->query("SELECT SUM(nominal_tambahan) as jumlah from barokah_tambahan, pengajar where barokah_tambahan.id_pengajar = pengajar.id_pengajar and barokah_tambahan.id_pengajar = $key->id_pengajar and barokah_tambahan.max_periode_tambahan >= CURDATE() ")->result();
+        $hitung_tambahan = $this->db->query("SELECT SUM(nominal_tambahan) as jumlah from barokah_tambahan where id_pengajar = $key->id_pengajar and (max_periode_tambahan IS NULL OR max_periode_tambahan >= '$periode_date') ")->result();
         if(!empty($hitung_tambahan)) { foreach($hitung_tambahan as $jumlah_tambahan) { $tambahan = $jumlah_tambahan->jumlah; } }
         
         // CALCULATE TOTALS FOR LIVE DATA
@@ -621,16 +614,10 @@ if (isset($isilist) && !empty($isilist)) {
                                 }
                                 if ($key->status_aktif == "Cuti 50%") { $tunja_anak *= 0.5; } elseif ($key->status_aktif == "Cuti 100%") { $tunja_anak = 0; }
                                 
-                                if ($key->walkes == "Ya") {
-                                    $tunj_walkes = 100000;
-                                } else if($key->walkes == "walkes_sklh") {
-                                    $tunj_walkes = 75000;
-                                } else if($key->walkes == "walkes_amsilati") {
-                                    $tunj_walkes = 25000;
-                                } else {
-                                    $tunj_walkes = 0;
-                                }
-                                if ($key->status_aktif == "Cuti 50%") { $tunj_walkes *= 0.5; } elseif ($key->status_aktif == "Cuti 100%") { $tunj_walkes = 0; }
+                                // Walkes — dari $walkes_config yang dikirim controller
+                                $walkes_key  = $key->walkes ?? '';
+                                $tunj_walkes = (int)(isset($walkes_config[$walkes_key]) ? $walkes_config[$walkes_key] : 0);
+                                if ($key->status_aktif == "Cuti 50%") { $tunj_walkes = (int)round($tunj_walkes * 0.5); } elseif ($key->status_aktif == "Cuti 100%") { $tunj_walkes = 0; }
                                 
                                 $rank = 0;
                                 if ($key->kategori == 'GTY' or $key->kategori == 'GTT') {
@@ -686,12 +673,14 @@ if (isset($isilist) && !empty($isilist)) {
                                 }
                                 if ($key->status_aktif == "Cuti 50%") { $jafung *= 0.5; } elseif ($key->status_aktif == "Cuti 100%") { $jafung = 0; }
                                 
+                                // Potongan — filter historis pakai $periode_date
                                 $potongan = 0;
-                                $hitung_potongan = $this->db->query("SELECT SUM(nominal_potongan) as jumlah from potongan_pengajar, pengajar where potongan_pengajar.id_pengajar = pengajar.id_pengajar and potongan_pengajar.id_pengajar = $key->id_pengajar and potongan_pengajar.max_periode_potongan >= CURDATE() ")->result();
+                                $hitung_potongan = $this->db->query("SELECT SUM(nominal_potongan) as jumlah from potongan_pengajar where id_pengajar = $key->id_pengajar and (max_periode_potongan IS NULL OR max_periode_potongan >= '$periode_date') ")->result();
                                 if(!empty($hitung_potongan)) { foreach($hitung_potongan as $jumlah_potongan) { $potongan = $jumlah_potongan->jumlah; } }
                                 
+                                // Tambahan — filter historis pakai $periode_date
                                 $tambahan = 0;
-                                $hitung_tambahan = $this->db->query("SELECT SUM(nominal_tambahan) as jumlah from barokah_tambahan, pengajar where barokah_tambahan.id_pengajar = pengajar.id_pengajar and barokah_tambahan.id_pengajar = $key->id_pengajar and barokah_tambahan.max_periode_tambahan >= CURDATE() ")->result();
+                                $hitung_tambahan = $this->db->query("SELECT SUM(nominal_tambahan) as jumlah from barokah_tambahan where id_pengajar = $key->id_pengajar and (max_periode_tambahan IS NULL OR max_periode_tambahan >= '$periode_date') ")->result();
                                 if(!empty($hitung_tambahan)) { foreach($hitung_tambahan as $jumlah_tambahan) { $tambahan = $jumlah_tambahan->jumlah; } }
                                 
                                 $diterima = $barokah_piket + $jml_kehadiran + $nominal_hadir_15 + $nominal_hadir_10 + $tunkel + $tunja_anak + $mengajar + $dty + $jafung + $kehormatan + $tunj_walkes + $tambahan - $potongan;

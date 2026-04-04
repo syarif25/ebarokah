@@ -148,6 +148,12 @@
             }
             $tahun_default = isset($tahun_acuan_map['Pengurus']) ? $tahun_acuan_map['Pengurus'] : (int)date('Y');
             
+            // Map nama bulan Indonesia ke angka (konsisten dengan hitung_barokah_helper.php)
+            $map_bulan_id = [
+                'januari'=>1,'februari'=>2,'maret'=>3,'april'=>4,'mei'=>5,'juni'=>6,
+                'juli'=>7,'agustus'=>8,'september'=>9,'oktober'=>10,'november'=>11,'desember'=>12
+            ];
+
             foreach($isilist as $key){
                 // Get tahun acuan dynamically
                 $id_bidang_key = trim($key->id_bidang ?? '');
@@ -159,8 +165,15 @@
                                             
                     $jml_kehadiran = $key->jumlah_hadir * $key->nominal_transport;
                     
-                    // Calculate wajib hadir & percentage
-                    $bulan_int = is_numeric($periode->bulan) ? (int)$periode->bulan : date('n', strtotime($periode->bulan));
+                    // Konversi nama bulan Indonesia dengan benar (strtotime TIDAK support Bahasa Indonesia)
+                    $bulan_raw = strtolower(trim($periode->bulan));
+                    if (is_numeric($bulan_raw)) {
+                        $bulan_int = (int)$bulan_raw;
+                    } elseif (isset($map_bulan_id[$bulan_raw])) {
+                        $bulan_int = $map_bulan_id[$bulan_raw];
+                    } else {
+                        $bulan_int = (int)date('n'); // fallback ke bulan sekarang
+                    }
                     $tahun_int = (int)$periode->tahun;
                     $total_hari = (int)date('t', mktime(0, 0, 0, $bulan_int, 1, $tahun_int));
                     

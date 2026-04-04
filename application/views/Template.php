@@ -196,6 +196,7 @@
                             <li><a href="<?php echo base_url() ?>Lembaga">Lembaga</a></li>
                             <li><a href="<?php echo base_url() ?>Tahun_acuan">Tahun Acuan</a></li>
 							<li><a href="<?php echo base_url() ?>Ketentuan_barokah">Ketentuan Tunjab</a></li>
+                             <li><a href="<?php echo base_url() ?>Libur_pesantren">Libur Pesantren/Nasional</a></li>
 							 <li><a href="<?php echo base_url() ?>Potongan">Jenis Potongan</a></li> 
 							<li><a href="<?php echo base_url() ?>Tunkel">Tunkel</a></li>
 							<!-- <li><a href="#">Masa Pengabdian</a></li> -->
@@ -404,6 +405,7 @@
 							<li><a href="<?php echo base_url() ?>Umana">Umana'</a></li>
                             <li><a href="<?php echo base_url() ?>Lembaga">Lembaga</a></li>
 							<li><a href="<?php echo base_url() ?>Ketentuan_barokah">Ketentuan Tunjab</a></li>
+                             <li><a href="<?php echo base_url() ?>Libur_pesantren">Libur Pesantren/Nasional</a></li>
 							 <!--<li><a href="<?php echo base_url() ?>Potongan">Jenis Potongan</a></li> -->
 							<li><a href="<?php echo base_url() ?>Tunkel">Tunkel</a></li>
 							<!-- <li><a href="#">Masa Pengabdian</a></li> -->

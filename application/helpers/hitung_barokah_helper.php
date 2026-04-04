@@ -9,16 +9,24 @@ if (!function_exists('hitung_wajib_hadir_bulanan')) {
      * @param int $bulan   Bulan (1-12)
      * @param int $tahun   Tahun (misal: 2024)
      * @param int $wajib_hadir_per_minggu  Dari ketentuan_barokah.wajib_hadir
+     * @param int $libur_ekstra Jumlah hari libur ekstra (contoh: Libur pesantren/nasional)
      * @return int Jumlah hari wajib hadir dalam bulan tersebut
      */
-    function hitung_wajib_hadir_bulanan($bulan, $tahun, $wajib_hadir_per_minggu)
+    function hitung_wajib_hadir_bulanan($bulan, $tahun, $wajib_hadir_per_minggu, $libur_ekstra = 0)
     {
         // Konversi String Bulan (e.g. 'Januari') ke Angka (1-12)
         $map_bulan = [
             'januari'=>1, 'februari'=>2, 'maret'=>3, 'april'=>4, 'mei'=>5, 'juni'=>6,
             'juli'=>7, 'agustus'=>8, 'september'=>9, 'oktober'=>10, 'november'=>11, 'desember'=>12
         ];
-        $bln = isset($map_bulan[strtolower($bulan)]) ? $map_bulan[strtolower($bulan)] : (int)date('n');
+        // Handle input angka (1-12) ATAU nama bulan Indonesia
+        if (is_numeric($bulan) && (int)$bulan >= 1 && (int)$bulan <= 12) {
+            $bln = (int)$bulan;
+        } elseif (isset($map_bulan[strtolower($bulan)])) {
+            $bln = $map_bulan[strtolower($bulan)];
+        } else {
+            $bln = (int)date('n'); // fallback: bulan sekarang
+        }
 
         // Total hari dalam bulan (tanpa dependency calendar extension)
         $total_hari = (int)date('t', mktime(0, 0, 0, $bln, 1, $tahun));
@@ -42,8 +50,11 @@ if (!function_exists('hitung_wajib_hadir_bulanan')) {
             $jumlah_jumat++;
         }
         
-        // Total hari kerja = total hari - jumat
-        $total_hari_kerja = $total_hari - $jumlah_jumat;
+        // Total hari kerja = total hari - jumat - libur ekstra
+        $total_hari_kerja = $total_hari - $jumlah_jumat - $libur_ekstra;
+        if ($total_hari_kerja < 0) {
+            $total_hari_kerja = 0;
+        }
         
         // Wajib hadir bulanan (proporsional)
         // Formula: (hari kerja dalam bulan ÷ 6 hari kerja per minggu) × wajib hadir per minggu
@@ -113,6 +124,18 @@ if (!function_exists('hitung_periode_barokah')) {
         } else {
             $tahun_default = (int)date('Y');
         }
+
+        // ==========================================
+        // Cek Libur Pesantren/Nasional terpusat
+        // ==========================================
+        $bulan_string = trim($rows[0]->bulan ?? '');
+        $tahun_int = (int)($rows[0]->tahun ?? date('Y'));
+        
+        $libur_pesantren = (int)($CI->db->query("
+            SELECT SUM(jumlah_hari) as total_libur 
+            FROM libur_pesantren 
+            WHERE bulan = ? AND tahun = ?
+        ", [$bulan_string, $tahun_int])->row()->total_libur ?? 0);
 
         // ==========================================
         // Ambil Data Perbandingan Komponen Bulan Lalu & Catatan
@@ -191,25 +214,45 @@ if (!function_exists('hitung_periode_barokah')) {
 
             // Wajib Hadir Bulanan
             $wajib_hadir_per_minggu = (int)($r->wajib_hadir ?? 0);
-            $bulan_int = is_numeric($r->bulan) ? (int)$r->bulan : date('n', strtotime($r->bulan)); 
+            // Konversi nama bulan Indonesia ke angka (strtotime TIDAK mendukung Bahasa Indonesia)
+            $_map_bln = ['januari'=>1,'februari'=>2,'maret'=>3,'april'=>4,'mei'=>5,'juni'=>6,
+                         'juli'=>7,'agustus'=>8,'september'=>9,'oktober'=>10,'november'=>11,'desember'=>12];
+            if (is_numeric($r->bulan)) {
+                $bulan_int = (int)$r->bulan;
+            } elseif (isset($_map_bln[strtolower(trim($r->bulan))])) {
+                $bulan_int = $_map_bln[strtolower(trim($r->bulan))];
+            } else {
+                $bulan_int = (int)date('n');
+            }
             $tahun_int = (int)$r->tahun;
-            $r->wajib_hadir_bulanan = hitung_wajib_hadir_bulanan($bulan_int, $tahun_int, $wajib_hadir_per_minggu);
+            $r->wajib_hadir_bulanan = hitung_wajib_hadir_bulanan($bulan_int, $tahun_int, $wajib_hadir_per_minggu, $libur_pesantren);
 
-            // Persentase Kehadiran (dengan bobot)
             // Hadir = 1, Izin = 0.25, Sakit = 0
             $jumlah_hadir = (int)$r->jumlah_hadir;
             $jumlah_tugas = (int)($r->jumlah_tugas ?? 0); // New Field
             $jumlah_izin = (int)($r->jumlah_izin ?? 0);
             $jumlah_sakit = (int)($r->jumlah_sakit ?? 0);
             
-            // Tugas and Sakit considered equivalent to Hadir for weight (1.0)
             // User Formula: (Hadir + Tugas + Sakit + Cuti) + (Izin x 0.25)
             $kehadiran_efektif = ($jumlah_hadir * 1) + ($jumlah_tugas * 1) + ($jumlah_izin * 0.25) + ($jumlah_sakit * 1.0);
             
             if ($r->wajib_hadir_bulanan > 0) {
                 $r->persentase_kehadiran = round(($kehadiran_efektif / $r->wajib_hadir_bulanan) * 100, 2);
             } else {
-                $r->persentase_kehadiran = 0;
+                $r->persentase_kehadiran = 0;   
+            }
+
+            // ================================================
+            // Jika kehadiran efektif < 50% dari wajib hadir,
+            // Tunjab dipotong proporsional sesuai rasio kehadiran
+            // ================================================
+            $r->tunjab_asli = (int)$r->tunjab; // Simpan nilai asli untuk referensi di View
+            if ($r->wajib_hadir_bulanan > 0 && ($kehadiran_efektif / $r->wajib_hadir_bulanan) < 0.5) {
+                $rasio_kehadiran = $kehadiran_efektif / $r->wajib_hadir_bulanan;
+                $r->tunjab = (int)round($r->tunjab_asli * $rasio_kehadiran);
+                $r->is_punishment_tunjab = true;
+            } else {
+                $r->is_punishment_tunjab = false;
             }
 
             // TMP
@@ -309,7 +352,8 @@ if (!function_exists('hitung_periode_barokah')) {
             'status'=> $rows[0]->status_pengajuan,
             'id_kehadiran_lembaga' => $rows[0]->id_kehadiran_lembaga,
             'id_lembaga'           => $rows[0]->id_lembaga,
-            'catatan_umum_pimpinan'=> $rows[0]->catatan_umum_pimpinan ?? ''
+            'catatan_umum_pimpinan'=> $rows[0]->catatan_umum_pimpinan ?? '',
+            'libur_pesantren'      => $libur_pesantren
         ];
 
         return [
