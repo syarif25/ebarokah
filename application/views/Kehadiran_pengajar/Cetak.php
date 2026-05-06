@@ -338,7 +338,7 @@
                     $jafung = 0; // Mengatur masa_p menjadi 0 untuk cuti 100%
                 }
                 
-                 $hitung_potongan = $this->db->query("SELECT SUM(nominal_potongan) as jumlah from potongan_pengajar, pengajar where potongan_pengajar.id_pengajar = pengajar.id_pengajar and potongan_pengajar.id_pengajar = $key->id_pengajar and potongan_pengajar.max_periode_potongan >= CURDATE() ")->result();
+                 $hitung_potongan = $this->db->query("SELECT SUM(nominal_potongan) as jumlah from potongan_pengajar, pengajar where potongan_pengajar.id_pengajar = pengajar.id_pengajar and potongan_pengajar.id_pengajar = $key->id_pengajar and (potongan_pengajar.min_periode_potongan IS NULL OR potongan_pengajar.min_periode_potongan <= LAST_DAY(CURDATE())) and potongan_pengajar.max_periode_potongan >= CURDATE() ")->result();
                
                 if(!empty($hitung_potongan)) {
                     foreach($hitung_potongan as $jumlah_potongan) {
@@ -348,7 +348,7 @@
                     $potongan = 0; // atau dapat juga menghasilkan pesan error atau log error
                 }
                 
-                $hitung_tambahan = $this->db->query("SELECT SUM(nominal_tambahan) as jumlah from barokah_tambahan, pengajar where barokah_tambahan.id_pengajar = pengajar.id_pengajar and barokah_tambahan.id_pengajar = $key->id_pengajar and barokah_tambahan.max_periode_tambahan >= CURDATE() ")->result();
+                $hitung_tambahan = $this->db->query("SELECT SUM(nominal_tambahan) as jumlah from barokah_tambahan, pengajar where barokah_tambahan.id_pengajar = pengajar.id_pengajar and barokah_tambahan.id_pengajar = $key->id_pengajar and (barokah_tambahan.min_periode_tambahan IS NULL OR barokah_tambahan.min_periode_tambahan <= LAST_DAY(CURDATE())) and barokah_tambahan.max_periode_tambahan >= CURDATE() ")->result();
                
                 if(!empty($hitung_tambahan)) {
                     foreach($hitung_tambahan as $jumlah_tambahan) {

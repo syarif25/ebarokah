@@ -70,6 +70,35 @@ if(!empty($isilist)) {
     <h4 class="mb-0">Validasi Penggajian Satpam Bulan <?= $bulan->bulan ?> <?= $bulan->tahun ?></h4>
     <div>
       <a class="btn btn-warning" target="_blank" href="<?= site_url('Validasi_satpam/cetak/'.$id) ?>"><i class="fa fa-print mr-1"></i> Cetak</a>
+      
+      <!-- Tampilan Kolom -->
+      <div class="dropdown d-inline-block mx-1">
+          <button class="btn btn-primary dropdown-toggle" type="button" id="btnTampilanKolomSatpam" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <i class="fa fa-columns mr-1"></i> Kolom
+          </button>
+          <div class="dropdown-menu dropdown-menu-right shadow-sm" aria-labelledby="btnTampilanKolomSatpam" style="min-width: 220px;">
+              <h6 class="dropdown-header text-uppercase font-weight-bold" style="font-size: 0.7rem; letter-spacing: 0.5px;">Tampilkan / Sembunyikan</h6>
+              <div class="dropdown-item px-3 py-2">
+                  <div class="custom-control custom-switch">
+                      <input type="checkbox" class="custom-control-input toggle-vis-satpam" id="colKeh1" data-columns="2,3,4" checked>
+                      <label class="custom-control-label" style="cursor:pointer;" for="colKeh1">Kehadiran 1 (Hari)</label>
+                  </div>
+              </div>
+              <div class="dropdown-item px-3 py-2">
+                  <div class="custom-control custom-switch">
+                      <input type="checkbox" class="custom-control-input toggle-vis-satpam" id="colKeh2" data-columns="5,6,7" checked>
+                      <label class="custom-control-label" style="cursor:pointer;" for="colKeh2">Kehadiran 2 (Shift)</label>
+                  </div>
+              </div>
+              <div class="dropdown-item px-3 py-2">
+                  <div class="custom-control custom-switch">
+                      <input type="checkbox" class="custom-control-input toggle-vis-satpam" id="colKeh3" data-columns="8,9,10" checked>
+                      <label class="custom-control-label" style="cursor:pointer;" for="colKeh3">Kehadiran 3 (Dinihari)</label>
+                  </div>
+              </div>
+          </div>
+      </div>
+
       <a class="btn btn-secondary" href="javascript:history.back()"><i class="fa fa-arrow-left mr-1"></i> Kembali</a>
     </div>
   </div>
@@ -293,9 +322,21 @@ function fmt(n){ n = Number(n||0); return n.toLocaleString('id-ID'); }
 
 $(function(){
   // (optional) DataTables
-  $('#tabel_validasi').DataTable({
+  const dtTblSatpam = $('#tabel_validasi').DataTable({
     paging:false, searching:false, ordering:false, info:false, fixedHeader:true,
     dom:'Bfrtip'
+  });
+
+  // Toggle Column Visibility Logic
+  $('.dropdown-menu').on('click', function(e) {
+      e.stopPropagation();
+  });
+  
+  $('.toggle-vis-satpam').on('change', function (e) {
+      var columnsStr = $(this).attr('data-columns');
+      var columns = columnsStr.split(',').map(Number);
+      var isVisible = $(this).is(':checked');
+      dtTblSatpam.columns(columns).visible(isVisible);
   });
 
   // BUKA MODAL

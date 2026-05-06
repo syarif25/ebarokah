@@ -199,7 +199,7 @@
                 var totalPotongan = json.total_potongan;
                 // $('#lembaga').html(data.nama_lembaga);
                 // Tampilkan total potongan pada elemen div
-                $('#total_potongan').text('Total Potongan : Rp.' + totalPotongan);
+                $('#total_potongan').text('Total Tambahan : Rp.' + totalPotongan);
                 $('#nama_lengkap_detail').text(json.data_umana.nama_lengkap);
                 $('#nama_lembaga_detail').text(json.data_umana.nama_lembaga);
                 $('#loadingSpinner').hide(); 
@@ -406,8 +406,8 @@
     </div>
 </div>
 
-<div id="modal_detail_potongan" class="modal fade bd-example-modal-lg" tabindex="-1" aria-hidden="true" style="display: none;">
-      <div class="modal-dialog modal-lg" >
+<div id="modal_detail_potongan" class="modal fade bd-example-modal-xl" tabindex="-1" aria-hidden="true" style="display: none;">
+      <div class="modal-dialog modal-xl" >
           <div class="modal-content">
               <div class="modal-header">
                   <h5 class="modal-title"></h5>
@@ -417,8 +417,13 @@
               <div class="modal-body">
                   <div class="card">
                       <form action="#" id="form">
-                          <div class="card-header">
-                              <h4 class="card-title">Form Detail Potongan Barokah</h4> <span id="total_potongan"></span>
+                          <div class="card-header d-flex justify-content-between align-items-center">
+                              <h4 class="card-title">Rincian Barokah Tambahan</h4> 
+                              <span id="total_potongan" class="badge badge-success light badge-lg fs-14"></span>
+                          </div>
+                          <div class="alert alert-info alert-dismissible fade show m-3 mb-0" role="alert" style="font-size: 13px;">
+                              <strong>Catatan:</strong> Status yang tampil adalah status hari ini. Saat validasi, sistem otomatis menggunakan angka sesuai <strong>bulan pengajuan</strong>.
+                              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="padding: 0.75rem 1rem;"></button>
                           </div>
                           <div class="card-body">
                           <style>
@@ -448,11 +453,12 @@
                                     </div>
                                 </div>
                                 </div>
-                                <table id="tabel_view_rincian_umana" class="table-hover" width="100%" >
-                                    <thead>
+                                <div class="table-responsive">
+                                    <table id="tabel_view_rincian_umana" class="table table-bordered table-striped" width="100%" >
+                                        <thead>
                                         <tr>
                                             <th>No</th>
-                                            <th>Jenis Potongan</th>
+                                            <th>Jenis Barokah</th>
                                             <th>Nominal</th>
                                             <th>Periode</th>
                                             <th>#</th>
@@ -461,8 +467,8 @@
                                     <tbody>
                                         
                                     </tbody>
-                                    
-                                </table>
+                                    </table>
+                                </div>
                                 <div id="loadingSpinner" class="table-loading-overlay" style="display: none;">
                                     <div class="spinner-border text-primary" role="status">
                                         <span class="visually-hidden">Loading...</span>

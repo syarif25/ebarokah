@@ -340,23 +340,42 @@ class Payroll_model extends CI_Model {
 
 	public function kirimwa($isipesan)
 {
+    // Format nominal uang (menghilangkan titik yang mungkin ada, lalu format ulang ke Rupiah)
+    $jumlah_clean = (float) str_replace('.', '', $isipesan['jumlah']);
+    
+    // Cegah pengiriman jika nominalnya 0 atau kurang
+    if ($jumlah_clean <= 0) {
+        return json_encode(['success' => false, 'message' => 'Skipped: Nominal 0']);
+    }
+
+    $jumlah_format = 'Rp ' . number_format($jumlah_clean, 0, ',', '.');
+    
+    // Sensor nomor rekening (menampilkan 4 digit terakhir saja, misal: **********8537)
+    $norek = $isipesan['norek'];
+    $norek_sensor = str_repeat('*', max(0, strlen($norek) - 4)) . substr($norek, -4);
+
     $pesan = '*'.$isipesan['title'].'*
 
 Periode : '.$isipesan['periode'].' 
 Nama Lengkap : '.$isipesan['nama_lengkap'].' 
 Lembaga : *'.$isipesan['lembaga'].'*
-Jumlah  : '.$isipesan['jumlah'].'
+Jumlah  : *'.$jumlah_format.'*
 Bank  : '.$isipesan['nama_bank'].'
-No Rek : '.$isipesan['norek'].'
+No Rek : '.$norek_sensor.'
 Tanggal Kirim : *'.$isipesan['waktu'].'*
 
 Untuk detail rincian barokah silakan kunjungi ebarokah.p2s3.com
 
 Jazakumullah Khairan';
 
-    $testingMode = false; // ← PRODUCTION MODE: kirim ke nomor asli
+    // Jika environment bukan production (misal development), mode testing aktif
+    $testingMode = (ENVIRONMENT !== 'development'); 
+    
+    // Nomor default untuk testing/development
+    $nomor_testing = "6281249057246";
+
     $nomor_hp = $testingMode 
-        ? "081249057246" 
+        ? $nomor_testing 
         : preg_replace('/^0/', '62', $isipesan['nomor_hp']); // ubah 0 ke 62
 
 
@@ -380,8 +399,8 @@ Jazakumullah Khairan';
     $this->db->insert('wa_log', $logData);
     $log_id = $this->db->insert_id();
 
-    $link = "https://solo.wablas.com/api/send-message";
-    $token = "fpi23keYVt27yc4FpVj6crgc199h72PrPARBY0ZZ0NLuqOeROfGPxYdzENOvXQRI.WEKyuXvr";
+    $link = "https://api.bablast.id/send";
+    $token = "FBCp2f1LeenxxVWn5C0dpi2ffvTbGOWqRTWDKErL1vVQ3Gw43MLkVRgwZG2fyLcDwHM49yM462PuZNboxj";
 
     $data = [
         'phone'   => $nomor_hp,
@@ -389,11 +408,14 @@ Jazakumullah Khairan';
     ];
 
     $curl = curl_init();
-    curl_setopt($curl, CURLOPT_HTTPHEADER, ["Authorization: $token"]);
+    curl_setopt($curl, CURLOPT_HTTPHEADER, [
+        "Content-type: application/json",
+        "Authorization: Bearer $token"
+    ]);
     curl_setopt($curl, CURLOPT_URL, $link);
     curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "POST");
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($data));
+    curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($data));
     curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
     curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
 
@@ -406,14 +428,14 @@ Jazakumullah Khairan';
 
     // Jika curl gagal total
     if ($result === false) {
-        $result = json_encode(['status' => false, 'message' => $curl_error]);
+        $result = json_encode(['success' => false, 'message' => $curl_error]);
     }
 
     curl_close($curl);
 
     $status = 'failed';
     $response_json = json_decode($result, true);
-    if (isset($response_json['status']) && $response_json['status'] == true) {
+    if (isset($response_json['success']) && $response_json['success'] == true) {
         $status = 'success';
     }
 
@@ -432,28 +454,47 @@ Jazakumullah Khairan';
 
 public function kirimWaUlang($isipesan)
 {
+    // Format nominal uang (menghilangkan titik yang mungkin ada, lalu format ulang ke Rupiah)
+    $jumlah_clean = (float) str_replace('.', '', $isipesan['jumlah']);
+
+    // Cegah pengiriman jika nominalnya 0 atau kurang
+    if ($jumlah_clean <= 0) {
+        return json_encode(['success' => false, 'message' => 'Skipped: Nominal 0']);
+    }
+
+    $jumlah_format = 'Rp ' . number_format($jumlah_clean, 0, ',', '.');
+    
+    // Sensor nomor rekening (menampilkan 4 digit terakhir saja, misal: **********8537)
+    $norek = $isipesan['norek'];
+    $norek_sensor = str_repeat('*', max(0, strlen($norek) - 4)) . substr($norek, -4);
+
     $pesan = '*'.$isipesan['title'].'*
 
 Periode : '.$isipesan['periode'].' 
 Nama Lengkap : '.$isipesan['nama_lengkap'].' 
 Lembaga : *'.$isipesan['lembaga'].'*
-Jumlah  : '.$isipesan['jumlah'].'
+Jumlah  : *'.$jumlah_format.'*
 Bank  : '.$isipesan['nama_bank'].'
-No Rek : '.$isipesan['norek'].'
+No Rek : '.$norek_sensor.'
 Tanggal Kirim : *'.$isipesan['waktu'].'*
 
 Untuk detail rincian barokah silakan kunjungi ebarokah.p2s3.com
 
 Jazakumullah Khairan';
 
-    $testingMode = false; // ← PRODUCTION MODE: kirim ke nomor asli
+    // Jika environment bukan production (misal development), mode testing aktif
+    $testingMode = (ENVIRONMENT !== 'production'); 
+    
+    // Nomor default untuk testing/development
+    $nomor_testing = "6281249057246";
+
     $nomor_hp = $testingMode 
-        ? "081249057246" 
+        ? $nomor_testing 
         : preg_replace('/^0/', '62', $isipesan['nomor_hp']); // ubah 0 ke 62
 
 
-    $link = "https://solo.wablas.com/api/send-message";
-    $token = "fpi23keYVt27yc4FpVj6crgc199h72PrPARBY0ZZ0NLuqOeROfGPxYdzENOvXQRI.WEKyuXvr";
+    $link = "https://api.bablast.id/send";
+    $token = "FBCp2f1LeenxxVWn5C0dpi2ffvTbGOWqRTWDKErL1vVQ3Gw43MLkVRgwZG2fyLcDwHM49yM462PuZNboxj";
 
     $data = [
         'phone'   => $nomor_hp,
@@ -461,11 +502,14 @@ Jazakumullah Khairan';
     ];
 
     $curl = curl_init();
-    curl_setopt($curl, CURLOPT_HTTPHEADER, ["Authorization: $token"]);
+    curl_setopt($curl, CURLOPT_HTTPHEADER, [
+        "Content-type: application/json",
+        "Authorization: Bearer $token"
+    ]);
     curl_setopt($curl, CURLOPT_URL, $link);
     curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "POST");
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($data));
+    curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($data));
     curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
     curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
 
@@ -478,14 +522,14 @@ Jazakumullah Khairan';
 
     // Jika curl gagal total
     if ($result === false) {
-        $result = json_encode(['status' => false, 'message' => $curl_error]);
+        $result = json_encode(['success' => false, 'message' => $curl_error]);
     }
 
     curl_close($curl);
 
     $status = 'failed';
     $response_json = json_decode($result, true);
-    if (isset($response_json['status']) && $response_json['status'] == true) {
+    if (isset($response_json['success']) && $response_json['success'] == true) {
         $status = 'success';
     }
 

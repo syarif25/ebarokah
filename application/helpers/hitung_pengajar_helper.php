@@ -165,7 +165,7 @@ if (!function_exists('hitung_row_pengajar')) {
         $id_pengajar = isset($key->id_pengajar) ? (int)$key->id_pengajar : 0;
         $potongan    = 0;
         $q = $CI->db->query(
-            "SELECT SUM(nominal_potongan) AS jumlah FROM potongan_pengajar WHERE id_pengajar = $id_pengajar AND (max_periode_potongan IS NULL OR max_periode_potongan >= '$periode_date')"
+            "SELECT SUM(nominal_potongan) AS jumlah FROM potongan_pengajar WHERE id_pengajar = $id_pengajar AND (min_periode_potongan IS NULL OR min_periode_potongan <= LAST_DAY('$periode_date')) AND (max_periode_potongan IS NULL OR max_periode_potongan >= '$periode_date')"
         );
         if ($q !== false) {
             $r = $q->row();
@@ -175,7 +175,7 @@ if (!function_exists('hitung_row_pengajar')) {
         // ── Tambahan — filter historis ────────────────────────────
         $tambahan = 0;
         $q = $CI->db->query(
-            "SELECT SUM(nominal_tambahan) AS jumlah FROM barokah_tambahan WHERE id_pengajar = $id_pengajar AND (max_periode_tambahan IS NULL OR max_periode_tambahan >= '$periode_date')"
+            "SELECT SUM(nominal_tambahan) AS jumlah FROM barokah_tambahan WHERE id_pengajar = $id_pengajar AND (min_periode_tambahan IS NULL OR min_periode_tambahan <= LAST_DAY('$periode_date')) AND (max_periode_tambahan IS NULL OR max_periode_tambahan >= '$periode_date')"
         );
         if ($q !== false) {
             $r = $q->row();

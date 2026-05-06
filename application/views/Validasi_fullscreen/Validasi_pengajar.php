@@ -374,12 +374,12 @@ if (isset($isilist) && !empty($isilist)) {
         
         // Potongan — filter historis pakai $periode_date, bukan CURDATE()
             $potongan = 0;
-            $hitung_potongan = $this->db->query("SELECT SUM(nominal_potongan) as jumlah from potongan_pengajar where id_pengajar = $key->id_pengajar and (max_periode_potongan IS NULL OR max_periode_potongan >= '$periode_date') ")->result();
+            $hitung_potongan = $this->db->query("SELECT SUM(nominal_potongan) as jumlah from potongan_pengajar where id_pengajar = $key->id_pengajar and (min_periode_potongan IS NULL OR min_periode_potongan <= LAST_DAY('$periode_date')) and (max_periode_potongan IS NULL OR max_periode_potongan >= '$periode_date') ")->result();
         if(!empty($hitung_potongan)) { foreach($hitung_potongan as $jumlah_potongan) { $potongan = $jumlah_potongan->jumlah; } }
         
         // Tambahan — filter historis pakai $periode_date
             $tambahan = 0;
-        $hitung_tambahan = $this->db->query("SELECT SUM(nominal_tambahan) as jumlah from barokah_tambahan where id_pengajar = $key->id_pengajar and (max_periode_tambahan IS NULL OR max_periode_tambahan >= '$periode_date') ")->result();
+        $hitung_tambahan = $this->db->query("SELECT SUM(nominal_tambahan) as jumlah from barokah_tambahan where id_pengajar = $key->id_pengajar and (min_periode_tambahan IS NULL OR min_periode_tambahan <= LAST_DAY('$periode_date')) and (max_periode_tambahan IS NULL OR max_periode_tambahan >= '$periode_date') ")->result();
         if(!empty($hitung_tambahan)) { foreach($hitung_tambahan as $jumlah_tambahan) { $tambahan = $jumlah_tambahan->jumlah; } }
         
         // CALCULATE TOTALS FOR LIVE DATA
@@ -472,6 +472,34 @@ if (isset($isilist) && !empty($isilist)) {
                         <a href="<?php echo base_url() ?>Kehadiran/Cetak_Potongan_pengajar/<?php echo $meta_id_lembaga; ?>" target="_blank" class="btn btn-outline-danger btn-sm rounded-pill">
                             <i class="mdi mdi-content-cut mr-1"></i> Potongan
                         </a>
+
+                        <!-- Tampilan Kolom -->
+                        <div class="dropdown d-inline-block ml-2">
+                            <button class="btn btn-outline-primary btn-sm rounded-pill dropdown-toggle" type="button" id="btnTampilanKolom" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="mdi mdi-view-column mr-1"></i> Tampilan Kolom
+                            </button>
+                            <div class="dropdown-menu shadow-sm" aria-labelledby="btnTampilanKolom" style="min-width: 220px;">
+                                <h6 class="dropdown-header text-uppercase font-weight-bold" style="font-size: 0.7rem; letter-spacing: 0.5px;">Tampilkan / Sembunyikan</h6>
+                                <div class="dropdown-item px-3 py-2">
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input toggle-vis" id="colMaster" data-columns="2,3,4,5,6,7,8,9" checked>
+                                        <label class="custom-control-label" style="cursor:pointer;" for="colMaster">Grup Data Master</label>
+                                    </div>
+                                </div>
+                                <div class="dropdown-item px-3 py-2">
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input toggle-vis" id="colKehadiran" data-columns="10,11,12,13,14,15,16,17,18" checked>
+                                        <label class="custom-control-label" style="cursor:pointer;" for="colKehadiran">Grup Kehadiran</label>
+                                    </div>
+                                </div>
+                                <div class="dropdown-item px-3 py-2">
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input toggle-vis" id="colTunjangan" data-columns="19,20,21,22,23" checked>
+                                        <label class="custom-control-label" style="cursor:pointer;" for="colTunjangan">Grup Tunjangan</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -675,12 +703,12 @@ if (isset($isilist) && !empty($isilist)) {
                                 
                                 // Potongan — filter historis pakai $periode_date
                                 $potongan = 0;
-                                $hitung_potongan = $this->db->query("SELECT SUM(nominal_potongan) as jumlah from potongan_pengajar where id_pengajar = $key->id_pengajar and (max_periode_potongan IS NULL OR max_periode_potongan >= '$periode_date') ")->result();
+                                $hitung_potongan = $this->db->query("SELECT SUM(nominal_potongan) as jumlah from potongan_pengajar where id_pengajar = $key->id_pengajar and (min_periode_potongan IS NULL OR min_periode_potongan <= LAST_DAY('$periode_date')) and (max_periode_potongan IS NULL OR max_periode_potongan >= '$periode_date') ")->result();
                                 if(!empty($hitung_potongan)) { foreach($hitung_potongan as $jumlah_potongan) { $potongan = $jumlah_potongan->jumlah; } }
                                 
                                 // Tambahan — filter historis pakai $periode_date
                                 $tambahan = 0;
-                                $hitung_tambahan = $this->db->query("SELECT SUM(nominal_tambahan) as jumlah from barokah_tambahan where id_pengajar = $key->id_pengajar and (max_periode_tambahan IS NULL OR max_periode_tambahan >= '$periode_date') ")->result();
+                                $hitung_tambahan = $this->db->query("SELECT SUM(nominal_tambahan) as jumlah from barokah_tambahan where id_pengajar = $key->id_pengajar and (min_periode_tambahan IS NULL OR min_periode_tambahan <= LAST_DAY('$periode_date')) and (max_periode_tambahan IS NULL OR max_periode_tambahan >= '$periode_date') ")->result();
                                 if(!empty($hitung_tambahan)) { foreach($hitung_tambahan as $jumlah_tambahan) { $tambahan = $jumlah_tambahan->jumlah; } }
                                 
                                 $diterima = $barokah_piket + $jml_kehadiran + $nominal_hadir_15 + $nominal_hadir_10 + $tunkel + $tunja_anak + $mengajar + $dty + $jafung + $kehormatan + $tunj_walkes + $tambahan - $potongan;
@@ -879,6 +907,21 @@ if (isset($isilist) && !empty($isilist)) {
             scrollCollapse: true,
             scrollX: true,
             ordering: false
+        });
+
+        // Toggle Column Visibility Logic
+        // Mencegah dropdown tertutup saat mengklik checkbox di dalamnya
+        $('.dropdown-menu').on('click', function(e) {
+            e.stopPropagation();
+        });
+
+        const dtTbl = $('#tblValidasi').DataTable();
+        $('.toggle-vis').on('change', function (e) {
+            var columnsStr = $(this).attr('data-columns');
+            var columns = columnsStr.split(',').map(Number);
+            var isVisible = $(this).is(':checked');
+
+            dtTbl.columns(columns).visible(isVisible);
         });
 
         // Edit Modal Logic

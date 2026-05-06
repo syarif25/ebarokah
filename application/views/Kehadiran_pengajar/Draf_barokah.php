@@ -164,7 +164,7 @@
                                                 $jafung = 0;
                                             }
                                             
-                                             $hitung_potongan = $this->db->query("SELECT SUM(nominal_potongan) as jumlah from potongan_pengajar, pengajar where potongan_pengajar.id_pengajar = pengajar.id_pengajar and potongan_pengajar.id_pengajar = $key->id_pengajar and potongan_pengajar.max_periode_potongan >= CURDATE() ")->result();
+                                             $hitung_potongan = $this->db->query("SELECT SUM(nominal_potongan) as jumlah from potongan_pengajar, pengajar where potongan_pengajar.id_pengajar = pengajar.id_pengajar and potongan_pengajar.id_pengajar = $key->id_pengajar and (potongan_pengajar.min_periode_potongan IS NULL OR potongan_pengajar.min_periode_potongan <= LAST_DAY(CURDATE())) and potongan_pengajar.max_periode_potongan >= CURDATE() ")->result();
                                            
                                             if(!empty($hitung_potongan)) {
                                                 foreach($hitung_potongan as $jumlah_potongan) {
@@ -205,8 +205,8 @@
                                             $jumlah_bk += $bk;
                                             $jumlah_potong += (int)$potongan;
                                             
-                                            $list_potongan = $this->db->query("SELECT id_potongan_pengajar, nama_potongan, nominal_potongan as jumlah from potongan_pengajar, pengajar, potongan where potongan_pengajar.jenis_potongan = potongan.id_potongan and potongan_pengajar.id_pengajar = pengajar.id_pengajar and potongan_pengajar.id_pengajar = 10
-                                            and potongan_pengajar.max_periode_potongan >= CURDATE()")->result();
+                                            $list_potongan = $this->db->query("SELECT id_potongan_pengajar, nama_potongan, nominal_potongan as jumlah from potongan_pengajar, pengajar, potongan where potongan_pengajar.jenis_potongan = potongan.id_potongan and potongan_pengajar.id_pengajar = pengajar.id_pengajar and potongan_pengajar.id_pengajar = $key->id_pengajar
+                                            and (potongan_pengajar.min_periode_potongan IS NULL OR potongan_pengajar.min_periode_potongan <= LAST_DAY(CURDATE())) and potongan_pengajar.max_periode_potongan >= CURDATE()")->result();
                                             foreach ($list_potongan as $list){
                                                 ?>
                                             <input type="hidden" name="" value="<?php echo $key->id_pengajar ?>">

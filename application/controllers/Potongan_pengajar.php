@@ -37,11 +37,13 @@ class Potongan_pengajar extends CI_Controller {
             $row[] = htmlentities($datanya->nama_lembaga);
 			$row[] = htmlentities($datanya->nama_potongan);
 			$row[] = '<span class="text-success">'.rupiah($datanya->nominal_potongan).'</span>';
-			$row[] = date_singkat($datanya->min_periode_potongan)." / ".date_singkat($datanya->max_periode_potongan);
+            $today = date('Y-m-d');
+            $isActive = ($datanya->max_periode_potongan >= $today);
+            $badge = $isActive ? '<span class="badge badge-success light badge-sm ml-2">Aktif</span>' : '<span class="badge badge-danger light badge-sm ml-2">Tidak Aktif</span>';
+			$row[] = date_singkat($datanya->min_periode_potongan)." / ".date_singkat($datanya->max_periode_potongan) . $badge;
 			//add html for action
 			$row[] = '<a type="button" class="btn btn-outline-primary btn-sm" href="#" 
 			title="Track" onclick="edit_potongan('."'".$datanya->id_potongan_pengajar."'".')"><i class="fas fa-edit mr-1" ></i> Edit</a>
-			<a type="button" class="btn btn-outline-danger btn-sm" href="hapus/'.$datanya->id_potongan_pengajar.'"><i class="fas fa-trash mr-1" ></i> Hapus</a>
 			';
 		$data[] = $row;
 		}
@@ -64,13 +66,25 @@ class Potongan_pengajar extends CI_Controller {
             $row[] = htmlentities($datanya->nama_potongan);
 			$row[] = '<span class="text-success"> Rp. '.htmlentities(rupiah($datanya->nominal)).' </span>';
 			// $row[] = '<span class="text-success">'.rupiah($datanya->nominal_potongan).'</span>';
-			$row[] = '<span class="text-primary fs-18 font-w400 d-block text-center">'.date_singkat($datanya->min_periode_potongan)." <br> s.d <br> ".date_singkat($datanya->max_periode_potongan).'</span>';
+            $today = date('Y-m-d');
+            $last_month = date('Y-m', strtotime('first day of last month'));
+            $max_month = date('Y-m', strtotime($datanya->max_periode_potongan));
+            
+            if ($datanya->min_periode_potongan > $today) {
+                $badge = '<span class="badge badge-warning light badge-sm mt-1">Akan Datang</span>';
+            } elseif ($datanya->max_periode_potongan >= $today) {
+                $badge = '<span class="badge badge-success light badge-sm mt-1">Berlaku Saat Ini</span>';
+            } elseif ($max_month == $last_month) {
+                $badge = '<span class="badge badge-info light badge-sm mt-1">Berakhir Bulan Lalu</span>';
+            } else {
+                $badge = '<span class="badge badge-danger light badge-sm mt-1">Telah Berakhir</span>';
+            }
+			$row[] = '<span class="text-primary fs-18 font-w400 d-block text-center">'.date_singkat($datanya->min_periode_potongan)." <br> s.d <br> ".date_singkat($datanya->max_periode_potongan).'</span><div class="text-center">'.$badge.'</div>';
 			// $row[] = '<span class="text-success"> Aktif </span>';
 			//add html for action
 			// $row[] = '
 			$row[] = '<a type="button" class="btn btn-outline-info btn-sm" href="#" 
 			title="Track" onclick="edit_potongan('."'".$datanya->id_potongan_pengajar."'".')"><i class="fas fa-edit mr-1" ></i> Edit</a>
-			<a type="button" class="btn btn-outline-danger btn-sm" href="potongan_pengajar/hapus/'.$datanya->id_potongan_pengajar.'"><i class="fas fa-trash mr-1" ></i> Hapus</a>
 			';
 		$data[] = $row;
 		}
@@ -116,7 +130,6 @@ class Potongan_pengajar extends CI_Controller {
             $row[] = htmlentities($datanya->nama_lembaga);
 			$row[] = '<span class="fs-8">'.htmlentities($datanya->jml_ptg).' Potongan </span> <br> <span class="text-success"> Rp. '.htmlentities(rupiah($datanya->nominal)).' </span>';
 			// $row[] = '<span class="text-success">'.rupiah($datanya->nominal_potongan).'</span>';
-			$row[] = '<span class="text-primary fs-18 font-w400 d-block">'.date_singkat($datanya->min_periode_potongan)." <br> s.d <br> ".date_singkat($datanya->max_periode_potongan).'</span>';
 			//add html for action
 			$row[] = '
 			<a type="button" class="btn btn-outline-success btn-sm" onclick="data_rincian_perumana('."'".$datanya->id_pengajar."'".')"><i class="fas fa-eye mr-1" ></i> Detail</a>

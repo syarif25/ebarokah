@@ -65,28 +65,26 @@ class Potongan_pengajar_model extends CI_Model {
 	{
     	if($this->session->userdata('jabatan') == 'AdminLembaga'){
     			$today = date('Y-m-d'); // Mendapatkan tanggal hari ini
-    			$this->db->select('potongan_pengajar.id_pengajar, gelar_depan, gelar_belakang, potongan_pengajar.id_potongan_pengajar, umana.nama_lengkap, lembaga.nama_lembaga, COUNT(potongan_pengajar.id_pengajar) as jml_ptg, 
-    			potongan_pengajar.min_periode_potongan, potongan_pengajar.max_periode_potongan, SUM(potongan_pengajar.nominal_potongan) as nominal');
+    			$this->db->select("potongan_pengajar.id_pengajar, gelar_depan, gelar_belakang, potongan_pengajar.id_potongan_pengajar, umana.nama_lengkap, lembaga.nama_lembaga, SUM(CASE WHEN potongan_pengajar.max_periode_potongan >= '$today' THEN 1 ELSE 0 END) as jml_ptg, 
+    			potongan_pengajar.min_periode_potongan, potongan_pengajar.max_periode_potongan, SUM(CASE WHEN potongan_pengajar.max_periode_potongan >= '$today' THEN potongan_pengajar.nominal_potongan ELSE 0 END) as nominal", FALSE);
     			$this->db->from('umana');
     			$this->db->join('pengajar', 'umana.nik = pengajar.nik');
     			$this->db->join('potongan_pengajar', 'potongan_pengajar.id_pengajar = pengajar.id_pengajar');
     			$this->db->join('potongan', 'potongan_pengajar.jenis_potongan = potongan.id_potongan');
     			$this->db->join('lembaga', 'pengajar.id_lembaga = lembaga.id_lembaga');
-    			$this->db->where('potongan_pengajar.max_periode_potongan >=', $today);
     			$this->db->group_by('potongan_pengajar.id_pengajar');
     			$this->db->order_by('potongan_pengajar.id_potongan_pengajar','desc');
     			$this->db->where('lembaga.id_lembaga', $this->session->userdata('lembaga'));
     		
     		} else {
     			$today = date('Y-m-d'); // Mendapatkan tanggal hari ini
-    			$this->db->select('potongan_pengajar.id_pengajar, gelar_depan, gelar_belakang, potongan_pengajar.id_potongan_pengajar, umana.nama_lengkap, lembaga.nama_lembaga, COUNT(potongan_pengajar.id_pengajar) as jml_ptg, 
-    			potongan_pengajar.min_periode_potongan, potongan_pengajar.max_periode_potongan, SUM(potongan_pengajar.nominal_potongan) as nominal');
+    			$this->db->select("potongan_pengajar.id_pengajar, gelar_depan, gelar_belakang, potongan_pengajar.id_potongan_pengajar, umana.nama_lengkap, lembaga.nama_lembaga, SUM(CASE WHEN potongan_pengajar.max_periode_potongan >= '$today' THEN 1 ELSE 0 END) as jml_ptg, 
+    			potongan_pengajar.min_periode_potongan, potongan_pengajar.max_periode_potongan, SUM(CASE WHEN potongan_pengajar.max_periode_potongan >= '$today' THEN potongan_pengajar.nominal_potongan ELSE 0 END) as nominal", FALSE);
     			$this->db->from('umana');
     			$this->db->join('pengajar', 'umana.nik = pengajar.nik');
     			$this->db->join('potongan_pengajar', 'potongan_pengajar.id_pengajar = pengajar.id_pengajar');
     			$this->db->join('potongan', 'potongan_pengajar.jenis_potongan = potongan.id_potongan');
     			$this->db->join('lembaga', 'pengajar.id_lembaga = lembaga.id_lembaga');
-    			$this->db->where('potongan_pengajar.max_periode_potongan >=', $today);
     			$this->db->group_by('potongan_pengajar.id_pengajar');
     			$this->db->order_by('potongan_pengajar.id_potongan_pengajar','desc');
     		}
@@ -109,8 +107,9 @@ class Potongan_pengajar_model extends CI_Model {
     $this->db->join('potongan_pengajar', 'potongan_pengajar.id_pengajar = pengajar.id_pengajar ');
     $this->db->join('potongan', 'potongan_pengajar.jenis_potongan = potongan.id_potongan');
     $this->db->join('lembaga', 'pengajar.id_lembaga = lembaga.id_lembaga');
-    $this->db->where('potongan_pengajar.max_periode_potongan >=', $today);
     $this->db->where('pengajar.id_pengajar', $id);
+    $this->db->order_by("(potongan_pengajar.max_periode_potongan >= '$today')", 'DESC');
+    $this->db->order_by('potongan_pengajar.id_potongan_pengajar', 'DESC');
     $query = $this->db->get();
     return $query->result();
 }
@@ -118,9 +117,8 @@ class Potongan_pengajar_model extends CI_Model {
 
 	public function total_potongan($id){
 		$today = date('Y-m-d'); // Mendapatkan tanggal hari ini
-		$this->db->select('SUM(potongan_pengajar.nominal_potongan) as total_potongan');
+		$this->db->select("SUM(CASE WHEN max_periode_potongan >= '$today' THEN nominal_potongan ELSE 0 END) as total_potongan", FALSE);
 		$this->db->from('potongan_pengajar');
-		$this->db->where('max_periode_potongan >=', $today);
 		$this->db->where('id_pengajar ='.$id);
 		$query = $this->db->get();
     	return $query->row()->total_potongan;

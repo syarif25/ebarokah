@@ -74,26 +74,28 @@ class Barokah_tambahan_model extends CI_Model {
 	{
 		if($this->session->userdata('jabatan') == 'AdminLembaga'){
 			$today = date('Y-m-d'); // Mendapatkan tanggal hari ini
-			$this->db->select('barokah_tambahan.id_pengajar, nama_barokah, gelar_depan, gelar_belakang, barokah_tambahan.id_barokah_tambahan, umana.nama_lengkap, nominal_tambahan, lembaga.nama_lembaga, COUNT(barokah_tambahan.id_pengajar) as jml_brkh, 
-			barokah_tambahan.min_periode_tambahan, barokah_tambahan.max_periode_tambahan, SUM(barokah_tambahan.nominal_tambahan) as nominal');
+			$this->db->select('barokah_tambahan.id_pengajar, nama_barokah, gelar_depan, gelar_belakang, barokah_tambahan.id_barokah_tambahan, umana.nama_lengkap, nominal_tambahan, lembaga.nama_lembaga, 
+			SUM(CASE WHEN barokah_tambahan.max_periode_tambahan >= CURDATE() THEN 1 ELSE 0 END) as jml_brkh, 
+			barokah_tambahan.min_periode_tambahan, barokah_tambahan.max_periode_tambahan, 
+			SUM(CASE WHEN barokah_tambahan.max_periode_tambahan >= CURDATE() THEN barokah_tambahan.nominal_tambahan ELSE 0 END) as nominal');
 			$this->db->from('umana');
 			$this->db->join('pengajar', 'umana.nik = pengajar.nik');
 			$this->db->join('barokah_tambahan', 'barokah_tambahan.id_pengajar = pengajar.id_pengajar');
 			$this->db->join('lembaga', 'pengajar.id_lembaga = lembaga.id_lembaga');
-			$this->db->where('barokah_tambahan.max_periode_tambahan >=', $today);
 			$this->db->group_by('barokah_tambahan.id_pengajar');
 			$this->db->order_by('barokah_tambahan.id_barokah_tambahan','desc');
 			$this->db->where('lembaga.id_lembaga', $this->session->userdata('lembaga'));
 		
 		} else {
 			$today = date('Y-m-d'); // Mendapatkan tanggal hari ini
-			$this->db->select('barokah_tambahan.id_pengajar, nama_barokah, gelar_depan, gelar_belakang, barokah_tambahan.id_barokah_tambahan, umana.nama_lengkap, nominal_tambahan, lembaga.nama_lembaga, COUNT(barokah_tambahan.id_pengajar) as jml_brkh, 
-			barokah_tambahan.min_periode_tambahan, barokah_tambahan.max_periode_tambahan, SUM(barokah_tambahan.nominal_tambahan) as nominal');
+			$this->db->select('barokah_tambahan.id_pengajar, nama_barokah, gelar_depan, gelar_belakang, barokah_tambahan.id_barokah_tambahan, umana.nama_lengkap, nominal_tambahan, lembaga.nama_lembaga, 
+			SUM(CASE WHEN barokah_tambahan.max_periode_tambahan >= CURDATE() THEN 1 ELSE 0 END) as jml_brkh, 
+			barokah_tambahan.min_periode_tambahan, barokah_tambahan.max_periode_tambahan, 
+			SUM(CASE WHEN barokah_tambahan.max_periode_tambahan >= CURDATE() THEN barokah_tambahan.nominal_tambahan ELSE 0 END) as nominal');
 			$this->db->from('umana');
 			$this->db->join('pengajar', 'umana.nik = pengajar.nik');
 			$this->db->join('barokah_tambahan', 'barokah_tambahan.id_pengajar = pengajar.id_pengajar');
 			$this->db->join('lembaga', 'pengajar.id_lembaga = lembaga.id_lembaga');
-			$this->db->where('barokah_tambahan.max_periode_tambahan >=', $today);
 			$this->db->group_by('barokah_tambahan.id_pengajar');
 			$this->db->order_by('barokah_tambahan.id_barokah_tambahan','desc');
 		}
@@ -112,18 +114,18 @@ class Barokah_tambahan_model extends CI_Model {
     $this->db->join('pengajar', 'umana.nik = pengajar.nik');
     $this->db->join('barokah_tambahan', 'barokah_tambahan.id_pengajar = pengajar.id_pengajar ');
     $this->db->join('lembaga', 'pengajar.id_lembaga = lembaga.id_lembaga');
-    $this->db->where('barokah_tambahan.max_periode_tambahan >=', $today);
     $this->db->where('pengajar.id_pengajar', $id);
+    $this->db->order_by('CASE WHEN barokah_tambahan.max_periode_tambahan >= CURDATE() THEN 1 ELSE 0 END', 'DESC');
+    $this->db->order_by('barokah_tambahan.id_barokah_tambahan', 'DESC');
     $query = $this->db->get();
     return $query->result();
 }
 
 
 	public function total_potongan($id){
-		$today = date('Y-m-d'); // Mendapatkan tanggal hari ini
 		$this->db->select('SUM(barokah_tambahan.nominal_tambahan) as total_potongan');
 		$this->db->from('barokah_tambahan');
-		$this->db->where('max_periode_tambahan >=', $today);
+		$this->db->where('max_periode_tambahan >= CURDATE()');
 		$this->db->where('id_pengajar ='.$id);
 		$query = $this->db->get();
     	return $query->row()->total_potongan;

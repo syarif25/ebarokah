@@ -487,25 +487,22 @@ class Kehadiran_struktural extends CI_Controller {
 	}
 	
 	public function cetak($id){
-		$list2 = $this->db->query("select  nama_pimpinan, id_kehadiran, jabatan_lembaga, ketentuan_barokah.id_ketentuan, id_bidang, tunj_anak, tunj_mp, umana.gelar_depan, umana.gelar_belakang, kehormatan, kehadiran_lembaga.file, tunj_kel, id_kehadiran_lembaga, nama_lengkap, nama_jabatan, status_nikah, tmt_struktural, kehadiran.id_penempatan, kehadiran.bulan, kehadiran.tahun, jumlah_hadir, jumlah_tugas, jumlah_izin, jumlah_sakit, nama_lembaga, barokah, ketentuan_barokah.wajib_hadir, nominal_transport from umana, penempatan, kehadiran, kehadiran_lembaga, lembaga, ketentuan_barokah, transport WHERE 
-		kehadiran_lembaga.id_kehadiran_lembaga = kehadiran.id_kehadi and 
-		penempatan.id_penempatan = kehadiran.id_penempatan and 
-		penempatan.nik = umana.nik and 
-		penempatan.id_lembaga = lembaga.id_lembaga and 
-		penempatan.id_ketentuan = ketentuan_barokah.id_ketentuan and 
-		penempatan.kategori_trans = transport.id_transport and 
-		DATEDIFF(NOW(), penempatan.tgl_mulai) < penempatan.tgl_selesai and
-		kehadiran_lembaga.id_kehadiran_lembaga = $id order by ketentuan_barokah.id_ketentuan asc, umana.nama_lengkap asc ")->result();
-		$tunkel_get = $this->db->get('tunkel')->result();
-		$tunj_anak_get = $this->db->get('tunjanak')->result();
-		// $kehormatan = $this->db->query('select * from ');
-		$this->Login_model->getsqurity() ;
+		$this->Login_model->getsqurity();
+        $this->load->helper('hitung_barokah_helper');
+        $this->load->helper('Rupiah_helper');
 
-	
-		$isi['isitunkel']  = $tunkel_get;
-		$isi['isitunj_anak']  = $tunj_anak_get;
-		$isi['isilist']  = $list2;
-		$this->load->view('Kehadiran_struktural/Cetak',$isi);
+        // Gunakan helper yang sama dengan menu Validasi
+        $res = hitung_periode_barokah($this, $id);
+
+        if (!$res['periode']) {
+            show_error('Data periode tidak ditemukan atau belum lengkap', 404);
+        }
+
+		$isi['isilist'] = $res['rows'];
+        $isi['periode'] = $res['periode'];
+        $isi['totals']  = $res['totals'];
+
+		$this->load->view('Kehadiran_struktural/Cetak', $isi);
 	}
 	
 	

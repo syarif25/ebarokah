@@ -124,190 +124,46 @@
             // $pdf->Ln();
             
             $no = 1;
-            $jumlah_total = 0;
-            $jumlah_tunjab = 0;
-            $jumlah_kehadiran = 0;
-            $jumlah_tunkel = 0;
-            $jumlah_tunanak = 0;
-            $jumlah_tmp = 0;
-            $jumlah_kehormatan = 0;
-            $jumlah_tbk = 0;
-            $jumlah_potong = 0;
-            $jumlah_semua = 0;
             
-            foreach($isitunkel as $nominaltunkel);
-            foreach($isitunj_anak as $nominaltunj_anak);
-            
-            // Load dynamic year config from DB
-            $config_tahun_query = $this->db->get('pengaturan_tahun_acuan');
-            $tahun_acuan_map = [];
-            if ($config_tahun_query->num_rows() > 0) {
-                foreach ($config_tahun_query->result() as $cfg) {
-                    $tahun_acuan_map[trim($cfg->id_bidang)] = (int)$cfg->tahun_acuan;
-                }
-            }
-            $tahun_default = isset($tahun_acuan_map['Pengurus']) ? $tahun_acuan_map['Pengurus'] : (int)date('Y');
-            
-            // Map nama bulan Indonesia ke angka (konsisten dengan hitung_barokah_helper.php)
-            $map_bulan_id = [
-                'januari'=>1,'februari'=>2,'maret'=>3,'april'=>4,'mei'=>5,'juni'=>6,
-                'juli'=>7,'agustus'=>8,'september'=>9,'oktober'=>10,'november'=>11,'desember'=>12
-            ];
-
             foreach($isilist as $key){
-                // Get tahun acuan dynamically
-                $id_bidang_key = trim($key->id_bidang ?? '');
-                $tahun_skrg = isset($tahun_acuan_map[$id_bidang_key]) ? $tahun_acuan_map[$id_bidang_key] : $tahun_default;
-                
-                // Calculate MP
-                $mp = $tahun_skrg - date("Y", strtotime($key->tmt_struktural));
-                $masa_p = max(0, $mp);
-                                            
-                    $jml_kehadiran = $key->jumlah_hadir * $key->nominal_transport;
-                    
-                    // Konversi nama bulan Indonesia dengan benar (strtotime TIDAK support Bahasa Indonesia)
-                    $bulan_raw = strtolower(trim($periode->bulan));
-                    if (is_numeric($bulan_raw)) {
-                        $bulan_int = (int)$bulan_raw;
-                    } elseif (isset($map_bulan_id[$bulan_raw])) {
-                        $bulan_int = $map_bulan_id[$bulan_raw];
-                    } else {
-                        $bulan_int = (int)date('n'); // fallback ke bulan sekarang
-                    }
-                    $tahun_int = (int)$periode->tahun;
-                    $total_hari = (int)date('t', mktime(0, 0, 0, $bulan_int, 1, $tahun_int));
-                    
-                    $jumlah_jumat = 0;
-                    $hari_pertama = mktime(0, 0, 0, $bulan_int, 1, $tahun_int);
-                    $nama_hari = date('N', $hari_pertama);
-                    $jumat_pertama = ($nama_hari <= 5) ? (5 - $nama_hari + 1) : (12 - $nama_hari + 1);
-                    for ($tgl = $jumat_pertama; $tgl <= $total_hari; $tgl += 7) {
-                        $jumlah_jumat++;
-                    }
-                    $hari_kerja = $total_hari - $jumlah_jumat;
-                    $wajib_hadir_bulanan = round(($hari_kerja / 6) * ($key->wajib_hadir ?? 0));
-                    
-                    $izin = (int)($key->jumlah_izin ?? 0);
-                    $sakit = (int)($key->jumlah_sakit ?? 0);
-                    $tugas = (int)($key->jumlah_tugas ?? 0); // Include Tugas
-                    
-                    // Logic Update: Hadir, Tugas, Sakit = 100%. Izin = 25%.
-                    $kehadiran_efektif = ($key->jumlah_hadir * 1) + ($tugas * 1) + ($sakit * 1) + ($izin * 0.25);
-                    $persentase = ($wajib_hadir_bulanan > 0) ? (int)round(($kehadiran_efektif / $wajib_hadir_bulanan) * 100) : 0;
-                        
-                    // $mp = date("Y") - date("Y", strtotime($key->tmt_struktural))  ;
-                    // if($mp == '0' ){
-                    //     $masa_p = 0 ;
-                    //     }else {
-                    //         $masa_p = $mp + 1;
-                    //     }
-                    // }
-                    
-                    //mendapatkan tunkel
-                    if ($key->tunj_kel == "Ya" and $mp >= 2){
-                        $tunkel = $nominaltunkel->besaran_tunkel;
-                    } else {
-                        $tunkel = 0;
-                    }
-                    
-                    if ($key->tunj_anak == "Ya" ){
-                        $tunja_anak = $nominaltunj_anak->nominal_tunj_anak;
-                    } else {
-                        $tunja_anak = 0;
-                    }
-
-                    $hitung_kehormatan = $this->db->query("select nominal_kehormatan from barokah_kehormatan where min_masa_pengabdian <= $mp and max_masa_pengabdian >= $mp ")->result();
-                    
-                    if(!empty($hitung_kehormatan) and $key->kehormatan == 'Ya') {
-                        foreach($hitung_kehormatan as $nilai_kehormatan) {
-                            $kehormatan = $nilai_kehormatan->nominal_kehormatan;
-                        }
-                    } else {
-                        $kehormatan = 0; // atau dapat juga menghasilkan pesan error atau log error
-                    }
-
-                    $hitung_tbk = $this->db->query("SELECT sum(nominal_tbk) as jumlah_tbk from t_beban_kerja, penempatan where t_beban_kerja.id_penempatan = penempatan.id_penempatan and t_beban_kerja.id_penempatan = $key->id_penempatan and t_beban_kerja.max_periode >= DATE(NOW()) ")->result();
-                   
-                    if(!empty($hitung_tbk)) {
-                        foreach($hitung_tbk as $nilai_tbk) {
-                            $tbk = $nilai_tbk->jumlah_tbk;
-                        }
-                    } else {
-                        $tbk = 0; // atau dapat juga menghasilkan pesan error atau log error
-                    }
-                    
-                     $hitung_potongan = $this->db->query("SELECT SUM(nominal_potongan) as jumlah  from potongan_umana, penempatan where potongan_umana.id_penempatan = penempatan.id_penempatan and potongan_umana.id_penempatan = $key->id_penempatan and potongan_umana.max_periode_potongan >= DATE(NOW()) ")->result();
-                   
-                    if(!empty($hitung_potongan)) {
-                        foreach($hitung_potongan as $jumlah_potongan) {
-                            $potongan = $jumlah_potongan->jumlah;
-                        }
-                    } else {
-                        $potongan = 0; // atau dapat juga menghasilkan pesan error atau log error
-                    }
-
-                // ========================== HITUNG TMP   =====================================================================
-                    $tmp = 0;
-                    // jika sudah 3 tahun, naikkan tmp sebesar 10.000
-                    
-                    $tahunSekarang = 2024; // mendapatkan tahun sekarang
-                    // $tahunKerja = $tahunSekarang - date("Y", strtotime($key->tmt_struktural)); // menghitung masa kerja dalam tahun
-                    if ($key->tunj_mp != "Tidak" and $mp >= 3 ) {
-                      $kenaikanGaji = floor($mp / 3) * 10000; // menghitung jumlah kenaikan gaji
-                      $tmp_Akhir = $tmp + $kenaikanGaji; // menghitung gaji saat ini
-                    } else {
-                      $tmp_Akhir = $tmp; // jika belum waktunya kenaikan gaji, gaji tetap sama dengan awal
-                    }
-                //   ==================================================================================================================  
-                    
-            $diterima = $jml_kehadiran + $tunkel + $tunja_anak + $key->barokah + $tmp_Akhir + $kehormatan + $tbk - $potongan;
-            $jumlah = $jml_kehadiran + $tunkel + $tunja_anak + $key->barokah + $tmp_Akhir + $kehormatan + $tbk;
-                
-
             $pdf->Cell(1,7,'',0,1);
             $pdf->SetFont('arial','B',7);
-            $pdf->Cell(6,7,$no++,1,0,'C');
-            $pdf->Cell(57,7,$key->gelar_depan.' '.ucwords(strtolower($key->nama_lengkap)).' '.$key->gelar_belakang,1,0,'L');
-            $pdf->Cell(32,7,$key->nama_jabatan,1,0,'L'); // Match Validasi (nama_jabatan)
+            
+            // Cek indisipliner untuk warna baris
+            $fill = false;
+            if (!empty($key->is_warning)) {
+                $pdf->SetFillColor(255, 243, 205); // Warna kuning ala bg-warning Bootstrap
+                $fill = true;
+            }
+
+            $pdf->Cell(6,7,$no++,1,0,'C', $fill);
+            $pdf->Cell(57,7,$key->gelar_depan.' '.ucwords(strtolower($key->nama_lengkap)).' '.$key->gelar_belakang,1,0,'L', $fill);
+            $pdf->Cell(32,7,$key->nama_jabatan,1,0,'L', $fill);
             $pdf->SetFont('arial','B',7);
-            $pdf->Cell(10,7,date("Y", strtotime($key->tmt_struktural)),1,0,'C');
-            $pdf->Cell(19,7,rupiah($key->barokah),1,0,'C');
-            $pdf->Cell(7,7,$masa_p,1,0,'C');
-            $pdf->Cell(19,7,rupiah($tmp_Akhir),1,0,'C');
+            $pdf->Cell(10,7,date("Y", strtotime($key->tmt_struktural)),1,0,'C', $fill);
+            $pdf->Cell(19,7,rupiah($key->tunjab),1,0,'C', $fill);
+            $pdf->Cell(7,7,$key->mp,1,0,'C', $fill);
+            $pdf->Cell(19,7,rupiah($key->tmp),1,0,'C', $fill);
             
             // Kehadiran columns
-            $pdf->Cell(6,7,$wajib_hadir_bulanan,1,0,'C');
-            $pdf->Cell(6,7,$key->jumlah_hadir,1,0,'C');
-            $pdf->Cell(6,7,$key->jumlah_tugas ?? 0,1,0,'C'); // New T
-            $pdf->Cell(5,7,$izin,1,0,'C');
-            $pdf->Cell(5,7,$sakit,1,0,'C');
-            $pdf->Cell(6,7,$persentase,1,0,'C');
+            $pdf->Cell(6,7,$key->wajib_hadir_bulanan,1,0,'C', $fill);
+            $pdf->Cell(6,7,$key->jumlah_hadir,1,0,'C', $fill);
+            $pdf->Cell(6,7,$key->jumlah_tugas ?? 0,1,0,'C', $fill); // New T
+            $pdf->Cell(5,7,$key->jumlah_izin,1,0,'C', $fill);
+            $pdf->Cell(5,7,$key->jumlah_sakit,1,0,'C', $fill);
+            $pdf->Cell(6,7,$key->persentase_kehadiran,1,0,'C', $fill);
             
-            $pdf->Cell(19,7,rupiah($jml_kehadiran),1,0,'C');
-            $pdf->Cell(19,7,rupiah($tunkel),1,0,'C');
-            $pdf->Cell(19,7,rupiah($tunja_anak),1,0,'C');
-            $pdf->Cell(20,7,rupiah($kehormatan),1,0,'C');
-            $pdf->Cell(18,7,rupiah($tbk),1,0,'C');
-            $pdf->Cell(20,7,rupiah($jumlah),1,0,'C');
-            $pdf->Cell(20,7,rupiah($potongan),1,0,'C');
-            $pdf->Cell(19,7,rupiah($diterima),1,0,'C');
+            $pdf->Cell(19,7,rupiah($key->nominal_kehadiran),1,0,'C', $fill);
+            $pdf->Cell(19,7,rupiah($key->tunkel),1,0,'C', $fill);
+            $pdf->Cell(19,7,rupiah($key->tunj_anak),1,0,'C', $fill);
+            $pdf->Cell(20,7,rupiah($key->nilai_kehormatan),1,0,'C', $fill);
+            $pdf->Cell(18,7,rupiah($key->tbk),1,0,'C', $fill);
+            $pdf->Cell(20,7,rupiah($key->jumlah_barokah),1,0,'C', $fill);
+            $pdf->Cell(20,7,rupiah($key->potongan),1,0,'C', $fill);
+            $pdf->Cell(19,7,rupiah($key->diterima),1,0,'C', $fill);
             $pdf->Cell(0,0,'',0,1);
             $pdf->Cell(0,0,'',0,1);
-    
-        
-        
-
-        $jumlah_semua += $jumlah;
-        $jumlah_total += $diterima;
-        $jumlah_tunjab += $key->barokah;
-        $jumlah_kehadiran += $jml_kehadiran;
-        $jumlah_tunkel += $tunkel;
-        $jumlah_tunanak += $tunja_anak;
-        $jumlah_tmp += $tmp_Akhir;
-        $jumlah_kehormatan += $kehormatan;
-        $jumlah_tbk += $tbk;
-        $jumlah_potong += (int)$potongan;
-    }
+        }
 
         $pdf->ln(8);
         
@@ -317,13 +173,13 @@
         $pdf->Cell(105,7,'TOTAL',1,0,'C');
         
         // 2. TUNJAB (19)
-        $pdf->Cell(19,7,rupiah($jumlah_tunjab),1,0,'C');
+        $pdf->Cell(19,7,rupiah($totals['total_tunjab']),1,0,'C');
         
         // 3. MP (7) - Empty
         $pdf->Cell(7,7,'',1,0,'C');
         
         // 4. TMP (19)
-        $pdf->Cell(19,7,rupiah($jumlah_tmp),1,0,'C');
+        $pdf->Cell(19,7,rupiah($totals['total_tmp']),1,0,'C');
         
         // 5. Kehadiran Breakdown (W+H+T+I+S+%)
         $pdf->Cell(6,7,'',1,0,'C'); // W
@@ -334,28 +190,28 @@
         $pdf->Cell(6,7,'',1,0,'C'); // %
         
         // 6. KHD.Rp (19)
-        $pdf->Cell(19,7,rupiah($jumlah_kehadiran),1,0,'C');
+        $pdf->Cell(19,7,rupiah($totals['total_kehadiran']),1,0,'C');
         
         // 7. TUNKEL (19)
-        $pdf->Cell(19,7,rupiah($jumlah_tunkel),1,0,'C');
+        $pdf->Cell(19,7,rupiah($totals['total_tunkel']),1,0,'C');
         
         // 8. TUN ANAK (19)
-        $pdf->Cell(19,7,rupiah($jumlah_tunanak),1,0,'C');
+        $pdf->Cell(19,7,rupiah($totals['total_tunjanak']),1,0,'C');
         
         // 9. KEHORMATAN (20)
-        $pdf->Cell(20,7,rupiah($jumlah_kehormatan),1,0,'C');
+        $pdf->Cell(20,7,rupiah($totals['total_kehormatan']),1,0,'C');
         
         // 10. TBK (18)
-        $pdf->Cell(18,7,rupiah($jumlah_tbk),1,0,'C');
+        $pdf->Cell(18,7,rupiah($totals['total_tbk']),1,0,'C');
         
         // 11. JUMLAH (20)
-        $pdf->Cell(20,7,rupiah($jumlah_semua),1,0,'C');
+        $pdf->Cell(20,7,rupiah($totals['total_barokah']),1,0,'C');
         
         // 12. POTONGAN (20)
-        $pdf->Cell(20,7,rupiah($jumlah_potong),1,0,'C');
+        $pdf->Cell(20,7,rupiah($totals['total_potongan']),1,0,'C');
         
         // 13. DITERIMA (19)
-        $pdf->Cell(19,7,rupiah($jumlah_total),1,0,'C');
+        $pdf->Cell(19,7,rupiah($totals['grand_total']),1,0,'C');
         
         $pdf->ln(40);
         $tgl1=gmdate("d-m-Y");

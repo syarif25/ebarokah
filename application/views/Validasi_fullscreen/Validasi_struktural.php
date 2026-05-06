@@ -60,6 +60,34 @@
           <i class="fa fa-scissors mr-1"></i> Potongan
         </a>
       <?php endif; ?>
+
+        <!-- Tampilan Kolom -->
+        <div class="dropdown d-inline-block ml-1">
+            <button class="btn btn-primary dropdown-toggle" type="button" id="btnTampilanKolomStruk" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="fa fa-columns mr-1"></i> Kolom
+            </button>
+            <div class="dropdown-menu dropdown-menu-right shadow-sm" aria-labelledby="btnTampilanKolomStruk" style="min-width: 220px;">
+                <h6 class="dropdown-header text-uppercase font-weight-bold" style="font-size: 0.7rem; letter-spacing: 0.5px;">Tampilkan / Sembunyikan</h6>
+                <div class="dropdown-item px-3 py-2">
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input toggle-vis-struk" id="colMasterStruk" data-columns="2,3,4,5,6" checked>
+                        <label class="custom-control-label" style="cursor:pointer;" for="colMasterStruk">Grup Data Master</label>
+                    </div>
+                </div>
+                <div class="dropdown-item px-3 py-2">
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input toggle-vis-struk" id="colKehadiranStruk" data-columns="7,8,9,10,11,12,13" checked>
+                        <label class="custom-control-label" style="cursor:pointer;" for="colKehadiranStruk">Grup Kehadiran</label>
+                    </div>
+                </div>
+                <div class="dropdown-item px-3 py-2">
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input toggle-vis-struk" id="colTunjanganStruk" data-columns="14,15,16,17" checked>
+                        <label class="custom-control-label" style="cursor:pointer;" for="colTunjanganStruk">Grup Tunjangan</label>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
   </div>
 
@@ -465,12 +493,24 @@
 
 
 <script>
-    $('#tabel_validasi').DataTable({
+    const dtTblStruk = $('#tabel_validasi').DataTable({
     paging: false,
     searching: false,
     ordering: false,
     info: false,
     fixedHeader: true
+    });
+
+    // Toggle Column Visibility Logic
+    $('.dropdown-menu').on('click', function(e) {
+        e.stopPropagation();
+    });
+
+    $('.toggle-vis-struk').on('change', function (e) {
+        var columnsStr = $(this).attr('data-columns');
+        var columns = columnsStr.split(',').map(Number);
+        var isVisible = $(this).is(':checked');
+        dtTblStruk.columns(columns).visible(isVisible);
     });
 
     $(function () {

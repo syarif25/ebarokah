@@ -57,7 +57,7 @@ class Validasi_pengajar extends CI_Controller {
             select tmt_maif, kehadiran_pengajar.jumlah_hadir_piket, kehadiran_pengajar.jumlah_hadir_15,
                    kehadiran_pengajar.jumlah_hadir_10, jafung, lembaga.id_lembaga, kehadiran_lembaga.status,
                    status_sertifikasi, walkes, kehadiran_pengajar.id_kehadiran_pengajar, pengajar.kategori,
-                   pengajar.jabatan_akademik, jumlah_sks, ijazah_terakhir, lembaga.id_bidang, tunj_anak,
+                jumlah_sks, ijazah_terakhir, lembaga.id_bidang, tunj_anak,
                    umana.gelar_depan, umana.gelar_belakang, kehormatan, kehadiran_lembaga.file, tunj_kel,
                    kehadiran_lembaga.id_kehadiran_lembaga, nama_lengkap, status_nikah, tmt_dosen, tmt_guru,
                    kehadiran_pengajar.id_pengajar, kehadiran_pengajar.bulan, kehadiran_pengajar.tahun,
@@ -251,10 +251,9 @@ class Validasi_pengajar extends CI_Controller {
             SELECT kp.*,
                    kl.bulan, kl.tahun,
                    p.kategori, p.id_lembaga, p.id_pengajar,
-                   p.tunj_kel, p.tunj_anak, p.walkes, p.kehormatan,
-                   p.status_sertifikasi, p.jabatan_akademik, p.jafung,
+                   p.tunj_kel, p.tunj_anak, p.walkes, p.kehormatan, p.jafung,
                    p.jumlah_sks,
-                   u.status_aktif, u.ijazah_terakhir, u.jabatan_akademik,
+                   u.status_aktif, u.ijazah_terakhir, u.jabatan_akademik, u.status_sertifikasi,
                    u.tmt_guru, u.tmt_dosen, u.tmt_maif,
                    l.nama_lembaga, l.id_bidang,
                    t.nominal_transport
@@ -326,7 +325,7 @@ class Validasi_pengajar extends CI_Controller {
              echo json_encode(['status' => false, 'message' => 'Gagal menyimpan snapshot.']);
         } else {
              $this->db->trans_commit();
-             echo json_encode(['status' => true, 'message' => 'Validasi disetujui dan data terkunci (Snapshot).']);
+             echo json_encode(['status' => true, 'message' => 'Validasi disetujui.']);
         }
     }
 

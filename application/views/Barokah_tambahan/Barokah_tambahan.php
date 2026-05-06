@@ -24,7 +24,6 @@
                                     <th>Lembaga</th>
                                     <th>Jenis Barokah</th>
                                     <th>Nominal</th>
-                                    <th>Periode</th>
                                     <th>Aksi</th>
                                 </tr>
                             </thead>

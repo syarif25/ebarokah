@@ -414,8 +414,8 @@
     </div>
 </div>
 
-<div id="modal_detail_potongan" class="modal fade bd-example-modal-lg" tabindex="-1" aria-hidden="true" style="display: none;">
-      <div class="modal-dialog modal-lg" >
+<div id="modal_detail_potongan" class="modal fade bd-example-modal-xl" tabindex="-1" aria-hidden="true" style="display: none;">
+      <div class="modal-dialog modal-xl" >
           <div class="modal-content">
               <div class="modal-header">
                   <h5 class="modal-title"></h5>
@@ -425,8 +425,13 @@
               <div class="modal-body">
                   <div class="card">
                       <form action="#" id="form">
-                          <div class="card-header">
-                              <h4 class="card-title">Form Detail Potongan Barokah</h4> <span id="total_potongan"></span>
+                          <div class="card-header d-flex justify-content-between align-items-center">
+                              <h4 class="card-title">Rincian Potongan Barokah</h4> 
+                              <span id="total_potongan" class="badge badge-success light badge-lg fs-14"></span>
+                          </div>
+                          <div class="alert alert-info alert-dismissible fade show m-3 mb-0" role="alert" style="font-size: 13px;">
+                              <strong>Catatan:</strong> Status yang tampil adalah status hari ini. Saat validasi, sistem otomatis menggunakan angka sesuai <strong>bulan pengajuan</strong>.
+                              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="padding: 0.75rem 1rem;"></button>
                           </div>
                           <div class="card-body">
                           <style>
@@ -439,38 +444,33 @@
                                 }
                             </style>
                               <div class="basic-form row">
-                                <div id="">
-                                    <div class="col-6">
-                                        <input type="hidden" name="id_detail">
-                                        <input type="hidden" name="id_penempatan_detail">
-                                        <label>Nama Lengkap</label> <small id="select_nikHelp" class="help-block text-danger">  </small>
-                                        <div class="input-group mb-3 input-success-o">
-                                            <h2 id="nama_lengkap_detail"></h2>
-                                        </select>
-                                            <span class="help-block text-danger" style="color:red"></span>
-                                        </div>
+                                <div class="row mb-4 px-3">
+                                    <div class="col-sm-6 mb-3 mb-sm-0">
+                                        <p class="mb-1 text-muted">Nama Lengkap</p>
+                                        <h5 id="nama_lengkap_detail" class="text-primary font-w600 mb-0"></h5>
                                     </div>
-                                    <div class="col-6">
-                                        <label>Lembaga Pengabdian</label>
-                                        <h2 id="nama_lembaga_detail"></h2>
+                                    <div class="col-sm-6">
+                                        <p class="mb-1 text-muted">Lembaga Pengabdian</p>
+                                        <h5 id="nama_lembaga_detail" class="text-primary font-w600 mb-0"></h5>
                                     </div>
                                 </div>
-                                </div>
-                                <table id="tabel_view_rincian_umana" class="table-hover" width="100%" >
-                                    <thead>
-                                        <tr>
-                                            <th>No</th>
-                                            <th>Jenis Potongan</th>
-                                            <th>Nominal</th>
-                                            <th>Periode</th>
-                                            <th>#</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
+                                <div class="table-responsive">
+                                    <table id="tabel_view_rincian_umana" class="table table-hover table-bordered table-striped table-responsive-sm fs-14" width="100%" >
+                                        <thead>
+                                            <tr>
+                                                <th>No</th>
+                                                <th>Jenis Potongan</th>
+                                                <th>Nominal</th>
+                                                <th>Periode</th>
+                                                <th>#</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            
+                                        </tbody>
                                         
-                                    </tbody>
-                                    
-                                </table>
+                                    </table>
+                                </div>
                                 <div id="loadingSpinner" class="table-loading-overlay" style="display: none;">
                                     <div class="spinner-border text-primary" role="status">
                                         <span class="visually-hidden">Loading...</span>
