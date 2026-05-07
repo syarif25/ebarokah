@@ -159,11 +159,36 @@ class Laporan_pengajar extends CI_Controller {
 		
 		$id = $this->decrypt_url($encrypted_id);
 		
-		// Always use live data (same as struktural cetak behavior)
-		$data['data_rincian'] = $this->Laporan_model->get_datatables_legacy_pengajar($id);
+		// Gunakan raw query agar view PDF mendapatkan semua field mentah dari DB
+		$data['isilist'] = $this->Laporan_model->get_raw_for_pdf_pengajar($id);
 		
         $data['header_info'] = $this->db->query("SELECT * FROM kehadiran_lembaga JOIN lembaga ON kehadiran_lembaga.id_lembaga = lembaga.id_lembaga WHERE id_kehadiran_lembaga = '$id'")->row();
 		
-		$this->load->view('Laporan_pengajar/Cetak', $data);
+		// Data tunkel & tunj_anak — dibutuhkan oleh view PDF untuk kalkulasi
+		$data['isitunkel']    = $this->db->get('tunkel')->result();
+		$data['isitunj_anak'] = $this->db->get('tunjanak')->result();
+
+		// Tahun acuan dinamis dari DB
+		$cfg_tahun = $this->db->get('pengaturan_tahun_acuan');
+		$tahun_acuan_map = [];
+		if ($cfg_tahun->num_rows() > 0) {
+			foreach ($cfg_tahun->result() as $cfg) {
+				$tahun_acuan_map[trim($cfg->id_bidang)] = (int)$cfg->tahun_acuan;
+			}
+		}
+		$data['tahun_acuan_map'] = $tahun_acuan_map;
+
+		// Walkes Config dari DB
+		$walkes_rows = $this->db->get('master_tarif_walkes')->result();
+		$walkes_config = [];
+		foreach ($walkes_rows as $w) {
+			$walkes_config[$w->kode_walkes] = (int)$w->nominal;
+		}
+		if (empty($walkes_config)) {
+			$walkes_config = ['Ya' => 75000, 'walkes_sklh' => 50000];
+		}
+		$data['walkes_config'] = $walkes_config;
+
+		$this->load->view('Kehadiran_pengajar/Cetak', $data);
 	}
 }

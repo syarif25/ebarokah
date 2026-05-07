@@ -469,9 +469,16 @@ if (isset($isilist) && !empty($isilist)) {
                         </a>
                         
                         <!-- Potongan -->
-                        <a href="<?php echo base_url() ?>Kehadiran/Cetak_Potongan_pengajar/<?php echo $meta_id_lembaga; ?>" target="_blank" class="btn btn-outline-danger btn-sm rounded-pill">
+                        <a href="<?php echo base_url() ?>Kehadiran_pengajar/cetak_potongan/<?php echo ($enc_id_lembaga ?? $meta_id_lembaga); ?>" target="_blank" class="btn btn-outline-danger btn-sm rounded-pill">
                             <i class="mdi mdi-content-cut mr-1"></i> Potongan
                         </a>
+
+                        <!-- Update Daftar Pengajar -->
+                        <?php if(!$is_readonly): ?>
+                        <button type="button" class="btn btn-primary btn-sm ml-2 rounded-pill shadow-sm" onclick="syncTeachers()">
+                            <i class="mdi mdi-sync mr-1"></i> Update Daftar Pengajar
+                        </button>
+                        <?php endif; ?>
 
                         <!-- Tampilan Kolom -->
                         <div class="dropdown d-inline-block ml-2">
@@ -719,7 +726,13 @@ if (isset($isilist) && !empty($isilist)) {
                         <tr id="row-<?php echo $key->id_kehadiran_pengajar; ?>">
                             <td class="cell-center text-muted sticky-col-first bg-white border-right"><?php echo $no++; ?></td>
                             <td class="sticky-col-second bg-white border-right">
-                                <div class="font-weight-bold text-dark"><?php echo htmlentities((isset($key->gelar_depan) ? $key->gelar_depan : '').' '.$key->nama_lengkap.' '.(isset($key->gelar_belakang) ? $key->gelar_belakang : '')); ?></div>
+                                <?php 
+                                    $g_depan = !empty($key->gelar_depan) ? trim($key->gelar_depan) . ' ' : '';
+                                    $g_belakang = !empty($key->gelar_belakang) ? ' ' . trim($key->gelar_belakang) : '';
+                                    $nama_formatted = ucwords(strtolower(trim($key->nama_lengkap)));
+                                    $full_name_display = $g_depan . $nama_formatted . $g_belakang;
+                                ?>
+                                <div class="font-weight-bold text-dark"><?php echo htmlentities($full_name_display); ?></div>
                                 <span class="badge badge-light border mt-1" style="font-size: 0.7rem;"><?php echo htmlentities($key->kategori); ?></span>
                                 <?php if($key->status_aktif == "Cuti 50%" or $key->status_aktif == "Cuti 100%"){ ?>
                                     <span class="badge badge-danger ml-1"><?php echo htmlentities($key->status_aktif); ?></span>
@@ -766,7 +779,7 @@ if (isset($isilist) && !empty($isilist)) {
                             
                             <!-- Potongan & Result -->
                             <td class="cell-right border-left align-middle text-muted js-jumlah"><?php echo rupiah($jumlah); ?></td>
-                            <td class="cell-right border-left text-danger align-middle"><?php echo rupiah($potongan); ?></td>
+                            <td class="cell-right border-left text-danger align-middle js-row-potongan"><?php echo rupiah($potongan); ?></td>
                             <td class="cell-right border-left col-result align-middle js-diterima"><?php echo rupiah($diterima); ?></td>
                             <td class="cell-center align-middle">
                                 <?php if(!$is_readonly): ?>
@@ -776,7 +789,7 @@ if (isset($isilist) && !empty($isilist)) {
                                     data-hadir15="<?php echo $key->jumlah_hadir_15; ?>"
                                     data-hadir10="<?php echo $key->jumlah_hadir_10; ?>"
                                     data-piket="<?php echo $key->jumlah_hadir_piket; ?>"
-                                    data-nama="<?php echo htmlentities($key->nama_lengkap); ?>"
+                                    data-nama="<?php echo htmlentities($full_name_display); ?>"
                                 ><i class="mdi mdi-pencil"></i></button>
                                 <?php else: ?>
                                     <span class="text-muted"><i class="mdi mdi-lock"></i></span>
@@ -827,20 +840,20 @@ if (isset($isilist) && !empty($isilist)) {
                             <!-- Kehadiran Breakdown -->
                             <!-- Normal (2 cols: Input, Nominal) -->
                             <td class="bg-light border-left"></td>
-                            <td class="text-right bg-light font-weight-bold"><?php echo rupiah($sum_jml_kehadiran); ?></td>
+                            <td class="text-right bg-light font-weight-bold" id="sum-kehadiran-normal"><?php echo rupiah($sum_jml_kehadiran); ?></td>
                             
                             <!-- 15rb (2 cols) -->
                             <td class="bg-light"></td>
-                            <td class="text-right bg-light font-weight-bold"><?php echo rupiah($sum_nominal_hadir_15); ?></td>
+                            <td class="text-right bg-light font-weight-bold" id="sum-kehadiran-15"><?php echo rupiah($sum_nominal_hadir_15); ?></td>
                             
                             <!-- 10rb (2 cols) -->
                             <td class="bg-light"></td>
-                            <td class="text-right bg-light font-weight-bold"><?php echo rupiah($sum_nominal_hadir_10); ?></td>
+                            <td class="text-right bg-light font-weight-bold" id="sum-kehadiran-10"><?php echo rupiah($sum_nominal_hadir_10); ?></td>
                             
                             <!-- Piket (3 cols: Input, Rate, Nominal) -->
                             <td class="bg-light"></td>
                             <td class="bg-light"></td>
-                            <td class="text-right bg-light font-weight-bold"><?php echo rupiah($sum_barokah_piket); ?></td>
+                            <td class="text-right bg-light font-weight-bold" id="sum-kehadiran-piket"><?php echo rupiah($sum_barokah_piket); ?></td>
                             
                             <!-- Tunjangan -->
                             <td class="text-right border-left bg-light font-weight-bold"><?php echo rupiah($sum_tunkel); ?></td>
@@ -850,9 +863,9 @@ if (isset($isilist) && !empty($isilist)) {
                             <td class="text-right bg-light font-weight-bold"><?php echo rupiah($sum_tambahan); ?></td>
                             
                             <!-- Potongan & Result -->
-                            <td class="text-right border-left bg-light font-weight-bold text-muted"><?php echo rupiah($sum_jumlah); ?></td>
-                            <td class="text-right border-left bg-light text-danger font-weight-bold"><?php echo rupiah($sum_potongan); ?></td>
-                            <td class="text-right border-left bg-light text-success font-weight-bold"><?php echo rupiah($sum_diterima); ?></td>
+                            <td class="text-right border-left bg-light font-weight-bold text-muted" id="sum-jumlah"><?php echo rupiah($sum_jumlah); ?></td>
+                            <td class="text-right border-left bg-light text-danger font-weight-bold" id="sum-potongan"><?php echo rupiah($sum_potongan); ?></td>
+                            <td class="text-right border-left bg-light text-success font-weight-bold" id="sum-diterima"><?php echo rupiah($sum_diterima); ?></td>
                             <td class="bg-light"></td>
                         </tr>
                     </tfoot>
@@ -992,6 +1005,9 @@ if (isset($isilist) && !empty($isilist)) {
                         btnEdit.data('hadir10', hadir10);
                         btnEdit.data('piket', piket);
 
+                        // Recalculate Footer Totals
+                        updateFooterTotals();
+
                         $('#modalEdit').modal('hide');
                         Swal.fire({
                             icon: 'success',
@@ -1017,6 +1033,52 @@ if (isset($isilist) && !empty($isilist)) {
             });
         });
     });
+
+    /**
+     * Helper to parse Rupiah string to integer
+     */
+    function parseRupiah(str) {
+        if (!str) return 0;
+        // Remove 'Rp ', dots, and any other non-digit chars
+        return parseInt(str.replace(/[^0-9]/g, '')) || 0;
+    }
+
+    /**
+     * Helper to format integer to Rupiah string
+     */
+    function formatRupiah(num) {
+        return 'Rp ' + num.toLocaleString('id-ID');
+    }
+
+    /**
+     * Recalculate and update the grand totals in the table footer
+     */
+    function updateFooterTotals() {
+        const dt = $('#tblValidasi').DataTable();
+        let sumNormal = 0, sum15 = 0, sum10 = 0, sumPiket = 0;
+        let sumJumlah = 0, sumPotongan = 0, sumDiterima = 0;
+
+        // Iterate through all rows (including those hidden by scroll/search)
+        dt.rows().every(function() {
+            const row = $(this.node());
+            sumNormal += parseRupiah(row.find('.js-nominal-hadir').text());
+            sum15 += parseRupiah(row.find('.js-nominal-15').text());
+            sum10 += parseRupiah(row.find('.js-nominal-10').text());
+            sumPiket += parseRupiah(row.find('.js-nominal-piket').text());
+            sumJumlah += parseRupiah(row.find('.js-jumlah').text());
+            sumPotongan += parseRupiah(row.find('.js-row-potongan').text());
+            sumDiterima += parseRupiah(row.find('.js-diterima').text());
+        });
+
+        // Update footer elements
+        $('#sum-kehadiran-normal').text(formatRupiah(sumNormal));
+        $('#sum-kehadiran-15').text(formatRupiah(sum15));
+        $('#sum-kehadiran-10').text(formatRupiah(sum10));
+        $('#sum-kehadiran-piket').text(formatRupiah(sumPiket));
+        $('#sum-jumlah').text(formatRupiah(sumJumlah));
+        $('#sum-potongan').text(formatRupiah(sumPotongan));
+        $('#sum-diterima').text(formatRupiah(sumDiterima));
+    }
 
     function save() {
         Swal.fire({
@@ -1108,6 +1170,57 @@ if (isset($isilist) && !empty($isilist)) {
                                 showConfirmButton: true
                             }).then(() => {
                                 window.location.href = "<?php echo site_url('Kehadiran/pengajar'); ?>";
+                            });
+                        } else {
+                            Swal.fire('Gagal', res.message, 'error');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error(xhr.responseText);
+                        Swal.fire('Error', 'Terjadi kesalahan koneksi.', 'error');
+                    }
+                });
+            }
+        });
+    }
+
+    function syncTeachers() {
+        Swal.fire({
+            title: 'Update Daftar Pengajar?',
+            text: "Sistem akan memeriksa jika ada pengajar baru atau pengajar yang masa aktifnya diupdate untuk dimasukkan ke periode ini.",
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Ya, Update!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Sinkronisasi...',
+                    text: 'Mohon tunggu sebentar',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                $.ajax({
+                    url: "<?php echo site_url('Validasi_pengajar/sync_pengajar_json'); ?>",
+                    type: "POST",
+                    dataType: "json",
+                    data: {
+                        id_kehadiran_lembaga: '<?php echo $id_kehadiran_lembaga; ?>'
+                    },
+                    success: function(res) {
+                        if (res.status) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil!',
+                                text: res.message,
+                                showConfirmButton: true
+                            }).then(() => {
+                                location.reload();
                             });
                         } else {
                             Swal.fire('Gagal', res.message, 'error');

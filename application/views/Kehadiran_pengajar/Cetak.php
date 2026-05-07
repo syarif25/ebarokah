@@ -1,11 +1,20 @@
 <?php 
     class CustomPDF extends FPDF {
         private $isFirstPage = true;  
+
     function Header() {
+        // --- WATERMARK: Single Centered Logo (opacity ~8%) ---
+        $pageW = $this->GetPageWidth();   // Legal Landscape = 355mm
+        $pageH = $this->GetPageHeight();  // Legal Landscape = 216mm
+        $logoW = 80;
+        $logoX = ($pageW - $logoW) / 2;
+        $logoY = ($pageH - ($logoW * 283/753)) / 2;
+        $this->Image('assets/p2s2_watermark.png', $logoX, $logoY, $logoW);
+        // ---------------------------------------------------------
+
         if ($this->PageNo() > 1) {
         $this->Cell(1,7,'',0,1);
         $this->SetFont('arial','B',6);
-        // $this->SetFillColor(128, 128, 128);
        
         $this->Cell(5,7,'N0',1,0,'C');
             $this->Cell(45,7,'NAMA LENGKAP',1,0,'C');
@@ -38,10 +47,7 @@
         $this->Cell(0,1,'',0,1);
         }
         if ($this->PageNo() > 1) {
-            // $this->SetFont('arial', 'I', 8);
-            // $this->Cell(0, 10, 'Elemen ini hanya ditampilkan pada lembar kedua dan seterusnya', 0, 1, 'C');
             $this->setY(25);
-           
         }
         }
     }
@@ -74,23 +80,22 @@
         $pdf->Line(9,27,340,27);
 
 
-        foreach ($isilist as $periode) {}
-
-            $pdf->ln(5);
-            $pdf->SetFont('arial', 'B', 10);
-            $pdf->Cell(200, 2, strtoupper($periode->nama_lembaga), '0', '0', 'L', false);
-            $pdf->Cell(50, 2, '', '0', '0', 'L', false);
-            if ($periode->id_bidang == "Bidang DIKTI"){
-                $pdf->Cell(50, 2,'Barokah Dosen', '0', '1', 'L', false);
-            } else {
-                $pdf->Cell(50, 2,'Barokah Guru', '0', '1', 'L', false);
-            }
-        
-            $pdf->ln(2);
-            $pdf->SetFont('arial', '', 10);
-            $pdf->Cell(200, 2, '', '0', '0', 'L', false);
-            $pdf->Cell(50, 2, '', '0', '0', 'L', false);
-            $pdf->Cell(50, 2, 'Bulan : '.$periode->bulan.' '.$periode->tahun, '0', '1', 'L', false);
+        // Menggunakan header_info yang dikirim dari controller untuk data header
+        $pdf->ln(5);
+        $pdf->SetFont('arial', 'B', 10);
+        $pdf->Cell(200, 2, strtoupper($header_info->nama_lembaga), '0', '0', 'L', false);
+        $pdf->Cell(50, 2, '', '0', '0', 'L', false);
+        if ($header_info->id_bidang == "Bidang DIKTI"){
+            $pdf->Cell(50, 2,'Barokah Dosen', '0', '1', 'L', false);
+        } else {
+            $pdf->Cell(50, 2,'Barokah Guru', '0', '1', 'L', false);
+        }
+    
+        $pdf->ln(2);
+        $pdf->SetFont('arial', '', 10);
+        $pdf->Cell(200, 2, '', '0', '0', 'L', false);
+        $pdf->Cell(50, 2, '', '0', '0', 'L', false);
+        $pdf->Cell(50, 2, 'Bulan : '.$header_info->bulan.' '.$header_info->tahun, '0', '1', 'L', false);
 
             $pdf->Cell(1,7,'',0,1);
             $pdf->SetFont('arial','B',6);
@@ -146,15 +151,21 @@
             $jumlah_semua = 0;
             $jumlah_bk = 0;
             $no = 1;
-            foreach($isitunkel as $nominaltunkel);
-            foreach($isitunj_anak as $nominaltunj_anak);
+            $nominaltunkel = isset($isitunkel[0]) ? $isitunkel[0] : null;
+            $nominaltunj_anak = isset($isitunj_anak[0]) ? $isitunj_anak[0] : null;
             foreach($isilist as $key){
                 $jml_kehadiran = $key->jumlah_hadir * $key->nominal_transport;
-                $nominal_hadir_15 = $key->jumlah_hadir_15 * 15000;
-                $nominal_hadir_10 = $key->jumlah_hadir_10 * 10000;
-                $tahun_madrasah = 2026;
-                $tahun_sekolah = 2026;
-                $tahun_pt = 2026;
+                $jml_kehadiran_15 = $key->jumlah_hadir_15 * 15000;
+                $jml_kehadiran_10 = $key->jumlah_hadir_10 * 10000;
+                // Ambil tahun acuan dari $tahun_acuan_map yang dikirim controller
+                // Fallback ke tahun saat ini jika tidak tersedia
+                $tahun_default  = (int)date('Y');
+                if (isset($tahun_acuan_map['Default']))      $tahun_default = $tahun_acuan_map['Default'];
+                if (isset($tahun_acuan_map['Pengurus']))     $tahun_default = $tahun_acuan_map['Pengurus'];
+                if (isset($tahun_acuan_map['Kantor Pusat'])) $tahun_default = $tahun_acuan_map['Kantor Pusat'];
+                $tahun_madrasah = isset($tahun_acuan_map['Bidang DIKJAR-M']) ? (int)$tahun_acuan_map['Bidang DIKJAR-M'] : $tahun_default;
+                $tahun_sekolah  = isset($tahun_acuan_map['Bidang DIKJAR'])   ? (int)$tahun_acuan_map['Bidang DIKJAR']   : $tahun_default;
+                $tahun_pt       = isset($tahun_acuan_map['Bidang DIKTI'])    ? (int)$tahun_acuan_map['Bidang DIKTI']    : $tahun_default;
                 
                 if (($key->kategori == 'GTY' && $key->id_bidang == "Bidang DIKJAR-M") || ($key->kategori == 'GTT' && $key->id_bidang == "Bidang DIKJAR-M")) {
                     $mp = $tahun_madrasah - date("Y", strtotime($key->tmt_guru));
@@ -216,12 +227,11 @@
                 }
 
                 //barokah walikelas
-                if ($key->walkes == "Ya" ){
-                    $tunj_walkes = 75000;
-                } else if($key->walkes == "walkes_sklh") {
-                    $tunj_walkes = 50000;
-                } else {
-                    $tunj_walkes = 0;
+                $tunj_walkes = 0;
+                if (isset($walkes_config[$key->walkes])) {
+                    $tunj_walkes = $walkes_config[$key->walkes];
+                } elseif ($key->walkes == "Ya" && isset($walkes_config['Ya'])) {
+                    $tunj_walkes = $walkes_config['Ya'];
                 }
                 
                 if ($key->status_aktif == "Cuti 50%") {
@@ -361,21 +371,11 @@
                 // $potongan = 0;
 
                 // ========================== HITUNG TMP   =====================================================================
-                $tmp = 0;
-                // jika sudah 3 tahun, naikkan tmp sebesar 10.000
+                // Logic TMP dihilangkan karena tidak digunakan di tabel PDF atau sudah dihandle di rank
+                // ==================================================================================================================  
                 
-                $tahunSekarang = 2024; // mendapatkan tahun sekarang
-                // $tahunKerja = $tahunSekarang - date("Y", strtotime($key->tmt_dosen)); // menghitung masa kerja dalam tahun
-                if ($mp >= 3 ) {
-                  $kenaikanGaji = floor($mp / 3) * 10000; // menghitung jumlah kenaikan gaji
-                  $tmp_Akhir = $tmp + $kenaikanGaji; // menghitung gaji saat ini
-                } else {
-                  $tmp_Akhir = $tmp; // jika belum waktunya kenaikan gaji, gaji tetap sama dengan awal
-                }
-                //   ==================================================================================================================  
-                
-                $diterima = $barokah_piket + $jml_kehadiran + $nominal_hadir_15 + $nominal_hadir_10 + $tunkel + $tunja_anak + $mengajar + $dty + $jafung + $kehormatan + $tunj_walkes + $tambahan - $potongan;
-                $jumlah = $barokah_piket + $jml_kehadiran + $nominal_hadir_15 + $nominal_hadir_10 + $tunkel + $tunja_anak + $mengajar + $dty + $jafung + $kehormatan + $tunj_walkes + $tambahan ;
+                $diterima = $barokah_piket + $jml_kehadiran + $jml_kehadiran_15 + $jml_kehadiran_10 + $tunkel + $tunja_anak + $mengajar + $dty + $jafung + $kehormatan + $tunj_walkes + $tambahan - $potongan;
+                $jumlah = $barokah_piket + $jml_kehadiran + $jml_kehadiran_15 + $jml_kehadiran_10 + $tunkel + $tunja_anak + $mengajar + $dty + $jafung + $kehormatan + $tunj_walkes + $tambahan ;
                 
 
             $pdf->Cell(1,7,'',0,1);

@@ -319,6 +319,9 @@ class Kehadiran_pengajar extends CI_Controller {
 	{
 		$this->Login_model->getsqurity();
 
+		// Dekripsi ID lembaga jika menggunakan URL terenkripsi
+		$id_lembaga = $this->decrypt_url($id_lembaga);
+
 		// Default: potongan aktif per hari ini
 		$filter_tanggal = "DATE_FORMAT(NOW(), '%Y-%m-01')";
 

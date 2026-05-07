@@ -59,25 +59,22 @@
         $pdf->SetFont('Times','B',16);
         $pdf->AddPage();
 
-        $pdf->Image('assets/p2s2.png',10,9,30);
-        // Title
-        $pdf->Cell(31,0,'','0','0','L',false);
-        $pdf->SetFont('tahoma','B',15);
-        $pdf->Cell(0,1,'KANTOR BENDAHARA','0','1','L',false);
+        $pdf->Image('assets/p2s2.png',10,11,30);
 
+        // Title
         $pdf->ln(4);
         $pdf->SetFont('tahoma','B',13);
         $pdf->Cell(31,0,'','0','0','L',false);
-        $pdf->Cell(150,1,"PONDOK PESANTREN SALAFIYAH SYAFI'IYAH",'0','1','L',false);
+        $pdf->Cell(150,1,"PONDOK PESANTREN SALAFIYAH SYAFI'IYAH SUKOREJO",'0','1','L',false);
 
         $pdf->Ln(4);
         $pdf->SetFont('tahoma','',11);
         $pdf->Cell(31,0,'','0','0','L',false);
-        $pdf->Cell(150,1,'SUKOREJO SITUBONDO JAWA TIMUR','0','1','L',false);
+        $pdf->Cell(150,1,'SUMBEREJO BANYUPUTIH SITUBONDO JAWA TIMUR','0','1','L',false);
 
-        $pdf->Ln(4);
+        $pdf->Ln(5);
         $pdf->SetFont('tahoma','',8);
-        $pdf->Cell(40,0,'Po Box 2 telp 0388-452666 Fax. 452707 - eMail : sentral@salafiyah.net - Situbondo, 68374','0','0','L',false);
+        $pdf->Cell(40,0,'Po Box 2 telp 0388-452666 Fax. 452707 - Situbondo, 68374','0','0','L',false);
 
         $pdf->Line(9,23,340,23);
         $pdf->Line(9,27,340,27);

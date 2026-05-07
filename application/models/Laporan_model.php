@@ -93,7 +93,7 @@ class Laporan_model extends CI_Model {
         // Explicitly select columns using Structural Join Pattern (Bulan/Tahun/Id_Pengajar)
 		$query = $this->db->query("SELECT 
             u.nik, u.nama_lengkap, u.gelar_depan, u.gelar_belakang,
-            l.nama_lembaga,
+            l.id_lembaga, l.nama_lembaga,
             p.kategori, u.status_sertifikasi, u.jabatan_akademik,
             tbp.id_pengajar, tbp.id_kehadiran_lembaga, tbp.bulan, tbp.tahun,
             tbp.jumlah_sks, tbp.rank, tbp.mengajar, tbp.mp, tbp.dty, tbp.jafung,
@@ -121,6 +121,40 @@ class Laporan_model extends CI_Model {
         }
         return $results;
 	}
+
+    // Khusus untuk PDF Cetak - mengembalikan data MENTAH dari DB
+    // agar view PDF bisa melakukan kalkulasinya sendiri (nominal_transport, tunj_kel, dll tersedia)
+    function get_raw_for_pdf_pengajar($id)
+    {
+        $id = $this->db->escape_str($id);
+        $list = $this->db->query("
+            SELECT
+                umana.nama_lengkap, umana.gelar_depan, umana.gelar_belakang,
+                umana.status_nikah, umana.tmt_dosen, umana.tmt_guru, umana.tmt_maif,
+                umana.ijazah_terakhir, umana.jabatan_akademik, umana.status_aktif,
+                umana.status_sertifikasi,
+                pengajar.id_pengajar, pengajar.kategori, pengajar.id_lembaga,
+                pengajar.tunj_anak, pengajar.tunj_kel, pengajar.kehormatan,
+                pengajar.walkes, pengajar.jafung,
+                lembaga.nama_lembaga, lembaga.id_bidang,
+                kehadiran_pengajar.bulan, kehadiran_pengajar.tahun,
+                kehadiran_pengajar.jumlah_hadir, kehadiran_pengajar.jumlah_hadir_15,
+                kehadiran_pengajar.jumlah_hadir_10, kehadiran_pengajar.jumlah_hadir_piket,
+                kehadiran_lembaga.id_kehadiran_lembaga, kehadiran_lembaga.status,
+                transport.nominal_transport,
+                pengajar.jumlah_sks
+            FROM umana
+            JOIN pengajar   ON pengajar.nik = umana.nik
+            JOIN kehadiran_pengajar ON kehadiran_pengajar.id_pengajar = pengajar.id_pengajar
+            JOIN kehadiran_lembaga  ON kehadiran_lembaga.id_kehadiran_lembaga = kehadiran_pengajar.id_kehadiran_lembaga
+            JOIN lembaga    ON pengajar.id_lembaga = lembaga.id_lembaga
+            JOIN transport  ON pengajar.kategori_trans = transport.id_transport
+            WHERE kehadiran_lembaga.id_kehadiran_lembaga = '$id'
+              AND DATEDIFF(NOW(), pengajar.tgl_mulai) < pengajar.tgl_selesai
+            ORDER BY umana.nama_lengkap ASC
+        ");
+        return $list->result();
+    }
 
     // New: Fetch Legacy key for Live Calculation on Report View
     function get_datatables_legacy_pengajar($id)
@@ -292,13 +326,15 @@ class Laporan_model extends CI_Model {
             $obj = new stdClass();
             
             // Identity (from umana/pengajar) mixed with Calculations
-            $obj->nik = isset($key->nik) ? $key->nik : ''; // Raw might not have nik in select? Checked select: umana.* not selected, but nik joined.
-            // Wait, select clause: ..., nama_lengkap, ...
-            // Let's ensure we have everything Rincian needed
+            $obj->nik = isset($key->nik) ? $key->nik : ''; 
             $obj->nama_lengkap = $key->nama_lengkap;
             $obj->gelar_depan = $key->gelar_depan;
             $obj->gelar_belakang = $key->gelar_belakang;
             $obj->nama_lembaga = $key->nama_lembaga;
+            $obj->id_bidang = $key->id_bidang;
+            $obj->bulan = $key->bulan;
+            $obj->tahun = $key->tahun;
+            $obj->status = $key->status;
             $obj->kategori = $key->kategori;
             $obj->ijazah_terakhir = $key->ijazah_terakhir;
             $obj->status_aktif = $key->status_aktif;

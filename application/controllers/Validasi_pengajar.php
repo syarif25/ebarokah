@@ -221,6 +221,89 @@ class Validasi_pengajar extends CI_Controller {
         }
     }
 
+    /**
+     * Sinkronkan daftar pengajar:
+     * Menambahkan pengajar yang baru/aktif ke periode yang sedang berjalan
+     * tanpa menghapus data pengajar yang sudah diinput sebelumnya.
+     */
+    public function sync_pengajar_json()
+    {
+        $this->Login_model->getsqurity();
+        $idKL = $this->input->post('id_kehadiran_lembaga', true);
+
+        if (!$idKL) {
+            echo json_encode(['status' => false, 'message' => 'ID Periode tidak ditemukan.']);
+            return;
+        }
+
+        // 1. Ambil info periode & lembaga
+        $periode = $this->db->get_where('kehadiran_lembaga', ['id_kehadiran_lembaga' => $idKL])->row();
+        if (!$periode) {
+            echo json_encode(['status' => false, 'message' => 'Data periode tidak ditemukan.']);
+            return;
+        }
+
+        $id_lembaga = $periode->id_lembaga;
+        $bulan = $periode->bulan;
+        $tahun = $periode->tahun;
+
+        // 2. Cari pengajar yang HARUSNYA ada (Aktif per hari ini)
+        // Logika disamakan dengan Add_kehadiran.php
+        $active_teachers = $this->db->query("
+            SELECT id_pengajar 
+            FROM pengajar 
+            WHERE id_lembaga = ? 
+              AND status IN ('Aktif', 'Cuti 50%', 'Cuti 100%')
+              AND tgl_mulai <= CURDATE()
+              AND (tgl_selesai IS NULL OR tgl_selesai >= CURDATE())
+        ", [$id_lembaga])->result();
+
+        if (empty($active_teachers)) {
+            echo json_encode(['status' => false, 'message' => 'Tidak ditemukan pengajar aktif untuk lembaga ini.']);
+            return;
+        }
+
+        // 3. Cari pengajar yang SUDAH ada di periode ini
+        $existing_ids = [];
+        $existing_query = $this->db->select('id_pengajar')
+                                  ->get_where('kehadiran_pengajar', ['id_kehadiran_lembaga' => $idKL])
+                                  ->result();
+        foreach ($existing_query as $ex) {
+            $existing_ids[] = $ex->id_pengajar;
+        }
+
+        // 4. Identifikasi yang BELUM ada (Missing)
+        $data_insert = [];
+        foreach ($active_teachers as $at) {
+            if (!in_array($at->id_pengajar, $existing_ids)) {
+                $data_insert[] = [
+                    'id_kehadiran_lembaga' => $idKL,
+                    'id_pengajar'          => $at->id_pengajar,
+                    'bulan'                => $bulan,
+                    'tahun'                => $tahun,
+                    'jumlah_hadir'         => 0,
+                    'jumlah_hadir_15'      => 0,
+                    'jumlah_hadir_10'      => 0,
+                    'jumlah_hadir_piket'   => 0
+                ];
+            }
+        }
+
+        if (empty($data_insert)) {
+            echo json_encode(['status' => true, 'message' => 'Daftar pengajar sudah sinkron. Tidak ada data baru.']);
+            return;
+        }
+
+        // 5. Eksekusi Insert Missing
+        $this->db->insert_batch('kehadiran_pengajar', $data_insert);
+
+        if ($this->db->affected_rows() > 0) {
+            echo json_encode(['status' => true, 'message' => count($data_insert) . ' pengajar baru berhasil ditambahkan ke daftar.']);
+        } else {
+            echo json_encode(['status' => false, 'message' => 'Gagal menyinkronkan data.']);
+        }
+    }
+
     public function approve()
     {
         $this->Login_model->getsqurity();
@@ -414,6 +497,15 @@ class Validasi_pengajar extends CI_Controller {
             $data['periode_date'] = $periode_row->tahun . '-' . $bln_num . '-01';
         } else {
             $data['periode_date'] = date('Y-m-01');
+        }
+
+        // Enkripsi id_lembaga untuk keamanan link Potongan di view
+        if (isset($periode_row) && $periode_row) {
+            $key_enc = '874jzceroier38!@#%*bjkdwdw)';
+            $enc_tmp = base64_encode($periode_row->id_lembaga . $key_enc);
+            $data['enc_id_lembaga'] = str_replace(['+', '/', '='], ['-', '_', ''], $enc_tmp);
+        } else {
+            $data['enc_id_lembaga'] = '';
         }
 
         $this->load->view('Validasi_fullscreen/Validasi_pengajar', $data);
