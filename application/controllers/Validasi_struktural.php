@@ -53,6 +53,8 @@ class Validasi_struktural extends CI_Controller {
             'total_barokah'    => $res['totals']['total_barokah'],
             'total_potongan'   => $res['totals']['total_potongan'],
             'grand_total'      => $res['totals']['grand_total'],
+            'enc_id_periode'   => $this->encrypt_url($res['periode']->id_kehadiran_lembaga),
+            'enc_id_lembaga'   => $this->encrypt_url($res['periode']->id_lembaga),
         ];
         $this->load->view('Validasi_fullscreen/Validasi_struktural', $data);
     }

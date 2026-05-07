@@ -49,41 +49,50 @@
 
       <?php if(!empty($periode->id_kehadiran_lembaga)): ?>
         <a class="btn btn-warning text-dark" target="_blank"
-           href="<?php echo base_url('Kehadiran_struktural/Cetak/'.$periode->id_kehadiran_lembaga); ?>">
+           href="<?php echo base_url('Kehadiran_struktural/Cetak/'.($enc_id_periode ?? $periode->id_kehadiran_lembaga)); ?>">
           <i class="fa fa-print mr-1"></i> Cetak
         </a>
       <?php endif; ?>
 
       <?php if(!empty($periode->id_lembaga)): ?>
         <a class="btn btn-danger text-white" target="_blank"
-           href="<?php echo base_url('Kehadiran_struktural/cetak_potongan/'.$periode->id_lembaga); ?>">
+           href="<?php echo base_url('Kehadiran_struktural/cetak_potongan/'.($enc_id_lembaga ?? $periode->id_lembaga)); ?>">
           <i class="fa fa-scissors mr-1"></i> Potongan
         </a>
       <?php endif; ?>
 
-        <!-- Tampilan Kolom -->
-        <div class="dropdown d-inline-block ml-1">
-            <button class="btn btn-primary dropdown-toggle" type="button" id="btnTampilanKolomStruk" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <i class="fa fa-columns mr-1"></i> Kolom
-            </button>
-            <div class="dropdown-menu dropdown-menu-right shadow-sm" aria-labelledby="btnTampilanKolomStruk" style="min-width: 220px;">
-                <h6 class="dropdown-header text-uppercase font-weight-bold" style="font-size: 0.7rem; letter-spacing: 0.5px;">Tampilkan / Sembunyikan</h6>
-                <div class="dropdown-item px-3 py-2">
-                    <div class="custom-control custom-switch">
-                        <input type="checkbox" class="custom-control-input toggle-vis-struk" id="colMasterStruk" data-columns="2,3,4,5,6" checked>
-                        <label class="custom-control-label" style="cursor:pointer;" for="colMasterStruk">Grup Data Master</label>
-                    </div>
+        <!-- Search & Tampilan Kolom -->
+        <div class="d-inline-flex align-items-center ml-2">
+            <div class="input-group shadow-sm mr-2" style="width: 250px;">
+                <div class="input-group-prepend">
+                    <span class="input-group-text bg-white border-right-0" style="font-size: 0.85rem;"><i class="fa fa-search text-muted"></i></span>
                 </div>
-                <div class="dropdown-item px-3 py-2">
-                    <div class="custom-control custom-switch">
-                        <input type="checkbox" class="custom-control-input toggle-vis-struk" id="colKehadiranStruk" data-columns="7,8,9,10,11,12,13" checked>
-                        <label class="custom-control-label" style="cursor:pointer;" for="colKehadiranStruk">Grup Kehadiran</label>
+                <input type="text" id="customSearchStruk" class="form-control border-left-0 pl-1" placeholder="Cari nama..." style="font-size: 0.85rem; height: 38px;">
+            </div>
+
+            <div class="dropdown">
+                <button class="btn btn-primary dropdown-toggle font-weight-bold" type="button" id="btnTampilanKolomStruk" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fa fa-columns mr-1"></i> Kolom
+                </button>
+                <div class="dropdown-menu dropdown-menu-right shadow-sm" aria-labelledby="btnTampilanKolomStruk" style="min-width: 220px;">
+                    <h6 class="dropdown-header text-uppercase font-weight-bold" style="font-size: 0.7rem; letter-spacing: 0.5px;">Tampilkan / Sembunyikan</h6>
+                    <div class="dropdown-item px-3 py-2">
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input toggle-vis-struk" id="colMasterStruk" data-columns="2,3,4,5,6" checked>
+                            <label class="custom-control-label" style="cursor:pointer;" for="colMasterStruk">Grup Data Master</label>
+                        </div>
                     </div>
-                </div>
-                <div class="dropdown-item px-3 py-2">
-                    <div class="custom-control custom-switch">
-                        <input type="checkbox" class="custom-control-input toggle-vis-struk" id="colTunjanganStruk" data-columns="14,15,16,17" checked>
-                        <label class="custom-control-label" style="cursor:pointer;" for="colTunjanganStruk">Grup Tunjangan</label>
+                    <div class="dropdown-item px-3 py-2">
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input toggle-vis-struk" id="colKehadiranStruk" data-columns="7,8,9,10,11,12,13" checked>
+                            <label class="custom-control-label" style="cursor:pointer;" for="colKehadiranStruk">Grup Kehadiran</label>
+                        </div>
+                    </div>
+                    <div class="dropdown-item px-3 py-2">
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input toggle-vis-struk" id="colTunjanganStruk" data-columns="14,15,16,17" checked>
+                            <label class="custom-control-label" style="cursor:pointer;" for="colTunjanganStruk">Grup Tunjangan</label>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -190,9 +199,21 @@
             <tr id="row-<?php echo $row->id_kehadiran; ?>" class="<?= (!empty($row->is_warning)) ? 'bg-warning' : '' ?>">
                 <td class="cell-center <?= (!empty($row->is_warning)) ? 'text-dark font-weight-bold' : '' ?>"><?php echo $no++; ?></td>
                 <td class="<?= (!empty($row->is_warning)) ? 'text-dark' : '' ?>">
-                    <?php echo htmlentities(trim(($row->gelar_depan ?? '').' '.($row->nama_lengkap ?? '').' '.($row->gelar_belakang ?? ''))); ?>
+                    <?php 
+                        $nama_full = strtoupper(implode(' ', array_filter([
+                            trim($row->gelar_depan ?? ''),
+                            trim($row->nama_lengkap ?? ''),
+                            trim($row->gelar_belakang ?? '')
+                        ])));
+                    ?>
+                    <div class="font-weight-bold text-dark" style="font-size: 0.9rem; line-height: 1.2;">
+                        <?php echo htmlentities($nama_full); ?>
+                    </div>
                     <?php if(!empty($row->is_warning)): ?>
-                        <br><span class="badge badge-danger shadow-sm mt-1 px-2 py-1"><i class="fa fa-exclamation-triangle"></i> Perubahan Komponen (<?= ($row->selisih_komponen > 0 ? '+' : '').number_format($row->selisih_komponen,0,',','.') ?>)</span>
+                        <span class="badge badge-danger shadow-sm mt-1 px-2 py-1" style="font-size: 0.65rem; letter-spacing: 0.3px;">
+                            <i class="fa fa-exclamation-triangle mr-1"></i> 
+                            PERUBAHAN KOMPONEN (<?= ($row->selisih_komponen > 0 ? '+' : '').number_format($row->selisih_komponen,0,',','.') ?>)
+                        </span>
                     <?php endif; ?>
                 </td>
                 <td><?php echo htmlentities($row->nama_jabatan ?? '-'); ?></td>
@@ -278,7 +299,7 @@
                         <button type="button" class="btn btn-sm <?= $btn_class ?> btn-catatan position-relative"
                                 title="Catatan Evaluasi"
                                 data-id="<?= $row->id_penempatan ?>"
-                                data-nama="<?= htmlentities(trim(($row->gelar_depan ?? '').' '.($row->nama_lengkap ?? '').' '.($row->gelar_belakang ?? ''))) ?>">
+                                data-nama="<?= htmlentities($nama_full) ?>">
                             <i class="fa <?= $icon_class ?> icon-catatan-<?= $row->id_penempatan ?>"></i>
                             <!-- Badge Bintang jika ada catatan -->
                             <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none badge-catatan-<?= $row->id_penempatan ?>" style="font-size: 0.5rem; transform: translate(-30%, -30%);">★</span>
@@ -495,10 +516,16 @@
 <script>
     const dtTblStruk = $('#tabel_validasi').DataTable({
     paging: false,
-    searching: false,
+    searching: true,
     ordering: false,
     info: false,
-    fixedHeader: true
+    fixedHeader: true,
+    dom: 't', // Hanya tampilkan tabel, sembunyikan fitur default DataTables (search box bawaan, dll)
+    });
+
+    // Custom Search Logic
+    $('#customSearchStruk').on('keyup', function() {
+        dtTblStruk.search(this.value).draw();
     });
 
     // Toggle Column Visibility Logic

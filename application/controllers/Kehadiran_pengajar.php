@@ -309,4 +309,73 @@ class Kehadiran_pengajar extends CI_Controller {
         return $this->upload->data('file_name');
 	}
 
+	/**
+	 * Cetak laporan potongan pengajar berdasarkan id_lembaga.
+	 * Jika id_kehadiran dikirim (dari halaman Laporan), filter potongan
+	 * akan menggunakan bulan/tahun periode laporan tersebut (historis).
+	 * Jika tidak, akan menggunakan tanggal hari ini (mode live).
+	 */
+	public function cetak_potongan($id_lembaga, $id_kehadiran = null)
+	{
+		$this->Login_model->getsqurity();
+
+		// Default: potongan aktif per hari ini
+		$filter_tanggal = "DATE_FORMAT(NOW(), '%Y-%m-01')";
+
+		if (!empty($id_kehadiran)) {
+			$periode = $this->db->get_where('kehadiran_lembaga', ['id_kehadiran_lembaga' => $id_kehadiran])->row();
+			if ($periode) {
+				$map_bulan = [
+					'januari'=>'01','februari'=>'02','maret'=>'03','april'=>'04',
+					'mei'=>'05','juni'=>'06','juli'=>'07','agustus'=>'08',
+					'september'=>'09','oktober'=>'10','november'=>'11','desember'=>'12'
+				];
+				$bln_raw = strtolower(trim($periode->bulan));
+				$bln_num = is_numeric($bln_raw)
+					? str_pad((int)$bln_raw, 2, '0', STR_PAD_LEFT)
+					: ($map_bulan[$bln_raw] ?? date('m'));
+				$thn_str = (int)$periode->tahun;
+				// Filter historis: tampilkan potongan yang berlaku pada bulan laporan
+				$filter_tanggal = "'{$thn_str}-{$bln_num}-01'";
+				$isi['bulan_laporan'] = ucfirst($bln_raw);
+				$isi['tahun_laporan'] = $thn_str;
+			}
+		}
+
+		$query = "
+			SELECT 
+				u.nama_lengkap, 
+				u.gelar_depan,
+				u.gelar_belakang,
+				pot.nama_potongan, 
+				pp.nominal_potongan,
+				pp.min_periode_potongan,
+				pp.max_periode_potongan,
+				l.nama_lembaga,
+				l.id_bidang,
+				p.tgl_mulai,
+				p.tgl_selesai
+			FROM 
+				umana u
+			JOIN 
+				pengajar p ON u.nik = p.nik
+			JOIN 
+				potongan_pengajar pp ON pp.id_pengajar = p.id_pengajar
+			JOIN 
+				potongan pot ON pp.jenis_potongan = pot.id_potongan
+			JOIN
+				lembaga l ON p.id_lembaga = l.id_lembaga
+			WHERE 
+				pp.min_periode_potongan <= {$filter_tanggal}
+				AND pp.max_periode_potongan >= {$filter_tanggal}
+				AND p.id_lembaga = ?
+				AND DATEDIFF(NOW(), p.tgl_mulai) < p.tgl_selesai
+			ORDER BY 
+				u.nama_lengkap ASC
+		";
+
+		$isi['isilist'] = $this->db->query($query, [$id_lembaga])->result();
+		$this->load->view('Kehadiran_pengajar/Potongan_pelajar', $isi);
+	}
+
 }

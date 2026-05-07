@@ -1,25 +1,32 @@
 <?php 
     class CustomPDF extends FPDF {
         private $isFirstPage = true;  
+
     function Header() {
+        // --- WATERMARK: Single Centered Logo (opacity ~8%) ---
+        $pageW = $this->GetPageWidth();
+        $pageH = $this->GetPageHeight();
+        $logoW = 100;
+        $logoX = ($pageW - $logoW) / 2;                    // Tengah horizontal
+        $logoY = ($pageH - ($logoW * 283/753)) / 2;        // Tengah vertikal (rasio proporsional)
+        // Gunakan file PNG yang sudah diedit opacity-nya (8%) via PHP GD
+        $this->Image('assets/p2s2_watermark.png', $logoX, $logoY, $logoW);
+        // -----------------------------------------------------
+
         if ($this->PageNo() > 1) {
-        $this->Cell(1,7,'',0,1);
-        $this->SetFont('arial','B',6);
-        // $this->SetFillColor(128, 128, 128);
-        $this->Cell(40, 2, '', '0', '0', 'L', false);
-        $this->Cell(7,7,'N0',1,0,'C');
-        $this->Cell(40,7,'NAMA LENGKAP',1,0,'C');
-        $this->Cell(40,7,'NAMA POTONGAN',1,0,'C');
-        $this->Cell(40,7,'NOMINAL',1,0,'C');
-        $this->Cell(0,1,'',0,1);
+            $this->Cell(1,7,'',0,1);
+            $this->SetFont('arial','B',6);
+            $this->Cell(40, 2, '', '0', '0', 'L', false);
+            $this->Cell(7,7,'N0',1,0,'C');
+            $this->Cell(40,7,'NAMA LENGKAP',1,0,'C');
+            $this->Cell(40,7,'NAMA POTONGAN',1,0,'C');
+            $this->Cell(40,7,'NOMINAL',1,0,'C');
+            $this->Cell(0,1,'',0,1);
         }
         if ($this->PageNo() > 1) {
-            // $this->SetFont('arial', 'I', 8);
-            // $this->Cell(0, 10, 'Elemen ini hanya ditampilkan pada lembar kedua dan seterusnya', 0, 1, 'C');
             $this->setY(25);
-           
         }
-        }
+    }
     }
         $pdf = new CustomPDF('P','mm','LEGAL');
         $pdf->AddFont('bookman','','bookman-old-style.php');
@@ -90,10 +97,12 @@
             $pdf->ln(7);
             
             foreach($isilist as $key){
-            // Gabungkan gelar depan + nama + gelar belakang, format proper case
-            $gelar_depan   = !empty($key->gelar_depan)   ? trim($key->gelar_depan).' '   : '';
-            $gelar_belakang = !empty($key->gelar_belakang) ? ', '.trim($key->gelar_belakang) : '';
-            $nama_tampil   = $gelar_depan . ucwords(strtolower(trim($key->nama_lengkap))) . $gelar_belakang;
+            // Gabungkan gelar depan + nama + gelar belakang, format UPPERCASE
+            $nama_tampil = strtoupper(implode(' ', array_filter([
+                trim($key->gelar_depan ?? ''),
+                trim($key->nama_lengkap ?? ''),
+                trim($key->gelar_belakang ?? '')
+            ])));
 
             $pdf->Cell(40, 2, '', '0', '0', 'L', false);
             $pdf->Cell(7,7,$no++,1,0,'C');

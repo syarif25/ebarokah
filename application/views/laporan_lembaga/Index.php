@@ -23,7 +23,7 @@
                 <div class="card-body">
                     <!-- Filter Section -->
                     <div class="row mb-3">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label class="form-label">Filter Lembaga</label>
                             <select class="form-control" id="filter_lembaga">
                                 <option value="">Semua Lembaga</option>
@@ -34,17 +34,26 @@
                             </select>
                         </div>
                         <div class="col-md-3">
+                            <label class="form-label">Kategori</label>
+                            <select class="form-control" id="filter_kategori">
+                                <option value="">Semua Kategori</option>
+                                <option value="Struktural">Struktural</option>
+                                <option value="Pengajar">Pengajar</option>
+                                <option value="Satpam">Satpam</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
                             <label class="form-label">Filter Periode</label>
                             <input type="text" class="form-control" id="filter_periode" placeholder="Pilih Bulan & Tahun" readonly>
                             <input type="hidden" id="filter_bulan">
                             <input type="hidden" id="filter_tahun">
                         </div>
-                        <div class="col-md-5">
+                        <div class="col-md-3">
                             <label class="form-label">&nbsp;</label><br>
-                            <button class="btn btn-info" onclick="applyFilter()">
-                                <i class="fas fa-filter"></i> Terapkan Filter
+                            <button class="btn btn-info btn-sm" onclick="applyFilter()">
+                                <i class="fas fa-filter"></i> Filter
                             </button>
-                            <button class="btn btn-secondary" onclick="resetFilter()">
+                            <button class="btn btn-secondary btn-sm" onclick="resetFilter()">
                                 <i class="fas fa-redo"></i> Reset
                             </button>
                         </div>
@@ -59,6 +68,7 @@
                                     <th>Nama Lembaga</th>
                                     <th class="text-center">Bulan</th>
                                     <th class="text-center">Tahun</th>
+                                    <th class="text-center">Kategori</th>
                                     <th class="text-right">Jumlah Nominal</th>
                                     <th class="text-center">Aksi</th>
                                 </tr>
@@ -72,6 +82,7 @@
                                     <th>Nama Lembaga</th>
                                     <th class="text-center">Bulan</th>
                                     <th class="text-center">Tahun</th>
+                                    <th class="text-center">Kategori</th>
                                     <th class="text-right">Jumlah Nominal</th>
                                     <th class="text-center">Aksi</th>
                                 </tr>

@@ -118,6 +118,10 @@ class Laporan_lembaga extends CI_Controller {
 			$this->db->like('kehadiran_lembaga.tahun', $_POST['filter_tahun']);
 		}
 
+		if (isset($_POST['filter_kategori']) && !empty($_POST['filter_kategori'])) {
+			$this->db->where('kehadiran_lembaga.kategori', $_POST['filter_kategori']);
+		}
+
 		// Fetch real data from model
 		$list = $this->Laporan_model->get_datatables();
 		$no = 1;
@@ -130,6 +134,7 @@ class Laporan_lembaga extends CI_Controller {
 			$row[] = htmlentities($datanya->nama_lembaga);
 			$row[] = htmlentities($datanya->bulan);
 			$row[] = htmlentities($datanya->tahun);
+			$row[] = htmlentities($datanya->kategori);
 			$row[] = rupiah($datanya->jumlah_total); // Remove span wrapper, Ajax will handle formatting
 			
 			// Send detail_url for Ajax render function to use
@@ -185,9 +190,8 @@ class Laporan_lembaga extends CI_Controller {
 	}
 
 	public function rincian($encrypted_id = null){
-		$this->Login_model->getsqurity() ;
+		$this->Login_model->getsqurity();
 		
-		// Decrypt URL parameter
 		if ($encrypted_id === null) {
 			redirect('laporan_lembaga');
 			return;
@@ -195,20 +199,32 @@ class Laporan_lembaga extends CI_Controller {
 		
 		$id = $this->decrypt_url($encrypted_id);
 		
-		// Fetch data from model
-		$isi['data_rincian'] = $this->Laporan_model->get_datatables_rincian($id);
-		$isi['encrypted_id'] = $encrypted_id; // Pass encrypted ID to view for print button
+		// Cek kategori periode terlebih dahulu
+		$periode = $this->db->get_where('kehadiran_lembaga', ['id_kehadiran_lembaga' => $id])->row();
+		$kategori = $periode ? $periode->kategori : 'Struktural';
 		
+		// Panggil model yang sesuai kategori
+		if ($kategori == 'Pengajar') {
+			$isi['data_rincian'] = $this->Laporan_model->get_datatables_rincian_pengajar($id);
+			$isi['kategori'] = 'Pengajar';
+		} elseif ($kategori == 'Satpam') {
+			$isi['data_rincian'] = $this->Laporan_model->get_datatables_rincian_satpam($id);
+			$isi['kategori'] = 'Satpam';
+		} else {
+			$isi['data_rincian'] = $this->Laporan_model->get_datatables_rincian($id);
+			$isi['kategori'] = 'Struktural';
+		}
+		
+		$isi['encrypted_id'] = $encrypted_id;
 		$isi['content'] = 'Laporan_lembaga/Rincian';
 		$isi['css'] 	= 'Laporan_lembaga/Css';
 		$isi['ajax'] 	= 'Laporan_lembaga/Ajax';
-		$this->load->view('Template',$isi);
+		$this->load->view('Template', $isi);
 	}
 	
 	public function cetak($encrypted_id = null){
-		$this->Login_model->getsqurity() ;
+		$this->Login_model->getsqurity();
 		
-		// Decrypt URL parameter
 		if ($encrypted_id === null) {
 			redirect('laporan_lembaga');
 			return;
@@ -216,10 +232,21 @@ class Laporan_lembaga extends CI_Controller {
 		
 		$id = $this->decrypt_url($encrypted_id);
 		
-		// Fetch data from model
-		$data['data_rincian'] = $this->Laporan_model->get_datatables_rincian($id);
+		// Cek kategori periode
+		$periode = $this->db->get_where('kehadiran_lembaga', ['id_kehadiran_lembaga' => $id])->row();
+		$kategori = $periode ? $periode->kategori : 'Struktural';
 		
-		// Load print view (without template)
+		if ($kategori == 'Pengajar') {
+			$data['data_rincian'] = $this->Laporan_model->get_datatables_rincian_pengajar($id);
+			$data['kategori'] = 'Pengajar';
+		} elseif ($kategori == 'Satpam') {
+			$data['data_rincian'] = $this->Laporan_model->get_datatables_rincian_satpam($id);
+			$data['kategori'] = 'Satpam';
+		} else {
+			$data['data_rincian'] = $this->Laporan_model->get_datatables_rincian($id);
+			$data['kategori'] = 'Struktural';
+		}
+		
 		$this->load->view('Laporan_lembaga/Cetak', $data);
 	}
 }

@@ -32,24 +32,34 @@
                 "data": function(d) {
                     // Add filter parameters to AJAX request
                     d.filter_lembaga = $('#filter_lembaga').val();
+                    d.filter_kategori = $('#filter_kategori').val();
                     d.filter_bulan = $('#filter_bulan').val();
                     d.filter_tahun = $('#filter_tahun').val();
                 }
             },
             "columnDefs": [
                 {
-                    "targets": [0, 2, 3, 5], // No, Bulan, Tahun, Aksi
+                    "targets": [0, 2, 3, 4, 6], // No, Bulan, Tahun, Kategori, Aksi
                     "className": "text-center"
                 },
                 {
-                    "targets": [4], // Jumlah Nominal
+                    "targets": [4], // Kategori
+                    "render": function(data, type, row) {
+                        let badge = 'info';
+                        if (data == 'Pengajar') badge = 'primary';
+                        if (data == 'Satpam') badge = 'secondary';
+                        return `<span class="badge badge-${badge} badge-sm">${data}</span>`;
+                    }
+                },
+                {
+                    "targets": [5], // Jumlah Nominal
                     "className": "text-right",
                     "render": function(data, type, row) {
                         return '<span class="text-success">' + data + '</span>';
                     }
                 },
                 {
-                    "targets": [5], // Aksi column
+                    "targets": [6], // Aksi column
                     "orderable": false,
                     "render": function(data, type, row) {
                         return `<a href="${row.detail_url}" class="btn btn-primary btn-sm shadow sharp" title="Lihat Rincian">
@@ -108,6 +118,7 @@
 
     function resetFilter() {
         $('#filter_lembaga').val('').trigger('change'); // trigger change for Select2
+        $('#filter_kategori').val('');
         $('#filter_periode').datepicker('clearDates');
         $('#filter_bulan').val('');
         $('#filter_tahun').val('');

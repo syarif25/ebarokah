@@ -4,14 +4,14 @@
     function Header() {
         if ($this->PageNo() > 1) {
         $this->Cell(1,7,'',0,1);
-        $this->SetFont('arial','B',6);
-        // $this->SetFillColor(128, 128, 128);
-        $this->Cell(40, 2, '', '0', '0', 'L', false);
-        $this->Cell(7,7,'N0',1,0,'C');
-        $this->Cell(40,7,'NAMA LENGKAP',1,0,'C');
-        $this->Cell(40,7,'NAMA POTONGAN',1,0,'C');
-        $this->Cell(40,7,'NOMINAL',1,0,'C');
-        $this->Cell(0,1,'',0,1);
+        $this->SetFont('arial','B',8);
+        $this->Cell(10, 7, '', '0', '0', 'L', false); // Margin
+        $this->Cell(7,7,'NO',1,0,'C');
+        $this->Cell(60,7,'NAMA LENGKAP',1,0,'C');
+        $this->Cell(45,7,'NAMA POTONGAN',1,0,'C');
+        $this->Cell(40,7,'MASA AKTIF',1,0,'C');
+        $this->Cell(30,7,'NOMINAL',1,0,'C');
+        $this->Cell(0,7,'',0,1);
         }
         if ($this->PageNo() > 1) {
             // $this->SetFont('arial', 'I', 8);
@@ -55,53 +55,73 @@
             $pdf->ln(5);
             
             $pdf->SetFont('arial', '', 10);
-            // $pdf->Cell(200, 2, '', '0', '0', 'L', false);
             $pdf->Cell(50, 2, 'RINCIAN POTONGAN BAROKAH UMANA STRUKTURAL', '0', '0', 'L', false);
             $pdf->ln(5);
-            $pdf->SetFont('arial', 'B', 10);
-            $pdf->Cell(200, 2, strtoupper($periode->nama_lembaga), '0', '0', 'L', false);
-            $pdf->Cell(50, 2, '', '0', '0', 'L', false);
-            if ($periode->id_bidang == "Bidang DIKTI"){
-                $pdf->Cell(50, 2,'Barokah Dosen', '0', '1', 'L', false);
-            } else {
-                $pdf->Cell(50, 2,'Barokah Guru', '0', '1', 'L', false);
-            }
-        
+            $pdf->SetFont('arial', 'B', 11);
+            $pdf->Cell(130, 2, strtoupper($periode->nama_lembaga), '0', '0', 'L', false);
             
-            // $pdf->Cell(50, 2, 'Bulan : '.$periode->bulan.' '.$periode->tahun, '0', '1', 'L', false);
+            $pdf->SetFont('arial', 'B', 10);
+            if (isset($bulan_laporan) && isset($tahun_laporan)) {
+                $pdf->Cell(60, 2, 'PERIODE: '.strtoupper($bulan_laporan).' '.$tahun_laporan, '0', '1', 'R', false);
+            } else {
+                $pdf->Cell(60, 2, '', '0', '1', 'R', false);
+            }
+            
+            $pdf->ln(2);
+            $pdf->SetFont('arial', '', 9);
+            if ($periode->id_bidang == "Bidang DIKTI"){
+                $pdf->Cell(50, 5,'Jenis: Barokah Dosen', '0', '1', 'L', false);
+            } else {
+                $pdf->Cell(50, 5,'Jenis: Barokah Guru', '0', '1', 'L', false);
+            }
 
             $pdf->Cell(1,7,'',0,1);
-            $pdf->Cell(40, 2, '', '0', '0', 'L', false);
-            $pdf->SetFont('arial','B',6);
-            // $pdf->SetFillColor(128, 128, 128);
-            $pdf->Cell(7,7,'N0',1,0,'C');
-            $pdf->Cell(40,7,'NAMA LENGKAP',1,0,'C');
-            $pdf->Cell(40,7,'NAMA POTONGAN',1,0,'C');
-            $pdf->Cell(40,7,'NOMINAL',1,0,'C');
-            $pdf->Cell(0,1,'',0,1);
+            $pdf->SetFont('arial','B',8);
+            $pdf->Cell(10, 7, '', '0', '0', 'L', false); // Margin
+            $pdf->Cell(7,7,'NO',1,0,'C');
+            $pdf->Cell(60,7,'NAMA LENGKAP',1,0,'C');
+            $pdf->Cell(45,7,'NAMA POTONGAN',1,0,'C');
+            $pdf->Cell(40,7,'MASA AKTIF',1,0,'C');
+            $pdf->Cell(30,7,'NOMINAL',1,0,'C');
+            $pdf->Cell(0,7,'',0,1);
             
             $no = 1;
-            
             $jumlah_total = 0;
-            $pdf->ln(7);
+            $pdf->SetFont('arial','',8);
             
             foreach($isilist as $key){
-            $pdf->Cell(40, 2, '', '0', '0', 'L', false);
-            $pdf->Cell(7,7,$no++,1,0,'C');
-            $pdf->Cell(40,7,$key->nama_lengkap,1,0,'L');
-            $pdf->Cell(40,7,$key->nama_potongan,1,0,'L');
-            $pdf->Cell(40,7,rupiah($key->nominal_potongan),1,0,'C');
-            $pdf->Cell(0,7,'',0,1);
+                // Format masa aktif
+                $masa_aktif = '-';
+                if (!empty($key->min_periode_potongan) && !empty($key->max_periode_potongan)) {
+                    $map_bln = ['Jan'=>'Jan','Feb'=>'Feb','Mar'=>'Mar','Apr'=>'Apr','May'=>'Mei','Jun'=>'Jun','Jul'=>'Jul','Aug'=>'Agu','Sep'=>'Sep','Oct'=>'Okt','Nov'=>'Nov','Dec'=>'Des'];
+                    $start_bln = $map_bln[date('M', strtotime($key->min_periode_potongan))] ?? date('M', strtotime($key->min_periode_potongan));
+                    $end_bln   = $map_bln[date('M', strtotime($key->max_periode_potongan))] ?? date('M', strtotime($key->max_periode_potongan));
+                    
+                    $start = $start_bln . ' ' . date('Y', strtotime($key->min_periode_potongan));
+                    $end   = $end_bln . ' ' . date('Y', strtotime($key->max_periode_potongan));
+                    $masa_aktif = $start . ' s.d ' . $end;
+                }
 
-            $jumlah_total = $jumlah_total + $key->nominal_potongan;
+                $nama_lengkap = trim(($key->gelar_depan ?? '') . ' ' . $key->nama_lengkap . (isset($key->gelar_belakang) && $key->gelar_belakang ? ', ' . $key->gelar_belakang : ''));
+
+                $pdf->Cell(10, 7, '', '0', '0', 'L', false); // Margin
+                $pdf->Cell(7,7,$no++,1,0,'C');
+                $pdf->Cell(60,7,$nama_lengkap,1,0,'L');
+                $pdf->Cell(45,7,$key->nama_potongan,1,0,'L');
+                $pdf->Cell(40,7,$masa_aktif,1,0,'C');
+                $pdf->Cell(30,7,rupiah($key->nominal_potongan),1,0,'R');
+                $pdf->Ln(7);
+
+                $jumlah_total = $jumlah_total + $key->nominal_potongan;
             }
 
         $pdf->ln(1);
         $pdf->SetFont('arial','B',9);
-        $pdf->Cell(87,7,'',0,0,'C');
-        $pdf->Cell(40,7,'Total',1,0,'C');
-        $pdf->Cell(40,7,rupiah($jumlah_total),1,0,'C');
-        $pdf->Cell(0,1,'',0,1);
+        $pdf->Cell(10, 7, '', '0', '0', 'L', false); // Margin
+        $pdf->Cell(112,7,'TOTAL',1,0,'R');
+        $pdf->Cell(40,7,'',1,0,'C');
+        $pdf->Cell(30,7,rupiah($jumlah_total),1,0,'R');
+        $pdf->Cell(0,7,'',0,1);
         $tgl1=gmdate("d-m-Y");
 
                     $bln = date('m');

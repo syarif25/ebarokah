@@ -1,24 +1,34 @@
 <?php 
     class CustomPDF extends FPDF {
         private $isFirstPage = true;  
+
     function Header() {
+        // --- WATERMARK: Single Centered Logo (opacity ~8%) ---
+        $pageW = $this->GetPageWidth();
+        $pageH = $this->GetPageHeight();
+        $logoW = 100; // Lebar logo watermark
+        $logoX = ($pageW - $logoW) / 2; // Tepat tengah horizontal
+        $logoY = ($pageH - ($logoW * 283/753)) / 2; // Tepat tengah vertikal (rasio proporsional)
+        // Gunakan file PNG yang sudah diedit opacity-nya (8%) via PHP GD
+        $this->Image('assets/p2s2_watermark.png', $logoX, $logoY, $logoW);
+        // -----------------------------------------------------
+
         if ($this->PageNo() > 1) {
             $this->Cell(1,7,'',0,1);
             $this->SetFont('arial','B',6);
             
             // Optimized widths for legal landscape (Total ~335mm)
             $this->Cell(6,7,'NO',1,0,'C');
-            $this->Cell(57,7,'NAMA LENGKAP',1,0,'C'); // Reduced from 60
-            $this->Cell(32,7,'ESELON',1,0,'C'); // Reduced from 35
+            $this->Cell(57,7,'NAMA LENGKAP',1,0,'C'); 
+            $this->Cell(32,7,'ESELON',1,0,'C'); 
             $this->Cell(10,7,'TMT',1,0,'C');
             $this->Cell(19,7,'TUNJAB',1,0,'C');
             $this->Cell(7,7,'MP',1,0,'C');
             $this->Cell(19,7,'TMP',1,0,'C');
             
-            // Kehadiran columns (Total 34mm)
             $this->Cell(6,7,'W',1,0,'C');
             $this->Cell(6,7,'H',1,0,'C');
-            $this->Cell(6,7,'T',1,0,'C'); // New Column
+            $this->Cell(6,7,'T',1,0,'C'); 
             $this->Cell(5,7,'I',1,0,'C');
             $this->Cell(5,7,'S',1,0,'C');
             $this->Cell(6,7,'%',1,0,'C');
@@ -34,7 +44,7 @@
             $this->Ln();
         }
         if ($this->PageNo() > 1) {
-            $this->setY(25); // Reduced from 32 to close the gap
+            $this->setY(25); 
         }
     }
     }
@@ -137,7 +147,12 @@
             }
 
             $pdf->Cell(6,7,$no++,1,0,'C', $fill);
-            $pdf->Cell(57,7,$key->gelar_depan.' '.ucwords(strtolower($key->nama_lengkap)).' '.$key->gelar_belakang,1,0,'L', $fill);
+            $nama_full = strtoupper(implode(' ', array_filter([
+                trim($key->gelar_depan ?? ''),
+                trim($key->nama_lengkap ?? ''),
+                trim($key->gelar_belakang ?? '')
+            ])));
+            $pdf->Cell(57,7,$nama_full,1,0,'L', $fill);
             $pdf->Cell(32,7,$key->nama_jabatan,1,0,'L', $fill);
             $pdf->SetFont('arial','B',7);
             $pdf->Cell(10,7,date("Y", strtotime($key->tmt_struktural)),1,0,'C', $fill);
