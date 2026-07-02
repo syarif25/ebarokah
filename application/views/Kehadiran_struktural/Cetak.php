@@ -19,7 +19,7 @@
             
             // Optimized widths for legal landscape (Total ~335mm)
             $this->Cell(6,7,'NO',1,0,'C');
-            $this->Cell(57,7,'NAMA LENGKAP',1,0,'C'); 
+            $this->Cell(53,7,'NAMA LENGKAP',1,0,'C'); 
             $this->Cell(32,7,'ESELON',1,0,'C'); 
             $this->Cell(10,7,'TMT',1,0,'C');
             $this->Cell(19,7,'TUNJAB',1,0,'C');
@@ -31,7 +31,7 @@
             $this->Cell(6,7,'T',1,0,'C'); 
             $this->Cell(5,7,'I',1,0,'C');
             $this->Cell(5,7,'S',1,0,'C');
-            $this->Cell(6,7,'%',1,0,'C');
+            $this->Cell(10,7,'%',1,0,'C');
             
             $this->Cell(19,7,'Kehadiran',1,0,'C');
             $this->Cell(19,7,'Tunkel',1,0,'C');
@@ -105,7 +105,7 @@
             
             // Optimized widths for legal landscape (Total ~335mm)
             $pdf->Cell(6,7,'NO',1,0,'C');
-            $pdf->Cell(57,7,'NAMA LENGKAP',1,0,'C'); // Reduced
+            $pdf->Cell(53,7,'NAMA LENGKAP',1,0,'C'); // Reduced
             $pdf->Cell(32,7,'ESELON',1,0,'C'); // Reduced
             $pdf->Cell(10,7,'TMT',1,0,'C');
             $pdf->Cell(19,7,'TUNJAB',1,0,'C');
@@ -118,7 +118,7 @@
             $pdf->Cell(6,7,'T',1,0,'C'); // New
             $pdf->Cell(5,7,'I',1,0,'C');
             $pdf->Cell(5,7,'S',1,0,'C');
-            $pdf->Cell(6,7,'%',1,0,'C');
+            $pdf->Cell(10,7,'%',1,0,'C');
             
             $pdf->Cell(19,7,'Kehadiran',1,0,'C');
             $pdf->Cell(19,7,'Tunkel',1,0,'C');
@@ -149,7 +149,7 @@
                 trim($key->nama_lengkap ?? ''),
                 trim($key->gelar_belakang ?? '')
             ])));
-            $pdf->Cell(57,7,$nama_full,1,0,'L', $fill);
+            $pdf->Cell(53,7,$nama_full,1,0,'L', $fill);
             $pdf->Cell(32,7,$key->nama_jabatan,1,0,'L', $fill);
             $pdf->SetFont('arial','B',7);
             $pdf->Cell(10,7,date("Y", strtotime($key->tmt_struktural)),1,0,'C', $fill);
@@ -163,7 +163,7 @@
             $pdf->Cell(6,7,$key->jumlah_tugas ?? 0,1,0,'C', $fill); // New T
             $pdf->Cell(5,7,$key->jumlah_izin,1,0,'C', $fill);
             $pdf->Cell(5,7,$key->jumlah_sakit,1,0,'C', $fill);
-            $pdf->Cell(6,7,$key->persentase_kehadiran,1,0,'C', $fill);
+            $pdf->Cell(10,7,$key->persentase_kehadiran,1,0,'C', $fill);
             
             $pdf->Cell(19,7,rupiah($key->nominal_kehadiran),1,0,'C', $fill);
             $pdf->Cell(19,7,rupiah($key->tunkel),1,0,'C', $fill);
@@ -180,9 +180,9 @@
         $pdf->ln(8);
         
         // Total Row - Aligned with Body Columns
-        // 1. Spacer (NO + NAMA + ESELON + TMT) = 6 + 57 + 32 + 10 = 105 (Calculated)
+        // 1. Spacer (NO + NAMA + ESELON + TMT) = 6 + 53 + 32 + 10 = 101 (Calculated)
         $pdf->SetFont('arial','B',7);
-        $pdf->Cell(105,7,'TOTAL',1,0,'C');
+        $pdf->Cell(101,7,'TOTAL',1,0,'C');
         
         // 2. TUNJAB (19)
         $pdf->Cell(19,7,rupiah($totals['total_tunjab']),1,0,'C');
@@ -199,7 +199,7 @@
         $pdf->Cell(6,7,'',1,0,'C'); // T - New
         $pdf->Cell(5,7,'',1,0,'C'); // I
         $pdf->Cell(5,7,'',1,0,'C'); // S
-        $pdf->Cell(6,7,'',1,0,'C'); // %
+        $pdf->Cell(10,7,'',1,0,'C'); // %
         
         // 6. KHD.Rp (19)
         $pdf->Cell(19,7,rupiah($totals['total_kehadiran']),1,0,'C');

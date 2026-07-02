@@ -15,12 +15,11 @@
 
         if ($this->PageNo() > 1) {
             $this->Cell(1,7,'',0,1);
-            $this->SetFont('arial','B',6);
-            $this->Cell(40, 2, '', '0', '0', 'L', false);
-            $this->Cell(7,7,'N0',1,0,'C');
-            $this->Cell(40,7,'NAMA LENGKAP',1,0,'C');
-            $this->Cell(40,7,'NAMA POTONGAN',1,0,'C');
-            $this->Cell(40,7,'NOMINAL',1,0,'C');
+            $this->SetFont('arial','B',7);
+            $this->Cell(10,7,'NO',1,0,'C');
+            $this->Cell(76,7,'NAMA LENGKAP',1,0,'C');
+            $this->Cell(60,7,'NAMA POTONGAN',1,0,'C');
+            $this->Cell(50,7,'NOMINAL',1,0,'C');
             $this->Cell(0,1,'',0,1);
         }
         if ($this->PageNo() > 1) {
@@ -82,13 +81,12 @@
             }
 
             $pdf->ln(3);
-            $pdf->Cell(40, 2, '', '0', '0', 'L', false);
-            $pdf->SetFont('arial','B',6);
+            $pdf->SetFont('arial','B',7);
             // $pdf->SetFillColor(128, 128, 128);
-            $pdf->Cell(7,7,'N0',1,0,'C');
-            $pdf->Cell(55,7,'NAMA LENGKAP',1,0,'C');
-            $pdf->Cell(40,7,'NAMA POTONGAN',1,0,'C');
-            $pdf->Cell(40,7,'NOMINAL',1,0,'C');
+            $pdf->Cell(10,7,'NO',1,0,'C');
+            $pdf->Cell(76,7,'NAMA LENGKAP',1,0,'C');
+            $pdf->Cell(60,7,'NAMA POTONGAN',1,0,'C');
+            $pdf->Cell(50,7,'NOMINAL',1,0,'C');
             $pdf->Cell(0,1,'',0,1);
             
             $no = 1;
@@ -104,11 +102,10 @@
                 trim($key->gelar_belakang ?? '')
             ])));
 
-            $pdf->Cell(40, 2, '', '0', '0', 'L', false);
-            $pdf->Cell(7,7,$no++,1,0,'C');
-            $pdf->Cell(55,7,$nama_tampil,1,0,'L');
-            $pdf->Cell(40,7,$key->nama_potongan,1,0,'L');
-            $pdf->Cell(40,7,rupiah($key->nominal_potongan),1,0,'C');
+            $pdf->Cell(10,7,$no++,1,0,'C');
+            $pdf->Cell(76,7,$nama_tampil,1,0,'L');
+            $pdf->Cell(60,7,$key->nama_potongan,1,0,'L');
+            $pdf->Cell(50,7,rupiah($key->nominal_potongan),1,0,'C');
             $pdf->Cell(0,7,'',0,1);
 
             $jumlah_total = $jumlah_total + $key->nominal_potongan;
@@ -116,9 +113,9 @@
 
         $pdf->ln(1);
         $pdf->SetFont('arial','B',9);
-        $pdf->Cell(87,7,'',0,0,'C');
-        $pdf->Cell(40,7,'Total',1,0,'C');
-        $pdf->Cell(40,7,rupiah($jumlah_total),1,0,'C');
+        $pdf->Cell(86,7,'',0,0,'C');
+        $pdf->Cell(60,7,'Total',1,0,'C');
+        $pdf->Cell(50,7,rupiah($jumlah_total),1,0,'C');
         $pdf->Cell(0,1,'',0,1);
         $tgl1=gmdate("d-m-Y");
 

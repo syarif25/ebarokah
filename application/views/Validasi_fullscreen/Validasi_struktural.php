@@ -945,10 +945,6 @@ $(function() {
   // fallback ekstra kalau dua-duanya tidak terpanggil karena alasan lain
   setTimeout(doReload, 2000);
 },
-error: function(xhr) {
-  console.error(xhr.responseText);
-  Swal.fire('Error', 'Terjadi kesalahan server.', 'error');
-},
       error: function(xhr) {
         console.error(xhr.responseText);
         Swal.fire('Error', 'Terjadi kesalahan server.', 'error');

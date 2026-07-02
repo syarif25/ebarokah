@@ -92,7 +92,7 @@ if (!function_exists('hitung_periode_barokah')) {
         JOIN ketentuan_barokah kb ON kb.id_ketentuan = p.id_ketentuan
         JOIN transport t ON t.id_transport = p.kategori_trans
         WHERE kl.id_kehadiran_lembaga = ?
-        ORDER BY kb.id_ketentuan ASC, u.nama_lengkap ASC
+        ORDER BY kb.barokah DESC, u.nama_lengkap ASC
         ";
         $rows = $CI->db->query($sql, [$idL])->result();
         if (!$rows) return ['rows'=>[], 'periode'=>null, 'totals'=>[]];
