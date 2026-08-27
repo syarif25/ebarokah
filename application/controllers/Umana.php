@@ -432,6 +432,21 @@ class Umana extends CI_Controller {
             $data['status'] = FALSE;
         }
 
+        $nomor_hp = trim($this->input->post('nomor_hp'));
+        if ($nomor_hp !== '' && $nomor_hp !== '0' && $nomor_hp !== '-') {
+            $nik1 = $this->input->post('nik1');
+            if ($nik1) {
+                $query = $this->db->query("SELECT nik FROM umana WHERE nomor_hp = ? AND nik != ?", array($nomor_hp, $nik1));
+            } else {
+                $query = $this->db->query("SELECT nik FROM umana WHERE nomor_hp = ?", array($nomor_hp));
+            }
+            if ($query->num_rows() > 0) {
+                $data['inputerror'][] = 'nomor_hp';
+                $data['error_string'][] = 'Nomor HP sudah digunakan oleh data Umana lain';
+                $data['status'] = FALSE;
+            }
+        }
+
       if ($data['status'] === FALSE) {
             echo json_encode($data);
             exit();

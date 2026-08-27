@@ -232,21 +232,119 @@ class Laporan_lembaga extends CI_Controller {
 		
 		$id = $this->decrypt_url($encrypted_id);
 		
-		// Cek kategori periode
-		$periode = $this->db->get_where('kehadiran_lembaga', ['id_kehadiran_lembaga' => $id])->row();
+		// Cek kategori periode (Join dengan lembaga agar mendapatkan nama_lembaga dan id_bidang)
+		$periode = $this->db->query("
+			SELECT kl.*, l.nama_lembaga, l.id_bidang 
+			FROM kehadiran_lembaga kl
+			JOIN lembaga l ON kl.id_lembaga = l.id_lembaga
+			WHERE kl.id_kehadiran_lembaga = ?
+		", [$id])->row();
+		
 		$kategori = $periode ? $periode->kategori : 'Struktural';
 		
 		if ($kategori == 'Pengajar') {
 			$data['data_rincian'] = $this->Laporan_model->get_datatables_rincian_pengajar($id);
 			$data['kategori'] = 'Pengajar';
+			$this->load->view('Laporan_lembaga/Cetak', $data);
 		} elseif ($kategori == 'Satpam') {
 			$data['data_rincian'] = $this->Laporan_model->get_datatables_rincian_satpam($id);
 			$data['kategori'] = 'Satpam';
+			$this->load->view('Laporan_lembaga/Cetak', $data);
 		} else {
-			$data['data_rincian'] = $this->Laporan_model->get_datatables_rincian($id);
-			$data['kategori'] = 'Struktural';
+			$this->load->library('Pdf');
+			$this->load->helper('hitung_barokah_helper');
+			
+			$raw_rows = $this->Laporan_model->get_datatables_rincian($id);
+			if (empty($raw_rows)) {
+				show_error('Data laporan tidak ditemukan', 404);
+			}
+
+			// Ambil libur_ekstra
+			$libur_ekstra = 0;
+			$q_libur = $this->db->get_where('libur_pesantren', ['bulan' => $periode->bulan, 'tahun' => $periode->tahun])->row();
+			if ($q_libur) {
+				$libur_ekstra = (int)$q_libur->jumlah_hari;
+			}
+
+			$isilist = [];
+			$total_tunjab = 0;
+			$total_tmp = 0;
+			$total_kehadiran = 0;
+			$total_tunkel = 0;
+			$total_tunjanak = 0;
+			$total_kehormatan = 0;
+			$total_tbk = 0;
+			$total_barokah = 0;
+			$total_potongan = 0;
+			$grand_total = 0;
+
+			foreach ($raw_rows as $r) {
+				$obj = new stdClass();
+				$obj->gelar_depan = $r->gelar_depan;
+				$obj->nama_lengkap = $r->nama_lengkap;
+				$obj->gelar_belakang = $r->gelar_belakang;
+				$obj->nama_jabatan = $r->nama_jabatan;
+				$obj->tmt_struktural = $r->tmt_struktural;
+				$obj->tunjab = $r->tunjab;
+				$obj->mp = $r->mp;
+				$obj->tmp = $r->tmp;
+				$obj->nama_lembaga = $r->nama_lembaga;
+				$obj->id_bidang = $r->id_bidang;
+				$obj->bulan = $r->bulan;
+				$obj->tahun = $r->tahun;
+
+				// Hitung wajib hadir bulanan
+				$w_bulanan = hitung_wajib_hadir_bulanan($periode->bulan, $periode->tahun, $r->wajib_hadir, $libur_ekstra);
+				$obj->wajib_hadir_bulanan = $w_bulanan;
+				$obj->jumlah_hadir = $r->jumlah_hadir;
+				$obj->jumlah_tugas = $r->jumlah_tugas;
+				$obj->jumlah_izin = $r->jumlah_izin;
+				$obj->jumlah_sakit = $r->jumlah_sakit;
+
+				// Hitung persentase kehadiran
+				$obj->persentase_kehadiran = ($w_bulanan > 0) ? round(($r->jumlah_hadir / $w_bulanan) * 100) . '%' : '0%';
+
+				$obj->nominal_kehadiran = $r->nominal_kehadiran;
+				$obj->tunkel = $r->tunkel;
+				$obj->tunj_anak = $r->tunj_anak;
+				$obj->nilai_kehormatan = $r->kehormatan;
+				$obj->tbk = $r->tbk;
+				$obj->jumlah_barokah = $r->tunjab + $r->nominal_kehadiran + $r->tunkel + $r->tunj_anak + $r->kehormatan + $r->tbk + $r->tmp;
+				$obj->potongan = $r->potongan;
+				$obj->diterima = $r->diterima;
+
+				$total_tunjab += $r->tunjab;
+				$total_tmp += $r->tmp;
+				$total_kehadiran += $r->nominal_kehadiran;
+				$total_tunkel += $r->tunkel;
+				$total_tunjanak += $r->tunj_anak;
+				$total_kehormatan += $r->kehormatan;
+				$total_tbk += $r->tbk;
+				$total_barokah += $obj->jumlah_barokah;
+				$total_potongan += $r->potongan;
+				$grand_total += $r->diterima;
+
+				$isilist[] = $obj;
+			}
+
+			$totals = [
+				'total_tunjab' => $total_tunjab,
+				'total_tmp' => $total_tmp,
+				'total_kehadiran' => $total_kehadiran,
+				'total_tunkel' => $total_tunkel,
+				'total_tunjanak' => $total_tunjanak,
+				'total_kehormatan' => $total_kehormatan,
+				'total_tbk' => $total_tbk,
+				'total_barokah' => $total_barokah,
+				'total_potongan' => $total_potongan,
+				'grand_total' => $grand_total
+			];
+
+			$data_view['isilist'] = $isilist;
+			$data_view['periode'] = $periode;
+			$data_view['totals'] = $totals;
+
+			$this->load->view('Kehadiran_struktural/Cetak', $data_view);
 		}
-		
-		$this->load->view('Laporan_lembaga/Cetak', $data);
 	}
 }

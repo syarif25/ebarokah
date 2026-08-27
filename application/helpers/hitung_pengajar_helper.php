@@ -281,3 +281,55 @@ if (!function_exists('build_meta_pengajar')) {
         );
     }
 }
+
+/**
+ * get_komponen_sebelumnya_pengajar() — Mengambil riwayat nominal komponen bulan sebelumnya yang sudah ACC/Selesai.
+ */
+if (!function_exists('get_komponen_sebelumnya_pengajar')) {
+    function get_komponen_sebelumnya_pengajar($id_lembaga, $id_kehadiran_lembaga)
+    {
+        $CI =& get_instance();
+        $komponen_sebelumnya = array();
+
+        $q_last = $CI->db->query("
+            SELECT DISTINCT kl.id_kehadiran_lembaga 
+            FROM kehadiran_lembaga kl
+            JOIN total_barokah_pengajar tbp ON kl.id_kehadiran_lembaga = tbp.id_kehadiran_lembaga
+            WHERE kl.id_lembaga = ? 
+              AND kl.id_kehadiran_lembaga < ? 
+              AND kl.status IN ('acc', 'selesai', 'Sudah')
+            ORDER BY kl.id_kehadiran_lembaga DESC 
+            LIMIT 1
+        ", array($id_lembaga, $id_kehadiran_lembaga));
+
+        if ($q_last !== false) {
+            $last_periode = $q_last->row();
+            if ($last_periode) {
+                $q_prev = $CI->db->query("
+                    SELECT id_pengajar, mengajar, dty, jafung, tunkel, tun_anak, kehormatan, walkes,
+                           (mengajar + dty + jafung + tunkel + tun_anak + kehormatan + walkes) AS total_tetap_prev
+                    FROM total_barokah_pengajar
+                    WHERE id_kehadiran_lembaga = ?
+                ", array($last_periode->id_kehadiran_lembaga));
+
+                if ($q_prev !== false) {
+                    foreach ($q_prev->result() as $p) {
+                        $komponen_sebelumnya[$p->id_pengajar] = array(
+                            'mengajar'   => (int)$p->mengajar,
+                            'dty'        => (int)$p->dty,
+                            'jafung'     => (int)$p->jafung,
+                            'tunkel'     => (int)$p->tunkel,
+                            'tun_anak'   => (int)$p->tun_anak,
+                            'kehormatan' => (int)$p->kehormatan,
+                            'walkes'     => (int)$p->walkes,
+                            'total_tetap_prev' => (int)$p->total_tetap_prev
+                        );
+                    }
+                }
+            }
+        }
+
+        return $komponen_sebelumnya;
+    }
+}
+

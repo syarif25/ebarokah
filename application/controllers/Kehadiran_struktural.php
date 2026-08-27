@@ -69,7 +69,7 @@ class Kehadiran_struktural extends CI_Controller {
 				  AND p.id_ketentuan = kb.id_ketentuan 
 				  AND l.id_lembaga = ? 
 				  AND p.tgl_selesai >= CURDATE()
-				ORDER BY kb.id_ketentuan ASC
+				ORDER BY kb.barokah DESC, u.nama_lengkap ASC
 			", [$periode->id_lembaga])->result();
 		} else {
 			$pegawai = [];

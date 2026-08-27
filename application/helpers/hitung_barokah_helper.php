@@ -28,12 +28,13 @@ if (!function_exists('hitung_wajib_hadir_bulanan')) {
             $bln = (int)date('n'); // fallback: bulan sekarang
         }
 
+        $thn = (int)$tahun;
         // Total hari dalam bulan (tanpa dependency calendar extension)
-        $total_hari = (int)date('t', mktime(0, 0, 0, $bln, 1, $tahun));
+        $total_hari = (int)date('t', mktime(0, 0, 0, $bln, 1, $thn));
         
         // Hitung jumlah Jumat dalam bulan
         $jumlah_jumat = 0;
-        $hari_pertama_bulan = mktime(0, 0, 0, $bln, 1, $tahun);
+        $hari_pertama_bulan = mktime(0, 0, 0, $bln, 1, $thn);
         $nama_hari_pertama = date('N', $hari_pertama_bulan); // 1=Senin, 5=Jumat, 6=Sabtu, 7=Minggu
         
         // Cari Jumat pertama dalam bulan

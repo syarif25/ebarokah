@@ -721,11 +721,34 @@ if (isset($isilist) && !empty($isilist)) {
                                 $diterima = $barokah_piket + $jml_kehadiran + $nominal_hadir_15 + $nominal_hadir_10 + $tunkel + $tunja_anak + $mengajar + $dty + $jafung + $kehormatan + $tunj_walkes + $tambahan - $potongan;
                                 $jumlah = $barokah_piket + $jml_kehadiran + $nominal_hadir_15 + $nominal_hadir_10 + $tunkel + $tunja_anak + $mengajar + $dty + $jafung + $kehormatan + $tunj_walkes + $tambahan;
                             }
+
+                            // Evaluasi perbandingan komponen tetap terhadap bulan lalu
+                            $is_warning = false;
+                            $selisih_komponen = 0;
+                            $komponen_berubah = array();
+                            $total_tetap_sekarang = (int)$mengajar + (int)$dty + (int)$jafung + (int)$tunkel + (int)$tunja_anak + (int)$kehormatan + (int)$tunj_walkes;
+
+                            if (isset($komponen_sebelumnya[$key->id_pengajar])) {
+                                $prev = $komponen_sebelumnya[$key->id_pengajar];
+                                if ((int)$mengajar !== $prev['mengajar'])     $komponen_berubah[] = 'mengajar';
+                                if ((int)$dty !== $prev['dty'])               $komponen_berubah[] = 'dty';
+                                if ((int)$jafung !== $prev['jafung'])         $komponen_berubah[] = 'jafung';
+                                if ((int)$tunkel !== $prev['tunkel'])         $komponen_berubah[] = 'tunkel';
+                                if ((int)$tunja_anak !== $prev['tun_anak'])   $komponen_berubah[] = 'tun_anak';
+                                if ((int)$kehormatan !== $prev['kehormatan']) $komponen_berubah[] = 'kehormatan';
+                                if ((int)$tunj_walkes !== $prev['walkes'])    $komponen_berubah[] = 'walkes';
+
+                                $tetap_prev = $prev['total_tetap_prev'];
+                                if ($total_tetap_sekarang !== $tetap_prev) {
+                                    $is_warning = true;
+                                    $selisih_komponen = $total_tetap_sekarang - $tetap_prev;
+                                }
+                            }
                         ?>
                         <!-- Row Data -->
-                        <tr id="row-<?php echo $key->id_kehadiran_pengajar; ?>">
-                            <td class="cell-center text-muted sticky-col-first bg-white border-right"><?php echo $no++; ?></td>
-                            <td class="sticky-col-second bg-white border-right">
+                        <tr id="row-<?php echo $key->id_kehadiran_pengajar; ?>" class="<?php echo $is_warning ? 'bg-warning' : ''; ?>">
+                            <td class="cell-center text-muted sticky-col-first <?php echo $is_warning ? 'bg-warning text-dark font-weight-bold' : 'bg-white'; ?> border-right"><?php echo $no++; ?></td>
+                            <td class="sticky-col-second <?php echo $is_warning ? 'bg-warning' : 'bg-white'; ?> border-right">
                                 <?php 
                                     $g_depan = !empty($key->gelar_depan) ? trim($key->gelar_depan) . ' ' : '';
                                     $g_belakang = !empty($key->gelar_belakang) ? ' ' . trim($key->gelar_belakang) : '';
@@ -737,6 +760,12 @@ if (isset($isilist) && !empty($isilist)) {
                                 <?php if($key->status_aktif == "Cuti 50%" or $key->status_aktif == "Cuti 100%"){ ?>
                                     <span class="badge badge-danger ml-1"><?php echo htmlentities($key->status_aktif); ?></span>
                                 <?php } ?>
+                                <?php if($is_warning): ?>
+                                    <span class="badge badge-danger shadow-sm mt-1 px-2 py-1" style="font-size: 0.65rem; letter-spacing: 0.3px;">
+                                        <i class="fa fa-exclamation-triangle mr-1"></i> 
+                                        PERUBAHAN KOMPONEN (<?php echo ($selisih_komponen > 0 ? '+' : '').number_format($selisih_komponen,0,',','.'); ?>)
+                                    </span>
+                                <?php endif; ?>
                                 <!-- INPUT HIDDEN HAPUS JIKA TIDAK PERLU, TAPI BIARKAN UNTUK FORM SUBMIT BULK -->
                                 <input type="hidden" name="id_pengajar[]" value="<?php echo $key->id_pengajar; ?>">
                                 <input type="hidden" name="id_kehadiran_pengajar[]" value="<?php echo $key->id_kehadiran_pengajar; ?>">
@@ -748,9 +777,9 @@ if (isset($isilist) && !empty($isilist)) {
                             <td class="cell-center align-middle"><?php echo $masa_p; ?> Thn</td>
                             <td class="cell-center align-middle font-weight-bold"><?php echo htmlentities($key->jumlah_sks); ?></td>
                             <td class="cell-right text-muted align-middle"><?php echo rupiah($rank); ?></td>
-                            <td class="cell-right font-weight-bold text-dark align-middle"><?php echo rupiah($mengajar); ?></td>
-                            <td class="cell-right align-middle"><?php echo rupiah($dty); ?></td>
-                            <td class="cell-right align-middle"><?php echo rupiah($jafung); ?></td>
+                            <td class="cell-right <?php echo in_array('mengajar', $komponen_berubah) ? 'text-danger font-weight-bold' : 'font-weight-bold text-dark'; ?> align-middle" <?php echo in_array('mengajar', $komponen_berubah) ? 'title="Nominal berubah dari bulan sebelumnya"' : ''; ?>><?php echo rupiah($mengajar); ?></td>
+                            <td class="cell-right <?php echo in_array('dty', $komponen_berubah) ? 'text-danger font-weight-bold' : ''; ?> align-middle" <?php echo in_array('dty', $komponen_berubah) ? 'title="Nominal berubah dari bulan sebelumnya"' : ''; ?>><?php echo rupiah($dty); ?></td>
+                            <td class="cell-right <?php echo in_array('jafung', $komponen_berubah) ? 'text-danger font-weight-bold' : ''; ?> align-middle" <?php echo in_array('jafung', $komponen_berubah) ? 'title="Nominal berubah dari bulan sebelumnya"' : ''; ?>><?php echo rupiah($jafung); ?></td>
                             
                             <!-- Kehadiran Breakdown -->
                             <!-- Normal -->
@@ -771,10 +800,10 @@ if (isset($isilist) && !empty($isilist)) {
                             <td class="cell-right text-muted align-middle js-nominal-piket"><?php echo rupiah($barokah_piket); ?></td>
                             
                             <!-- Tunjangan breakdown -->
-                            <td class="cell-right border-left align-middle"><?php echo rupiah($tunkel); ?></td>
-                            <td class="cell-right align-middle"><?php echo rupiah($tunja_anak); ?></td>
-                            <td class="cell-right align-middle"><?php echo rupiah($kehormatan); ?></td>
-                            <td class="cell-right align-middle"><?php echo rupiah($tunj_walkes); ?></td>
+                            <td class="cell-right border-left <?php echo in_array('tunkel', $komponen_berubah) ? 'text-danger font-weight-bold' : ''; ?> align-middle" <?php echo in_array('tunkel', $komponen_berubah) ? 'title="Nominal berubah dari bulan sebelumnya"' : ''; ?>><?php echo rupiah($tunkel); ?></td>
+                            <td class="cell-right <?php echo in_array('tun_anak', $komponen_berubah) ? 'text-danger font-weight-bold' : ''; ?> align-middle" <?php echo in_array('tun_anak', $komponen_berubah) ? 'title="Nominal berubah dari bulan sebelumnya"' : ''; ?>><?php echo rupiah($tunja_anak); ?></td>
+                            <td class="cell-right <?php echo in_array('kehormatan', $komponen_berubah) ? 'text-danger font-weight-bold' : ''; ?> align-middle" <?php echo in_array('kehormatan', $komponen_berubah) ? 'title="Nominal berubah dari bulan sebelumnya"' : ''; ?>><?php echo rupiah($kehormatan); ?></td>
+                            <td class="cell-right <?php echo in_array('walkes', $komponen_berubah) ? 'text-danger font-weight-bold' : ''; ?> align-middle" <?php echo in_array('walkes', $komponen_berubah) ? 'title="Nominal berubah dari bulan sebelumnya"' : ''; ?>><?php echo rupiah($tunj_walkes); ?></td>
                             <td class="cell-right align-middle"><?php echo rupiah($tambahan); ?></td>
                             
                             <!-- Potongan & Result -->

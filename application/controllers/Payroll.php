@@ -109,6 +109,10 @@ class Payroll extends CI_Controller {
 		$this->db->where('id_kehadiran_lembaga', $this->input->post('id_kehadiran_lembaga'));
 		$this->db->update('kehadiran_lembaga', $data2);
 
+      // Log action
+      $this->load->helper('hitung_barokah');
+      catat_riwayat_barokah($this->input->post('id_kehadiran_lembaga'), 'selesai', 'Selesai ditransfer (WA Log)');
+
     
       // Ambil kategori lembaga
       $qCat = $this->db->select('kategori')
