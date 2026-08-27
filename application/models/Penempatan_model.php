@@ -48,6 +48,7 @@ class Penempatan_model extends CI_Model {
 		$this->db->from('pengajar');
 		$this->db->join('lembaga', 'pengajar.id_lembaga = lembaga.id_lembaga');
         $this->db->join('umana', 'pengajar.nik = umana.nik'); 
+        $this->db->join('master_prodi', 'pengajar.id_prodi = master_prodi.id_prodi', 'left');
         if ($this->session->userdata('jabatan') == 'AdminLembaga'){
         $this->db->where('pengajar.id_lembaga', $id_lemb);
         } else {

@@ -20,7 +20,7 @@
 	 <!-- Toastr -->
 	 <link rel="stylesheet" href="<?php echo base_url() ?>assets/vendor/toastr/css/toastr.min.css">
 	<?php $this->load->view($css); 
-    error_reporting(0);
+    // error_reporting(0);
     ?>
 	<!-- ================================================== -->
 	 <!-- <script>
@@ -194,6 +194,7 @@
                             <li><a href="<?php echo base_url() ?>Pengguna">Pengguna</a></li>
 							<li><a href="<?php echo base_url() ?>Umana">Umana'</a></li>
                             <li><a href="<?php echo base_url() ?>Lembaga">Lembaga</a></li>
+                            <li><a href="<?php echo base_url() ?>Master_prodi">Master Prodi</a></li>
                             <li><a href="<?php echo base_url() ?>Tahun_acuan">Tahun Acuan</a></li>
 							<li><a href="<?php echo base_url() ?>Ketentuan_barokah">Ketentuan Tunjab</a></li>
                              <li><a href="<?php echo base_url() ?>Libur_pesantren">Libur Pesantren/Nasional</a></li>
@@ -264,9 +265,10 @@
                         <ul aria-expanded="false">
                             <!--<li><a href="<?php echo base_url() ?>Laporan_lembaga/per_bulan">Per Bulan</a></li>-->
                             <li><a href="<?php echo base_url() ?>Laporan_lembaga">Per Lembaga</a></li>
+                            <li><a href="<?php echo base_url() ?>Rekap_kehadiran_pengajar">Rekap Kehadiran Pengajar</a></li>
                             <li><a href="<?php echo base_url() ?>Laporan_satpam/index">Laporan Satpam</a></li>
 							<li><a href="<?php echo base_url() ?>Laporan/per_umana">Per Umana</a></li>
-							
+                            <li><a href="<?php echo base_url() ?>Laporan_waktu">Laporan Waktu Pengajuan</a></li>
                         </ul>
                     </li>
                     <li><a class="has-arrow" href="javascript:void()">
@@ -277,10 +279,10 @@
                             <li><a href="<?php echo base_url() ?>Potongan_umana/per_umana">Potongan Umana</a></li>
 							<li><a href="<?php echo base_url() ?>Log_barokah">Total Barokah</a></li>
 							<li><a href="<?php echo base_url() ?>Log_barokah/pengajar">Total Barokah Pengajar</a></li>
+                            <li><a href="<?php echo base_url() ?>Rekap_barokah_umana">Rekap Total Barokah Umana</a></li>
 							<li><a href="<?php echo base_url() ?>Kehadiran/kehadiran_log">Kehadiran</a></li>
 							<li><a href="<?php echo base_url() ?>Log_kehadiran_lemb">Kehadiran Lembaga</a></li>
-							
-                        </ul>
+						</ul>
                     </li>
                     <li><a class="" href="<?php echo base_url()?>Usulan_approval" aria-expanded="false">
 							<i class="fas fa-check-double"></i>
@@ -404,6 +406,7 @@
                             <li><a href="<?php echo base_url() ?>Pengguna">Pengguna</a></li>
 							<li><a href="<?php echo base_url() ?>Umana">Umana'</a></li>
                             <li><a href="<?php echo base_url() ?>Lembaga">Lembaga</a></li>
+                            <li><a href="<?php echo base_url() ?>Master_prodi">Master Prodi</a></li>
 							<li><a href="<?php echo base_url() ?>Ketentuan_barokah">Ketentuan Tunjab</a></li>
                              <li><a href="<?php echo base_url() ?>Libur_pesantren">Libur Pesantren/Nasional</a></li>
 							 <!--<li><a href="<?php echo base_url() ?>Potongan">Jenis Potongan</a></li> -->
@@ -432,14 +435,25 @@
                     </li>
                     <li><a class="has-arrow" href="javascript:void()">
 						<i class="fas fa-chart-line"></i>
+							<span class="nav-text">Log</span>
+						</a>
+                        <ul aria-expanded="false">
+                            <li><a href="<?php echo base_url() ?>Rekap_barokah_umana">Rekap Total Barokah Umana</a></li>
+                        </ul>
+                    </li>
+                    <li><a class="has-arrow" href="javascript:void()">
+						<i class="fas fa-chart-line"></i>
 							<span class="nav-text">Laporan</span>
 						</a>
                         <ul aria-expanded="false">
                             <li><a href="<?php echo base_url() ?>Laporan_lembaga/per_bulan">Per Bulan</a></li>
                             <li><a href="<?php echo base_url() ?>Laporan_lembaga">Per Lembaga</a></li>
+                            <li><a href="<?php echo base_url() ?>Rekap_kehadiran_pengajar">Rekap Kehadiran Pengajar</a></li>
 							<li><a href="<?php echo base_url() ?>Laporan/per_umana">Per Umana</a></li>
+                            <li><a href="<?php echo base_url() ?>Laporan_waktu">Laporan Waktu Pengajuan</a></li>
                         </ul>
                     </li>
+
                     <li><a class="" href="<?php echo base_url()?>Usulan_approval" aria-expanded="false">
 							<i class="fas fa-check-double"></i>
 							<span class="nav-text">Approval Usulan </span>
@@ -464,7 +478,9 @@
                         <ul aria-expanded="false">
                             <li><a href="<?php echo base_url() ?>Laporan_lembaga/per_bulan">Per Bulan</a></li>
                             <li><a href="<?php echo base_url() ?>Laporan_lembaga">Per Lembaga</a></li>
+                            <li><a href="<?php echo base_url() ?>Rekap_kehadiran_pengajar">Rekap Kehadiran Pengajar</a></li>
 							<li><a href="<?php echo base_url() ?>Laporan/per_umana">Per Umana</a></li>
+                            <li><a href="<?php echo base_url() ?>Laporan_waktu">Laporan Waktu Pengajuan</a></li>
                         </ul>
                     </li>
                     <?php }else if ($this->session->userdata('jabatan') == 'SDM'){ ?>

@@ -66,7 +66,7 @@
                             <div class="mb-4 col-sm-4 input-success-o">
                                 <label class="form-label">Lembaga</label>
                                 <!-- <input type="text" class="form-control" name="potongan"> -->
-                                <select  class="form-control" name="lembaga">
+                                <select id="lembaga" class="form-control" name="lembaga">
                                     <option value=""></option>
                                     <?php 
                                         $this->db->where('id_bidang', 'bidang dikti');
@@ -83,6 +83,12 @@
                                         ?>
                                 </select>
                                 <span class="help-block text-danger" style="color:red"></span>
+                            </div>
+                            <div class="mb-4 col-sm-4 input-success-o" id="prodi-container" style="display:none;">
+                                <label class="form-label">Program Studi</label>
+                                <select id="id_prodi" class="form-control" name="id_prodi">
+                                    <option value="">-- Pilih Prodi --</option>
+                                </select>
                             </div>
                             <div class="mb-3 col-sm-2 input-success-o">
                                 <label class="form-label">Tanggal Mulai</label>

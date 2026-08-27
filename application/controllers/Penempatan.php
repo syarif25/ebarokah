@@ -148,7 +148,11 @@ class Penempatan extends CI_Controller {
 				<br><a href="" class="btn btn-primary light btn-xs mb-1">'.htmlentities($datanya->kategori).'</a>';
 			$row[] = htmlentities($datanya->jumlah_sks);
 				
-			$row[] =date_singkat($datanya->tgl_mulai).' <br> Sampai <br> '. date_singkat($datanya->tgl_selesai);
+			if ($datanya->id_bidang == 'Bidang DIKTI') {
+				$row[] = !empty($datanya->nama_prodi) ? htmlentities($datanya->nama_prodi) : '-';
+			} else {
+				$row[] = '-';
+			}
 			// $row[] = htmlentities($datanya->tunj_kel)."<br>".htmlentities($datanya->kehormatan);
 			// Logic Icon Tunjangan
 			$icons = '';
@@ -196,15 +200,11 @@ class Penempatan extends CI_Controller {
 				$row[] = '<span class="badge badge-danger">'.$datanya->status.'</span>';
 			}
 			
-			$row[] = '<td class="py-2 text-end">
-						<div class="dropdown"><button class="btn btn-primary tp-btn-light sharp" type="button" data-bs-toggle="dropdown" aria-expanded="false"><span class="fs--1"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="18px" height="18px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"></rect><circle fill="#000000" cx="5" cy="12" r="2"></circle><circle fill="#000000" cx="12" cy="12" r="2"></circle><circle fill="#000000" cx="19" cy="12" r="2"></circle></g></svg></span></button>
-							<div class="dropdown-menu dropdown-menu-end border py-0" style="margin: 0px;">
-								<div class="py-2">
-								<a class="dropdown-item text-danger" href="upload/'.$datanya->file_sk.'">FIle SK</a></div>
-								<a class="dropdown-item text-success" href="#" onclick="edit_penempatan('."'".$datanya->id_pengajar."'".')"> <i class="bx bx-edit mr-1" ></i> Edit</a>
-							</div>
-						</div>
-					</td>';
+			$row[] = '<div class="d-flex justify-content-center">
+						<a href="javascript:void(0)" class="btn btn-primary shadow btn-sm" onclick="edit_penempatan('."'".$datanya->id_pengajar."'".')">
+							Edit
+						</a>
+					  </div>';
 			//add html for action
 			$data[] = $row;
 		}
@@ -214,10 +214,18 @@ class Penempatan extends CI_Controller {
 
 
     public function get_umana($id)
-	{
-		$data = $this->Penempatan_model->get_akun($id);
-		echo json_encode($data);
-	}
+    {
+        $data = $this->Penempatan_model->get_by_id_umana($id);
+        echo json_encode($data);
+    }
+
+    public function get_prodi_by_lembaga($id_lembaga)
+    {
+        $this->db->where('id_lembaga', $id_lembaga);
+        $this->db->order_by('nama_prodi', 'ASC');
+        $query = $this->db->get('master_prodi');
+        echo json_encode($query->result());
+    }
 
     public function ajax_add()
 	{
@@ -292,6 +300,7 @@ class Penempatan extends CI_Controller {
 				'kategori' 	    	=> $this->input->post('kategori'),
 				'jumlah_sks' 	    => $this->input->post('jumlah_sks'),
 				'id_lembaga' 	    => $this->input->post('lembaga'),
+                'id_prodi'          => $this->input->post('id_prodi') ? $this->input->post('id_prodi') : NULL,
 				'tunj_kel' 	   		=> $this->input->post('tunkel'),
 				'tunj_anak' 	   	=> $this->input->post('tunj_anak'),
 				'kehormatan' 	   	=> $this->input->post('kehormatan'),
@@ -309,6 +318,7 @@ class Penempatan extends CI_Controller {
 				'kategori' 	    	=> $this->input->post('kategori'),
 				'jumlah_sks' 	    => $this->input->post('jumlah_sks'),
 				'id_lembaga' 	    => $this->input->post('lembaga'),
+                'id_prodi'          => $this->input->post('id_prodi') ? $this->input->post('id_prodi') : NULL,
 				'tunj_kel' 	   		=> $this->input->post('tunkel'),
 				'tunj_anak' 	   	=> $this->input->post('tunj_anak'),
 				'kehormatan' 	   	=> $this->input->post('kehormatan'),
@@ -340,28 +350,37 @@ class Penempatan extends CI_Controller {
 	
 	public function ajax_update_pengajar(){
         // $this->_validate_edit();
-       $data = array(
-			'nik' 	            => $this->input->post('nik'),
-			'kategori' 	    	=> $this->input->post('kategori'),
-			'jumlah_sks' 	    => $this->input->post('jumlah_sks'),
-			'id_lembaga' 	    => $this->input->post('lembaga'),
-			'tunj_kel' 	   		=> $this->input->post('tunkel'),
-			'tunj_anak' 	   	=> $this->input->post('tunj_anak'),
-			'kehormatan' 	   	=> $this->input->post('kehormatan'),
-			'walkes' 	   		=> $this->input->post('walikelas'),
-			'jafung' 	   		=> $this->input->post('jafung'),
-			'tgl_mulai' 	    => $this->input->post('tgl_mulai'),
-			'tgl_selesai' 	    => $this->input->post('tgl_selesai'),
-			'kategori_trans' 	=> $this->input->post('transport'),
-			'file_sk'			=> '',
-			'status'			=> $this->input->post('status'),
-			
-        );
-        
-        if(!empty($_FILES['file_sk']['name']))
-		{
-			$upload = $this->_do_upload();
-			$data['file_sk'] = $upload;
+		if ($this->session->userdata('jabatan') == 'AdminLembaga') {
+			// Admin Lembaga only allowed to update prodi and sks
+			$data = array(
+				'jumlah_sks' => $this->input->post('jumlah_sks'),
+				'id_prodi'   => $this->input->post('id_prodi') ? $this->input->post('id_prodi') : NULL,
+			);
+		} else {
+			// SuperAdmin or HRD allowed to update everything
+			$data = array(
+				'nik' 	            => $this->input->post('nik'),
+				'kategori' 	    	=> $this->input->post('kategori'),
+				'jumlah_sks' 	    => $this->input->post('jumlah_sks'),
+				'id_lembaga' 	    => $this->input->post('lembaga'),
+				'id_prodi'          => $this->input->post('id_prodi') ? $this->input->post('id_prodi') : NULL,
+				'tunj_kel' 	   		=> $this->input->post('tunkel'),
+				'tunj_anak' 	   	=> $this->input->post('tunj_anak'),
+				'kehormatan' 	   	=> $this->input->post('kehormatan'),
+				'walkes' 	   		=> $this->input->post('walikelas'),
+				'jafung' 	   		=> $this->input->post('jafung'),
+				'tgl_mulai' 	    => $this->input->post('tgl_mulai'),
+				'tgl_selesai' 	    => $this->input->post('tgl_selesai'),
+				'kategori_trans' 	=> $this->input->post('transport'),
+				'file_sk'			=> '',
+				'status'			=> $this->input->post('status'),
+			);
+
+			if(!empty($_FILES['file_sk']['name']))
+			{
+				$upload = $this->_do_upload();
+				$data['file_sk'] = $upload;
+			}
 		}
         
 		$this->Penempatan_model->update_pengajar(array('id_pengajar' => $this->input->post('id_pengajar')), $data);

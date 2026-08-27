@@ -76,6 +76,33 @@
         });
     });
 
+    $('#lembaga, .lembaga-select').change(function(){
+        var id_lembaga = $(this).val();
+        if(id_lembaga != '') {
+            $.ajax({
+                url : "<?php echo base_url('Penempatan/get_prodi_by_lembaga')?>/" + id_lembaga,
+                method : "GET",
+                dataType : 'json',
+                success: function(data)
+                {
+                    var html = '<option value="">-- Pilih Prodi --</option>';
+                    if(data.length > 0) {
+                        for(var i=0; i<data.length; i++) {
+                            html += '<option value="'+data[i].id_prodi+'">'+data[i].nama_prodi+'</option>';
+                        }
+                        $('#prodi-container').show();
+                    } else {
+                        $('#prodi-container').hide();
+                    }
+                    $('#id_prodi').html(html);
+                }
+            });
+        } else {
+            $('#prodi-container').hide();
+            $('#id_prodi').html('<option value="">-- Pilih Prodi --</option>');
+        }
+    });
+
     function save()
     {
         $('#btnSave').text('Proses menyimpan...'); //change button text
@@ -171,6 +198,10 @@
     {
         save_method = 'update';
         $('#form')[0].reset(); // reset form on modals
+        $('#form').find('.input-success-o').show();
+        $('#form').find('input, select, textarea').show();
+        $('#form').find('.nice-select, .select2-container').show();
+        $('#form').find('.plaintext-value').remove();
 
 
         //Ajax Load data from ajax
@@ -193,15 +224,56 @@
             $('[name="id_ketentuan"]').val(data.id_ketentuan);
             $('[name="tmt"]').val(data.tmt_struktural);
             $('[name="lembaga"]').val(data.id_lembaga);
+            if(data.id_lembaga) {
+                $.ajax({
+                    url : "<?php echo base_url('Penempatan/get_prodi_by_lembaga')?>/" + data.id_lembaga,
+                    method : "GET",
+                    dataType : 'json',
+                    success: function(res) {
+                        var html = '<option value="">-- Pilih Prodi --</option>';
+                        if(res.length > 0) {
+                            for(var i=0; i<res.length; i++) {
+                                html += '<option value="'+res[i].id_prodi+'">'+res[i].nama_prodi+'</option>';
+                            }
+                            $('#prodi-container').show();
+                        } else {
+                            $('#prodi-container').hide();
+                        }
+                        $('#id_prodi').html(html);
+                        if(data.id_prodi) {
+                            $('#id_prodi').val(data.id_prodi);
+                        }
+                    }
+                });
+            } else {
+                $('#prodi-container').hide();
+                $('#id_prodi').html('<option value="">-- Pilih Prodi --</option>');
+            }
             $('[name="tunkel"]').val(data.tunj_kel);
             $('[name="tunj_anak"]').val(data.tunj_anak);
-            $('[name="transport"]').val(data.kategori_trans);
+            $('[name="transport"]').val(data.kategori_trans).trigger('change');
             $('[name="kehormatan"]').val(data.kehormatan);
             $('[name="walikelas"]').val(data.walkes);
             $('[name="jafung"]').val(data.jafung);
             $('[name="tgl_mulai"]').val(data.tgl_mulai);
             $('[name="tgl_selesai"]').val(data.tgl_selesai);
             $('[name="status"]').val(data.status);
+
+            var role = '<?php echo $this->session->userdata("jabatan"); ?>';
+            if (role == 'AdminLembaga') {
+                $('[name="tgl_mulai"]').closest('.input-success-o').hide();
+                $('[name="tgl_selesai"]').closest('.input-success-o').hide();
+                $('#form').find('input, select, textarea').not('[name="id_prodi"], [name="jumlah_sks"], [name="id_pengajar"], [name="tgl_mulai"], [name="tgl_selesai"], [type="hidden"]').each(function() {
+                    var val = $(this).is('select') ? $(this).find('option:selected').text() : $(this).val();
+                    if (!val || val == '') val = '-';
+                    $(this).hide();
+                    if ($(this).next().hasClass('nice-select') || $(this).next().hasClass('select2-container')) {
+                        $(this).next().hide();
+                    }
+                    $(this).after('<div class="plaintext-value text-dark fw-bold pt-2 border-bottom border-light pb-1 mb-2">' + val + '</div>');
+                });
+            }
+
             $('#modal_penempatan').modal('show'); // show bootstrap modal when complete loaded
             },
             error: function (jqXHR, textStatus, errorThrown)
@@ -220,18 +292,19 @@
 
 
 <div id="modal_penempatan" class="modal fade bd-example-modal-lg" tabindex="-1" aria-hidden="true" style="display: none;">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl" style="max-width: 95%; width: 1200px;">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Penempatan Struktural</h5> <small id="id"></small>
-                <button type="button" class="btn-close" data-bs-dismiss="modal">
+                <h5 class="modal-title">Penempatan Pengajar <small class="text-muted" style="font-size: 70%;">ID: #<span id="id"></span></small></h5>
+                <button type="button" class="btn-close close" data-bs-dismiss="modal" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
                 <div class="card">
                     <form id="form">
                         <div class="row">
-                            <div class="mb-3 col-sm-4 input-success-o">
+                            <div class="mb-3 col-md-3 col-sm-6 input-success-o">
                                 <label class="form-label">NIK</label>
                                 <!-- <input type="text" class="form-control" name="nik"> -->
                                 <select id="" class="form-control" name="nik">
@@ -246,42 +319,27 @@
                                 </select>
                                 <input type="hidden" name="id_pengajar">
                             </div>
-                            <div class="mb-3 col-sm-4 input-success-o">
+                            <div class="mb-3 col-md-3 col-sm-6 input-success-o">
                                 <label class="form-label">Nama Lengkap</label>
                                 <input type="text" class="form-control" name="nama_lengkap" readonly>
                             </div>
-                            <div class="mb-1 col-sm-2 input-info-o">
+                            <div class="mb-3 col-md-2 col-sm-4 input-info-o">
                                 <label class="form-label">Ijazah Terakhir</label>
                                 <input type="text" class="form-control" name="ijazah_terakhir" readonly>
                             </div>
-                            <div class="mb-2 col-sm-2 input-info-o">
+                            <div class="mb-3 col-md-2 col-sm-4 input-info-o">
                                 <label class="form-label">TMT Guru</label>
                                 <input type="text" class="form-control" name="tmt_guru" readonly>
                             </div>
-                            <div class="mb-2 col-sm-2 input-info-o">
+                            <div class="mb-3 col-md-2 col-sm-4 input-info-o">
                                 <label class="form-label">TMT Dosen</label>
                                 <input type="text" class="form-control" name="tmt_dosen" readonly>
                             </div>
-                            <div class="mb-2 col-sm-2 input-success-o">
-                                <label class="form-label">Kategori</label>
-                                <!-- <input type="text" class="form-control" name="nik"> -->
-                                <select id="" class="form-control" name="kategori">
-                                    <option value=""></option>
-                                    <option value="GTY">Guru Tetap</option>
-                                    <option value="GTT">Guru Tidak Tetap</option>
-                                    <option value="DTY">Dosen Tetap</option>
-                                    <option value="DTT">Dosen Tidak Tetap</option>
-                                </select>
-                                <span class="help-block text-danger" style="color:red"></span>
-                            </div>
-                            <div class="mb-2 col-sm-2 input-success-o">
-                                <label class="form-label">Jumlah SKS/JAM</label>
-                                <input type="number" class="form-control" name="jumlah_sks">
-                            </div>
-                            <div class="mb-4 col-sm-4 input-success-o">
+
+                            <div class="mb-3 col-md-4 col-sm-6 input-success-o">
                                 <label class="form-label">Lembaga</label>
                                 <!-- <input type="text" class="form-control" name="potongan"> -->
-                                <select  class="form-control" name="lembaga">
+                                <select  class="form-control lembaga-select" name="lembaga">
                                     <option value=""></option>
                                     <?php 
                                         $this->db->where('id_bidang', 'bidang dikti');
@@ -299,15 +357,38 @@
                                 </select>
                                 <span class="help-block text-danger" style="color:red"></span>
                             </div>
-                            <div class="mb-3 col-sm-2 input-success-o">
+                            <div class="mb-3 col-md-4 col-sm-6 input-success-o" id="prodi-container" style="display:none;">
+                                <label class="form-label">Program Studi</label>
+                                <select id="id_prodi" class="form-control" name="id_prodi">
+                                    <option value="">-- Pilih Prodi --</option>
+                                </select>
+                            </div>
+                            <div class="mb-3 col-md-2 col-sm-6 input-success-o">
+                                <label class="form-label">Kategori</label>
+                                <!-- <input type="text" class="form-control" name="nik"> -->
+                                <select id="" class="form-control" name="kategori">
+                                    <option value=""></option>
+                                    <option value="GTY">Guru Tetap</option>
+                                    <option value="GTT">Guru Tidak Tetap</option>
+                                    <option value="DTY">Dosen Tetap</option>
+                                    <option value="DTT">Dosen Tidak Tetap</option>
+                                </select>
+                                <span class="help-block text-danger" style="color:red"></span>
+                            </div>
+                            <div class="mb-3 col-md-2 col-sm-4 input-success-o">
+                                <label class="form-label">Jumlah SKS/JAM</label>
+                                <input type="number" class="form-control" name="jumlah_sks">
+                            </div>
+                            <div class="mb-3 col-md-2 col-sm-4 input-success-o">
                                 <label class="form-label">Tanggal Mulai</label>
                                 <input type="date" class="form-control" name="tgl_mulai">
                             </div>
-                            <div class="mb-3 col-sm-2 input-success-o">
+                            <div class="mb-3 col-md-2 col-sm-4 input-success-o">
                                 <label class="form-label">Tanggal Selesai</label>
                                 <input type="date" class="form-control" name="tgl_selesai">
                             </div>
-                            <div class="mb-3 col-sm-3 input-success-o">
+
+                            <div class="mb-3 col-md-2 col-sm-4 input-success-o">
                                 <label class="form-label">Tunkel </label>
                                 <select name="tunkel" id="" class="form-control">
                                     <option value=""></option>
@@ -316,7 +397,7 @@
                                 </select>
                                 <span class="help-block text-danger" style="color:red"></span>
                             </div>
-                            <div class="mb-3 col-sm-3 input-success-o">
+                            <div class="mb-3 col-md-2 col-sm-4 input-success-o">
                                 <label class="form-label">Tunj Anak </label>
                                 <select name="tunj_anak" id="" class="form-control">
                                     <option value=""></option>
@@ -325,7 +406,7 @@
                                 </select>
                                 <span class="help-block text-danger" style="color:red"></span>
                             </div>
-                            <div class="mb-3 col-sm-3 input-success-o">
+                            <div class="mb-3 col-md-2 col-sm-4 input-success-o">
                                 <label class="form-label">Kehormatan</label>
                                 <!-- <input type="text" class="form-control" name="potongan"> -->
                                 <select  class="form-control" name="kehormatan">
@@ -333,7 +414,7 @@
                                    <option>Tidak</option>
                                 </select>
                             </div>
-                            <div class="mb-3 col-sm-3 input-success-o">
+                            <div class="mb-3 col-md-2 col-sm-4 input-success-o">
                                 <label class="form-label">Wali Kelas</label>
                                 <!-- <input type="text" class="form-control" name="potongan"> -->
                                 <select  class="form-control" name="walikelas">
@@ -343,7 +424,7 @@
                                      <option value="walkes_amsilati">Wali Kelas Amsilati</option>
                                 </select>
                             </div>
-                            <div class="mb-3 col-sm-3 input-success-o">
+                            <div class="mb-3 col-md-2 col-sm-4 input-success-o">
                                 <label class="form-label">Jafung </label>
                                 <select name="jafung" id="" class="form-control">
                                     <option value=""></option>
@@ -352,7 +433,7 @@
                                 </select>
                                 <span class="help-block text-danger" style="color:red"></span>
                             </div>
-                            <div class="mb-3 col-sm-3 input-success-o">
+                            <div class="mb-3 col-md-2 col-sm-4 input-success-o">
                                 <label class="form-label">Status</label>
                                 <!-- <input type="text" class="form-control" name="potongan"> -->
                                 <select  class="form-control" name="status">
@@ -362,36 +443,30 @@
                                     <option>Cuti 100%</option>
                                 </select>
                             </div>
-                            <div class="mb-5 col-sm-5 input-success-o">
+
+                            <div class="mb-3 col-md-9 col-sm-8 input-success-o">
                                 <label class="form-label">Transport/Kehadiran </label>
                                 <select id="trans" class="form-control trans" name="transport">
                                     <option value=""></option>
                                     <?php 
-                                    $this->db->where('kategori_transport !=', 'struktural');
                                     $this->db->order_by('kategori_transport', 'ASC'); 
                                     $query = $this->db->get('transport');
                                     
                                     if ($query->num_rows() > 0) {
                                         foreach ($query->result() as $row) {
-                                            // Format nominal_transport menjadi Rupiah
                                             $nominal_rupiah = number_format($row->nominal_transport, 0, ',', '.');
                                             ?>
-                                            <option value="<?php echo $row->id_transport;?>">
-                                                <b><?php echo $row->kategori_transport;?> | </b>
-                                                <?php echo $row->nama_transport." | Rp ".$nominal_rupiah;?>
-                                            </option>
+                                            <option value="<?php echo $row->id_transport;?>"><?php echo $row->kategori_transport." | ".$row->nama_transport." | Rp ".$nominal_rupiah;?></option>
                                             <?php
                                         }
                                     }
                                     ?>
                                 </select>
-
                                 <span class="help-block text-danger" style="color:red"></span>
                             </div>
-                            <!--<div class="mb-3 col-sm-9 input-success-o">-->
-                            <!--</div>-->
-                            <div class="mb-3 col-sm-3 input-success-o">
-                                <button type="button" class="btn btn-primary" id="btnSave" onclick="simpan()">Simpan</button>   
+                            <div class="mb-3 col-md-3 col-sm-4 input-success-o">
+                                <label class="form-label d-block" style="visibility: hidden;">Aksi</label>
+                                <button type="button" class="btn btn-primary w-100 font-weight-bold" id="btnSave" onclick="simpan()">Simpan</button>   
                             </div>
                         </div>
                     </form>
@@ -400,3 +475,4 @@
         </div>
     </div>
 </div>
+

@@ -130,7 +130,7 @@
                                     <th>Nama Lengkap</th>
                                     <th>Lembaga</th>
                                     <th>SKS/Jam</th>
-                                    <th>Masa Pengabdian</th>
+                                    <th>Prodi</th>
                                     <th>Tunjangan</th>
                                     <th>Status</th>
                                     <th>Aksi</th>

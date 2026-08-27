@@ -70,15 +70,53 @@ class Laporan_model extends CI_Model {
 
 	function get_datatables_rincian($id)
 	{
-		// $this->_get_datatables_query_rincian($id);
-		$query_lama = $this->db->query("select umana.gelar_depan, umana.gelar_belakang, id_kehadiran_lembaga, lembaga.id_lembaga, kehadiran_lembaga.status, total_barokah.kehormatan, potongan, jabatan_lembaga, jumlah_total, nama_lembaga, kehadiran.bulan, kehadiran.tahun, nama_lengkap, tmp, diterima, tmt_struktural, nama_jabatan, barokah, jumlah_hadir, nominal_kehadiran, mp, tunkel, total_barokah.tunj_anak, tbk, total_barokah.kehadiran, umana.nik from kehadiran, kehadiran_lembaga, penempatan, umana, total_barokah, ketentuan_barokah, lembaga WHERE lembaga.id_lembaga = penempatan.id_lembaga and kehadiran_lembaga.id_kehadiran_lembaga = kehadiran.id_kehadi AND kehadiran_lembaga.id_kehadiran_lembaga = $id AND penempatan.id_penempatan = kehadiran.id_penempatan AND penempatan.nik = umana.nik and total_barokah.id_penempatan = kehadiran.id_penempatan AND penempatan.id_ketentuan = ketentuan_barokah.id_ketentuan and total_barokah.bulan = kehadiran_lembaga.bulan AND total_barokah.tahun = kehadiran_lembaga.tahun GROUP by umana.nik ORDER by ketentuan_barokah.id_ketentuan ASC");
-// 		$query =  $this->db->query("SELECT u.nik, u.nama_lengkap, tb.*, p.id_penempatan FROM total_barokah tb
-//             INNER JOIN penempatan p ON tb.id_penempatan = p.id_penempatan
-//             INNER JOIN umana u ON p.nik = u.nik
-//             INNER JOIN lembaga l ON l.id_lembaga = p.id_lembaga
-//             WHERE u.nik = $id
-//             ORDER BY id_total_barokah DESC;");
-		return $query_lama->result();
+		$id = $this->db->escape_str($id);
+		$query = $this->db->query("
+			SELECT 
+				umana.gelar_depan, 
+				umana.gelar_belakang, 
+				kehadiran_lembaga.id_kehadiran_lembaga, 
+				lembaga.id_lembaga, 
+				kehadiran_lembaga.status, 
+				total_barokah.kehormatan, 
+				total_barokah.potongan, 
+				total_barokah.diterima, 
+				total_barokah.tunjab, 
+				total_barokah.tunkel, 
+				total_barokah.tunj_anak, 
+				total_barokah.tmp, 
+				total_barokah.tbk, 
+				total_barokah.nominal_kehadiran,
+				total_barokah.mp,
+				jabatan_lembaga, 
+				jumlah_total, 
+				nama_lembaga, 
+				lembaga.id_bidang,
+				kehadiran.bulan, 
+				kehadiran.tahun, 
+				nama_lengkap, 
+				tmt_struktural, 
+				nama_jabatan, 
+				ketentuan_barokah.wajib_hadir,
+				kehadiran.jumlah_hadir, 
+				kehadiran.jumlah_tugas, 
+				kehadiran.jumlah_izin, 
+				kehadiran.jumlah_sakit, 
+				umana.nik 
+			FROM kehadiran
+			JOIN kehadiran_lembaga ON kehadiran_lembaga.id_kehadiran_lembaga = kehadiran.id_kehadi
+			JOIN penempatan ON penempatan.id_penempatan = kehadiran.id_penempatan
+			JOIN umana ON penempatan.nik = umana.nik
+			JOIN total_barokah ON total_barokah.id_penempatan = kehadiran.id_penempatan 
+				AND total_barokah.bulan = kehadiran_lembaga.bulan 
+				AND total_barokah.tahun = kehadiran_lembaga.tahun
+			JOIN ketentuan_barokah ON penempatan.id_ketentuan = ketentuan_barokah.id_ketentuan
+			JOIN lembaga ON lembaga.id_lembaga = penempatan.id_lembaga
+			WHERE kehadiran_lembaga.id_kehadiran_lembaga = '$id'
+			GROUP BY umana.nik 
+			ORDER BY total_barokah.tunjab DESC, umana.nama_lengkap ASC
+		");
+		return $query->result();
 	}
 	
 
@@ -113,8 +151,12 @@ class Laporan_model extends CI_Model {
                 AND tbp.bulan = kl.bulan 
                 AND tbp.tahun = kl.tahun
             )
+            LEFT JOIN master_prodi mp ON mp.id_prodi = p.id_prodi
             WHERE kl.id_kehadiran_lembaga = '$id'
-            ORDER BY u.nama_lengkap ASC;");
+            ORDER BY 
+                CASE WHEN l.id_bidang = 'Bidang DIKTI' THEN 0 ELSE 1 END ASC,
+                IFNULL(mp.nama_prodi, '~') ASC,
+                u.nama_lengkap ASC;");
 		$results = $query->result();
         foreach($results as $row) {
             $row->is_snapshot = true; // Mark as snapshot
@@ -149,9 +191,13 @@ class Laporan_model extends CI_Model {
             JOIN kehadiran_lembaga  ON kehadiran_lembaga.id_kehadiran_lembaga = kehadiran_pengajar.id_kehadiran_lembaga
             JOIN lembaga    ON pengajar.id_lembaga = lembaga.id_lembaga
             JOIN transport  ON pengajar.kategori_trans = transport.id_transport
+            LEFT JOIN master_prodi mp ON mp.id_prodi = pengajar.id_prodi
             WHERE kehadiran_lembaga.id_kehadiran_lembaga = '$id'
               AND DATEDIFF(NOW(), pengajar.tgl_mulai) < pengajar.tgl_selesai
-            ORDER BY umana.nama_lengkap ASC
+            ORDER BY
+                CASE WHEN lembaga.id_bidang = 'Bidang DIKTI' THEN 0 ELSE 1 END ASC,
+                IFNULL(mp.nama_prodi, '~') ASC,
+                umana.nama_lengkap ASC
         ");
         return $list->result();
     }
@@ -172,7 +218,10 @@ class Laporan_model extends CI_Model {
         pengajar.id_lembaga = lembaga.id_lembaga and 
         pengajar.kategori_trans = transport.id_transport and 
         DATEDIFF(NOW(), pengajar.tgl_mulai) < pengajar.tgl_selesai and
-        kehadiran_lembaga.id_kehadiran_lembaga = '$id' order by nama_lengkap asc ")->result();
+        kehadiran_lembaga.id_kehadiran_lembaga = '$id' 
+        order by 
+            CASE WHEN id_bidang = 'Bidang DIKTI' THEN 0 ELSE 1 END ASC,
+            nama_lengkap asc ")->result();
 
         if (empty($list)) return array();
 
@@ -477,4 +526,62 @@ class Laporan_model extends CI_Model {
         $this->db->order_by('u.nama_lengkap', 'ASC');
         return $this->db->get()->result();
     }
+
+	// Fungsi untuk Rekap Kehadiran Pengajar (Pivot Table)
+	// Menggunakan total_barokah_pengajar (snapshot yang sudah divalidasi)
+	// Filter lembaga berdasarkan kehadiran_lembaga.id_lembaga (bukan pengajar.id_lembaga)
+	// agar konsisten dengan data yang tampil di Laporan_pengajar per periode
+	function get_rekap_kehadiran_pivot($id_lembaga, $kriteria_bulan_tahun)
+	{
+		if (empty($kriteria_bulan_tahun)) return [];
+
+		// Bangun kondisi OR untuk kombinasi bulan dan tahun
+		$or_conditions = [];
+		foreach ($kriteria_bulan_tahun as $bt) {
+			$parts = explode('-', $bt);
+			if (count($parts) == 2) {
+				$bulan = $this->db->escape($parts[0]);
+				$tahun = $this->db->escape($parts[1]);
+				$or_conditions[] = "(tbp.bulan = $bulan AND tbp.tahun = $tahun)";
+			}
+		}
+		if (empty($or_conditions)) return [];
+
+		$where_bulan_tahun = implode(" OR ", $or_conditions);
+
+		$sql = "
+			SELECT
+				umana.nama_lengkap,
+				umana.gelar_depan,
+				umana.gelar_belakang,
+				lembaga.nama_lembaga,
+				pengajar.kategori,
+				tbp.bulan,
+				tbp.tahun,
+				tbp.id_pengajar,
+				tbp.jumlah_hadir,
+				tbp.jumlah_hadir_15,
+				tbp.jumlah_hadir_10,
+				tbp.jumlah_hadir_piket
+			FROM total_barokah_pengajar tbp
+			JOIN pengajar ON pengajar.id_pengajar = tbp.id_pengajar
+			JOIN umana ON umana.nik = pengajar.nik
+			JOIN lembaga ON lembaga.id_lembaga = pengajar.id_lembaga
+			JOIN kehadiran_lembaga kl ON kl.id_kehadiran_lembaga = tbp.id_kehadiran_lembaga
+			WHERE ($where_bulan_tahun)
+			  AND kl.kategori = 'Pengajar'
+		";
+
+		if (!empty($id_lembaga)) {
+			$id_lembaga_safe = $this->db->escape($id_lembaga);
+			// Filter berdasarkan id_lembaga pada PERIODE kehadiran, bukan id_lembaga pengajar
+			$sql .= " AND kl.id_lembaga = $id_lembaga_safe";
+		}
+
+		$sql .= " ORDER BY umana.nama_lengkap ASC";
+
+		$query = $this->db->query($sql);
+		return $query->result();
+	}
 }
+

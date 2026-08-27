@@ -432,8 +432,12 @@ class Validasi_pengajar extends CI_Controller {
             JOIN pengajar p ON p.id_pengajar = tbp.id_pengajar
             JOIN umana u ON u.nik = p.nik
             JOIN lembaga l ON l.id_lembaga = kl.id_lembaga
+            LEFT JOIN master_prodi mp ON mp.id_prodi = p.id_prodi
             WHERE kl.id_kehadiran_lembaga = '$decrypted_id'
-            ORDER BY u.nama_lengkap ASC
+            ORDER BY
+                CASE WHEN l.id_bidang = 'Bidang DIKTI' THEN 0 ELSE 1 END ASC,
+                IFNULL(mp.nama_prodi, '~') ASC,
+                u.nama_lengkap ASC
         ")->result();
 
         if (!empty($snapshot)) {
@@ -450,7 +454,10 @@ class Validasi_pengajar extends CI_Controller {
             pengajar.id_lembaga = lembaga.id_lembaga and 
             pengajar.kategori_trans = transport.id_transport and 
             DATEDIFF(NOW(), pengajar.tgl_mulai) < pengajar.tgl_selesai and
-            kehadiran_lembaga.id_kehadiran_lembaga = $decrypted_id order by nama_lengkap asc ")->result();
+            kehadiran_lembaga.id_kehadiran_lembaga = $decrypted_id 
+            order by 
+                CASE WHEN id_bidang = 'Bidang DIKTI' THEN 0 ELSE 1 END ASC,
+                nama_lengkap asc ")->result();
             
             $data['isilist'] = $list2;
             $data['is_snapshot'] = false;
@@ -499,13 +506,15 @@ class Validasi_pengajar extends CI_Controller {
             $data['periode_date'] = date('Y-m-01');
         }
 
-        // Enkripsi id_lembaga untuk keamanan link Potongan di view
+        // Enkripsi id_lembaga untuk keamanan link Potongan di view & ambil perbandingan komponen sebelumnya
         if (isset($periode_row) && $periode_row) {
             $key_enc = '874jzceroier38!@#%*bjkdwdw)';
             $enc_tmp = base64_encode($periode_row->id_lembaga . $key_enc);
             $data['enc_id_lembaga'] = str_replace(['+', '/', '='], ['-', '_', ''], $enc_tmp);
+            $data['komponen_sebelumnya'] = get_komponen_sebelumnya_pengajar($periode_row->id_lembaga, $decrypted_id);
         } else {
             $data['enc_id_lembaga'] = '';
+            $data['komponen_sebelumnya'] = array();
         }
 
         $this->load->view('Validasi_fullscreen/Validasi_pengajar', $data);
