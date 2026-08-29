@@ -153,6 +153,12 @@
             $no = 1;
             $nominaltunkel = isset($isitunkel[0]) ? $isitunkel[0] : null;
             $nominaltunj_anak = isset($isitunj_anak[0]) ? $isitunj_anak[0] : null;
+            $current_prodi = null;
+            $sub_mengajar = 0; $sub_dty = 0; $sub_jafung = 0;
+            $sub_kehadiran = 0; $sub_kehadiran_15 = 0; $sub_kehadiran_10 = 0; $sub_kehadiran_piket = 0;
+            $sub_tunkel = 0; $sub_tunanak = 0; $sub_kehormatan = 0; $sub_walkes = 0; $sub_bk = 0;
+            $sub_semua = 0; $sub_potong = 0; $sub_total = 0;
+
             foreach($isilist as $key){
                 $jml_kehadiran = $key->jumlah_hadir * $key->nominal_transport;
                 $jml_kehadiran_15 = $key->jumlah_hadir_15 * 15000;
@@ -377,17 +383,73 @@
                 $diterima = $barokah_piket + $jml_kehadiran + $jml_kehadiran_15 + $jml_kehadiran_10 + $tunkel + $tunja_anak + $mengajar + $dty + $jafung + $kehormatan + $tunj_walkes + $tambahan - $potongan;
                 $jumlah = $barokah_piket + $jml_kehadiran + $jml_kehadiran_15 + $jml_kehadiran_10 + $tunkel + $tunja_anak + $mengajar + $dty + $jafung + $kehormatan + $tunj_walkes + $tambahan ;
                 
+                $prodi_name = !empty($key->nama_prodi) ? $key->nama_prodi : 'Lainnya / Tidak Ada Prodi';
+                if ($current_prodi !== $prodi_name) {
+                    // Cetak subtotal prodi sebelumnya jika ada
+                    if ($current_prodi !== null) {
+                        $pdf->Cell(1,7,'',0,1);
+                        $pdf->SetFont('arial','B',5);
+                        $pdf->SetFillColor(255, 255, 204); // Warna kuning muda untuk total
+                        $pdf->Cell(101,7,'TOTAL ' . strtoupper($current_prodi),1,0,'C',true);
+                        $pdf->Cell(12,7,rupiah($sub_mengajar),1,0,'C',true);
+                        $pdf->Cell(10,7,rupiah($sub_dty),1,0,'C',true);
+                        $pdf->Cell(12,7,rupiah($sub_jafung),1,0,'C',true);
+                        $pdf->Cell(17,7,rupiah($sub_kehadiran),1,0,'C',true);
+                        $pdf->Cell(17,7,rupiah($sub_kehadiran_15),1,0,'C',true);
+                        $pdf->Cell(17,7,rupiah($sub_kehadiran_10),1,0,'C',true);
+                        $pdf->Cell(24,7,rupiah($sub_kehadiran_piket),1,0,'C',true);
+                        $pdf->Cell(12,7,rupiah($sub_tunkel),1,0,'C',true);
+                        $pdf->Cell(12,7,rupiah($sub_tunanak),1,0,'C',true);
+                        $pdf->Cell(15,7,rupiah($sub_kehormatan),1,0,'C',true);
+                        $pdf->Cell(15,7,rupiah($sub_walkes),1,0,'C',true);
+                        $pdf->Cell(15,7,rupiah($sub_bk),1,0,'C',true);
+                        $pdf->Cell(15,7,rupiah($sub_semua),1,0,'C',true);
+                        $pdf->Cell(15,7,rupiah($sub_potong),1,0,'C',true);
+                        $pdf->Cell(20,7,rupiah($sub_total),1,0,'C',true);
+                        $pdf->SetFillColor(230, 230, 230); // Kembalikan ke warna header
+                        
+                        // Reset subtotal
+                        $sub_mengajar = 0; $sub_dty = 0; $sub_jafung = 0;
+                        $sub_kehadiran = 0; $sub_kehadiran_15 = 0; $sub_kehadiran_10 = 0; $sub_kehadiran_piket = 0;
+                        $sub_tunkel = 0; $sub_tunanak = 0; $sub_kehormatan = 0; $sub_walkes = 0; $sub_bk = 0;
+                        $sub_semua = 0; $sub_potong = 0; $sub_total = 0;
+                    }
+                    
+                    $current_prodi = $prodi_name;
+                    $pdf->Cell(1,7,'',0,1);
+                    $pdf->SetFont('tahoma','B',6);
+                    $pdf->SetFillColor(230, 230, 230);
+                    $pdf->Cell(329, 7, '  PRODI: ' . strtoupper($prodi_name), 1, 0, 'L', true);
+                }
 
             $pdf->Cell(1,7,'',0,1);
+
+            // Hitung is_warning 
+            $is_warning = false;
+            $fill = false;
+            $total_tetap_sekarang = (int)$mengajar + (int)$dty + (int)$jafung + (int)$tunkel + (int)$tunja_anak + (int)$kehormatan + (int)$tunj_walkes;
+            if (isset($komponen_sebelumnya[$key->id_pengajar])) {
+                $prev = $komponen_sebelumnya[$key->id_pengajar];
+                $tetap_prev = $prev['total_tetap_prev'];
+                if ($total_tetap_sekarang !== $tetap_prev) {
+                    $is_warning = true;
+                }
+            }
+
+            if ($is_warning) {
+                $pdf->SetFillColor(255, 243, 205); // Warna kuning
+                $fill = true;
+            }
+
             $pdf->SetFont('arial','B',5);
             // $pdf->SetFillColor(128, 128, 128);
-            $pdf->Cell(5,7,$no++,1,0,'C');
+            $pdf->Cell(5,7,$no++,1,0,'C', $fill);
             if($key->status_aktif == "Cuti 50%" or $key->status_aktif == "Cuti 100%"){
             $pdf->SetTextColor(255, 0, 0); // Mengatur warna teks menjadi merah
-            $pdf->Cell(45, 7, $key->gelar_depan . ' ' . strtoupper($key->nama_lengkap) . ' ' . $key->gelar_belakang . ' (' . $key->status_aktif . ')', 1, 0, 'L');
+            $pdf->Cell(45, 7, $key->gelar_depan . ' ' . strtoupper($key->nama_lengkap) . ' ' . $key->gelar_belakang . ' (' . $key->status_aktif . ')', 1, 0, 'L', $fill);
             $pdf->SetTextColor(0, 0, 0); // Mengembalikan warna teks ke hitam (opsional)
             } else {
-                $pdf->Cell(45,7,$key->gelar_depan.' '.strtoupper($key->nama_lengkap).' '.$key->gelar_belakang,1,0,'L');
+                $pdf->Cell(45,7,$key->gelar_depan.' '.strtoupper($key->nama_lengkap).' '.$key->gelar_belakang,1,0,'L', $fill);
             }
             
             // Cek kondisi status aktif
@@ -396,8 +458,8 @@
             } else {
                 $pdf->SetTextColor(0, 0, 0); // Mengembalikan warna teks ke hitam
             }
-            $pdf->Cell(8,7,$key->kategori,1,0,'C');
-            $pdf->Cell(8,7,$key->ijazah_terakhir,1,0,'C');
+            $pdf->Cell(8,7,$key->kategori,1,0,'C', $fill);
+            $pdf->Cell(8,7,$key->ijazah_terakhir,1,0,'C', $fill);
             if (
                 ($key->kategori == 'DTY' && $key->nama_lembaga != "Ma'had Aly Sukorejo") ||
                 ($key->kategori == 'DTT' && $key->nama_lembaga != "Ma'had Aly Sukorejo")
@@ -412,31 +474,31 @@
                 $tmt = date("Y", strtotime($key->tmt_guru));
             }
             
-            $pdf->Cell(8, 7, $tmt, 1, 0, 'C');
+            $pdf->Cell(8, 7, $tmt, 1, 0, 'C', $fill);
 
-            $pdf->Cell(5,7,$masa_p,1,0,'C');
-            $pdf->Cell(12,7,$key->jumlah_sks,1,0,'C');
-            $pdf->Cell(10,7,rupiah($rank),1,0,'C');
-            $pdf->Cell(12,7,rupiah($mengajar),1,0,'C');
-            $pdf->Cell(10,7,rupiah($dty),1,0,'C');
-            $pdf->Cell(12,7,rupiah($jafung),1,0,'C');
-            $pdf->Cell(5,7,$key->jumlah_hadir,1,0,'C');
-            $pdf->Cell(12,7,rupiah($jml_kehadiran),1,0,'C');
-            $pdf->Cell(5,7,$key->jumlah_hadir_15,1,0,'C');
-            $pdf->Cell(12,7,rupiah($jml_kehadiran_15),1,0,'C');
-            $pdf->Cell(5,7,$key->jumlah_hadir_10,1,0,'C');
-            $pdf->Cell(12,7,rupiah($jml_kehadiran_10),1,0,'C');
-            $pdf->Cell(4,7,$key->jumlah_hadir_piket,1,0,'C');
-            $pdf->Cell(10,7,'x '.rupiah($rank_piket),1,0,'C');
-            $pdf->Cell(10,7,rupiah($barokah_piket),1,0,'C');
-            $pdf->Cell(12,7,rupiah($tunkel),1,0,'C');
-            $pdf->Cell(12,7,rupiah($tunja_anak),1,0,'C');
-            $pdf->Cell(15,7,rupiah($kehormatan),1,0,'C');
-            $pdf->Cell(15,7,rupiah($tunj_walkes),1,0,'C');
-            $pdf->Cell(15,7,rupiah($tambahan),1,0,'C');
-            $pdf->Cell(15,7,rupiah($jumlah),1,0,'C');
-            $pdf->Cell(15,7,rupiah($potongan),1,0,'C');
-            $pdf->Cell(20,7,rupiah($diterima),1,0,'C');
+            $pdf->Cell(5,7,$masa_p,1,0,'C', $fill);
+            $pdf->Cell(12,7,$key->jumlah_sks,1,0,'C', $fill);
+            $pdf->Cell(10,7,rupiah($rank),1,0,'C', $fill);
+            $pdf->Cell(12,7,rupiah($mengajar),1,0,'C', $fill);
+            $pdf->Cell(10,7,rupiah($dty),1,0,'C', $fill);
+            $pdf->Cell(12,7,rupiah($jafung),1,0,'C', $fill);
+            $pdf->Cell(5,7,$key->jumlah_hadir,1,0,'C', $fill);
+            $pdf->Cell(12,7,rupiah($jml_kehadiran),1,0,'C', $fill);
+            $pdf->Cell(5,7,$key->jumlah_hadir_15,1,0,'C', $fill);
+            $pdf->Cell(12,7,rupiah($jml_kehadiran_15),1,0,'C', $fill);
+            $pdf->Cell(5,7,$key->jumlah_hadir_10,1,0,'C', $fill);
+            $pdf->Cell(12,7,rupiah($jml_kehadiran_10),1,0,'C', $fill);
+            $pdf->Cell(4,7,$key->jumlah_hadir_piket,1,0,'C', $fill);
+            $pdf->Cell(10,7,'x '.rupiah($rank_piket),1,0,'C', $fill);
+            $pdf->Cell(10,7,rupiah($barokah_piket),1,0,'C', $fill);
+            $pdf->Cell(12,7,rupiah($tunkel),1,0,'C', $fill);
+            $pdf->Cell(12,7,rupiah($tunja_anak),1,0,'C', $fill);
+            $pdf->Cell(15,7,rupiah($kehormatan),1,0,'C', $fill);
+            $pdf->Cell(15,7,rupiah($tunj_walkes),1,0,'C', $fill);
+            $pdf->Cell(15,7,rupiah($tambahan),1,0,'C', $fill);
+            $pdf->Cell(15,7,rupiah($jumlah),1,0,'C', $fill);
+            $pdf->Cell(15,7,rupiah($potongan),1,0,'C', $fill);
+            $pdf->Cell(20,7,rupiah($diterima),1,0,'C', $fill);
             // Menambahkan baris baru
             $pdf->Cell(0, 0, '', 0, 1);
             $pdf->Cell(0, 0, '', 0, 1);
@@ -459,10 +521,47 @@
             $jumlah_kehormatan += $kehormatan;
             $jumlah_walkes += $tunj_walkes;
             $jumlah_bk += $tambahan;
-            
             $jumlah_potong += (int)$potongan;
-    
+
+            $sub_mengajar += $mengajar;
+            $sub_dty += $dty;
+            $sub_jafung += $jafung;
+            $sub_kehadiran += $jml_kehadiran;
+            $sub_kehadiran_15 += $jml_kehadiran_15;
+            $sub_kehadiran_10 += $jml_kehadiran_10;
+            $sub_kehadiran_piket += $barokah_piket;
+            $sub_tunkel += $tunkel;
+            $sub_tunanak += $tunja_anak;
+            $sub_kehormatan += $kehormatan;
+            $sub_walkes += $tunj_walkes;
+            $sub_bk += $tambahan;
+            $sub_semua += $jumlah;
+            $sub_potong += (int)$potongan;
+            $sub_total += $diterima;
     }
+
+        // Cetak subtotal untuk prodi terakhir
+        if ($current_prodi !== null) {
+            $pdf->Cell(1,7,'',0,1);
+            $pdf->SetFont('arial','B',5);
+            $pdf->SetFillColor(255, 255, 204); // Warna kuning muda untuk total
+            $pdf->Cell(101,7,'TOTAL ' . strtoupper($current_prodi),1,0,'C',true);
+            $pdf->Cell(12,7,rupiah($sub_mengajar),1,0,'C',true);
+            $pdf->Cell(10,7,rupiah($sub_dty),1,0,'C',true);
+            $pdf->Cell(12,7,rupiah($sub_jafung),1,0,'C',true);
+            $pdf->Cell(17,7,rupiah($sub_kehadiran),1,0,'C',true);
+            $pdf->Cell(17,7,rupiah($sub_kehadiran_15),1,0,'C',true);
+            $pdf->Cell(17,7,rupiah($sub_kehadiran_10),1,0,'C',true);
+            $pdf->Cell(24,7,rupiah($sub_kehadiran_piket),1,0,'C',true);
+            $pdf->Cell(12,7,rupiah($sub_tunkel),1,0,'C',true);
+            $pdf->Cell(12,7,rupiah($sub_tunanak),1,0,'C',true);
+            $pdf->Cell(15,7,rupiah($sub_kehormatan),1,0,'C',true);
+            $pdf->Cell(15,7,rupiah($sub_walkes),1,0,'C',true);
+            $pdf->Cell(15,7,rupiah($sub_bk),1,0,'C',true);
+            $pdf->Cell(15,7,rupiah($sub_semua),1,0,'C',true);
+            $pdf->Cell(15,7,rupiah($sub_potong),1,0,'C',true);
+            $pdf->Cell(20,7,rupiah($sub_total),1,0,'C',true);
+        }
 
         $pdf->ln(8);
         $pdf->Cell(101,7,'',0,0,'C');

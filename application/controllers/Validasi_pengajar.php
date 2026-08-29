@@ -426,7 +426,7 @@ class Validasi_pengajar extends CI_Controller {
             SELECT tbp.*, 
             u.gelar_depan, u.nama_lengkap, u.gelar_belakang,
             p.kategori, u.status_aktif, u.ijazah_terakhir,
-            kl.bulan, kl.tahun, l.nama_lembaga, kl.status as status_periode, kl.file, kl.id_kehadiran_lembaga, kl.id_lembaga, tbp.id_total_barokah_pengajar as id_kehadiran_pengajar, kl.status
+            kl.bulan, kl.tahun, l.nama_lembaga, kl.status as status_periode, kl.file, kl.id_kehadiran_lembaga, kl.id_lembaga, tbp.id_total_barokah_pengajar as id_kehadiran_pengajar, kl.status, mp.nama_prodi
             FROM kehadiran_lembaga kl
             JOIN total_barokah_pengajar tbp ON tbp.id_kehadiran_lembaga = kl.id_kehadiran_lembaga
             JOIN pengajar p ON p.id_pengajar = tbp.id_pengajar
@@ -437,7 +437,8 @@ class Validasi_pengajar extends CI_Controller {
             ORDER BY
                 CASE WHEN l.id_bidang = 'Bidang DIKTI' THEN 0 ELSE 1 END ASC,
                 IFNULL(mp.nama_prodi, '~') ASC,
-                u.nama_lengkap ASC
+                u.nama_lengkap ASC,
+                u.nik ASC
         ")->result();
 
         if (!empty($snapshot)) {
@@ -445,19 +446,27 @@ class Validasi_pengajar extends CI_Controller {
              $data['is_snapshot'] = true;
         } else {
             // 2. Fetch Live Data
-            $list2 = $this->db->query("select jumlah_hadir_piket, jumlah_hadir_15, jumlah_hadir_10, jafung, lembaga.id_lembaga, kehadiran_lembaga.status, status_sertifikasi, walkes, kehadiran_pengajar.id_kehadiran_pengajar, pengajar.kategori, jabatan_akademik, jumlah_sks, status_sertifikasi, ijazah_terakhir, id_bidang, tunj_anak, umana.gelar_depan, umana.gelar_belakang, kehormatan, kehadiran_lembaga.file, tunj_kel, kehadiran_lembaga.id_kehadiran_lembaga, 
-            nama_lengkap, status_nikah, tmt_dosen, tmt_guru, tmt_maif, kehadiran_pengajar.id_pengajar, kehadiran_pengajar.bulan, kehadiran_pengajar.tahun, jumlah_hadir, nama_lembaga, nominal_transport, status_aktif from umana, pengajar, kehadiran_pengajar, kehadiran_lembaga,
-            lembaga, transport WHERE 
-            kehadiran_lembaga.id_kehadiran_lembaga = kehadiran_pengajar.id_kehadiran_lembaga and 
-            pengajar.id_pengajar = kehadiran_pengajar.id_pengajar and 
-            pengajar.nik = umana.nik and 
-            pengajar.id_lembaga = lembaga.id_lembaga and 
-            pengajar.kategori_trans = transport.id_transport and 
-            DATEDIFF(NOW(), pengajar.tgl_mulai) < pengajar.tgl_selesai and
-            kehadiran_lembaga.id_kehadiran_lembaga = $decrypted_id 
-            order by 
+            $list2 = $this->db->query("SELECT 
+                jumlah_hadir_piket, jumlah_hadir_15, jumlah_hadir_10, jafung, lembaga.id_lembaga, kehadiran_lembaga.status, 
+                status_sertifikasi, walkes, kehadiran_pengajar.id_kehadiran_pengajar, pengajar.kategori, jabatan_akademik, 
+                jumlah_sks, ijazah_terakhir, id_bidang, tunj_anak, umana.gelar_depan, umana.gelar_belakang, kehormatan, 
+                kehadiran_lembaga.file, tunj_kel, kehadiran_lembaga.id_kehadiran_lembaga, nama_lengkap, status_nikah, 
+                tmt_dosen, tmt_guru, tmt_maif, kehadiran_pengajar.id_pengajar, kehadiran_pengajar.bulan, kehadiran_pengajar.tahun, 
+                jumlah_hadir, nama_lembaga, nominal_transport, status_aktif, master_prodi.nama_prodi
+            FROM kehadiran_pengajar
+            JOIN pengajar ON pengajar.id_pengajar = kehadiran_pengajar.id_pengajar
+            JOIN umana ON pengajar.nik = umana.nik
+            JOIN kehadiran_lembaga ON kehadiran_lembaga.id_kehadiran_lembaga = kehadiran_pengajar.id_kehadiran_lembaga
+            JOIN lembaga ON pengajar.id_lembaga = lembaga.id_lembaga
+            JOIN transport ON pengajar.kategori_trans = transport.id_transport
+            LEFT JOIN master_prodi ON master_prodi.id_prodi = pengajar.id_prodi
+            WHERE DATEDIFF(NOW(), pengajar.tgl_mulai) < pengajar.tgl_selesai
+              AND kehadiran_lembaga.id_kehadiran_lembaga = '$decrypted_id'
+            ORDER BY 
                 CASE WHEN id_bidang = 'Bidang DIKTI' THEN 0 ELSE 1 END ASC,
-                nama_lengkap asc ")->result();
+                IFNULL(master_prodi.nama_prodi, '~') ASC,
+                nama_lengkap ASC,
+                umana.nik ASC")->result();
             
             $data['isilist'] = $list2;
             $data['is_snapshot'] = false;

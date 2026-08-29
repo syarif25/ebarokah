@@ -523,6 +523,7 @@ if (isset($isilist) && !empty($isilist)) {
                             <!-- Fixed ID/Name -->
                             <th rowspan="2" class="text-center bg-white sticky-col-first" style="width: 40px; border-bottom: 2px solid #e2e8f0;">No</th>
                             <th rowspan="2" class="bg-white sticky-col-second" style="min-width: 250px; border-bottom: 2px solid #e2e8f0;">Nama Pengajar</th>
+                            <th rowspan="2" class="bg-white" style="min-width: 120px; border-bottom: 2px solid #e2e8f0;">Prodi</th>
                             
                             <!-- Metric Groups (Requested specific ordering) -->
                             <th rowspan="2" class="text-center border-left header-group-input" style="min-width: 60px;">IT</th>
@@ -766,11 +767,15 @@ if (isset($isilist) && !empty($isilist)) {
                                         PERUBAHAN KOMPONEN (<?php echo ($selisih_komponen > 0 ? '+' : '').number_format($selisih_komponen,0,',','.'); ?>)
                                     </span>
                                 <?php endif; ?>
-                                <!-- INPUT HIDDEN HAPUS JIKA TIDAK PERLU, TAPI BIARKAN UNTUK FORM SUBMIT BULK -->
                                 <input type="hidden" name="id_pengajar[]" value="<?php echo $key->id_pengajar; ?>">
                                 <input type="hidden" name="id_kehadiran_pengajar[]" value="<?php echo $key->id_kehadiran_pengajar; ?>">
                             </td>
                             
+                            <!-- Prodi Column -->
+                            <td class="bg-white text-muted align-middle" style="font-size: 0.8rem; font-weight: 500;">
+                                <?php echo htmlentities(!empty($key->nama_prodi) ? $key->nama_prodi : '-'); ?>
+                            </td>
+
                             <!-- Requested Columns: IT, TMT, MP, Jam/SKS, Rank, Mengajar, DTY, Jafung -->
                             <td class="cell-center border-left align-middle"><?php echo htmlentities($key->ijazah_terakhir); ?></td>
                             <td class="cell-center align-middle"><?php echo $tmt_display; ?></td>
@@ -833,6 +838,7 @@ if (isset($isilist) && !empty($isilist)) {
                             <!-- Sticky Cols (No, Nama) -->
                             <td class="sticky-col-first bg-light border-right text-center font-weight-bold"></td>
                             <td class="sticky-col-second bg-light border-right font-weight-bold text-uppercase text-right px-3">Total Seluruh:</td>
+                            <td class="bg-light border-right border-left"></td>
                             
                             <!-- Inputs Group (IT, TMT, MP, Jam) - Empty/Merged -->
                             <td colspan="4" class="bg-light border-right border-left"></td>

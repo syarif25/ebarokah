@@ -26,6 +26,7 @@
                                                     <th>No</th>
                                                     <th>Nama Lengkap</th>
                                                     <th>Jumlah SKS/Jam</th>
+                                                    <th>Prodi</th>
                                                     <!-- <th>Alamat</th> -->
                                                     <th style="width: 100px">Hadir Normal <br> <span>(sesuai domisili)</span> </br></th>
                                                     <th style="width: 100px">Hadir 15.000</th>
@@ -42,17 +43,19 @@
                                                         pengajar.*, 
                                                         lembaga.*, 
                                                         umana.*, 
-                                                        transport.*
+                                                        transport.*,
+                                                        master_prodi.nama_prodi
                                                     FROM pengajar
                                                     JOIN umana ON pengajar.nik = umana.nik
                                                     JOIN lembaga ON pengajar.id_lembaga = lembaga.id_lembaga
                                                     JOIN transport ON pengajar.kategori_trans = transport.id_transport
+                                                    LEFT JOIN master_prodi ON pengajar.id_prodi = master_prodi.id_prodi
                                                     WHERE 
                                                         lembaga.id_lembaga = $id
                                                         AND pengajar.tgl_mulai <= CURDATE()
                                                         AND (pengajar.tgl_selesai IS NULL OR pengajar.tgl_selesai >= CURDATE())
                                                         AND pengajar.status IN ('Aktif', 'Cuti 50%', 'Cuti 100%')
-                                                    ORDER BY umana.nama_lengkap ASC
+                                                    ORDER BY IFNULL(master_prodi.nama_prodi, '~') ASC, umana.nama_lengkap ASC
                                                 ")->result();
 
                                                 foreach ($list as $key): 
@@ -73,6 +76,15 @@
                                                         <?php echo $key->gelar_depan.' '.ucwords(strtolower($key->nama_lengkap)).' '.$key->gelar_belakang . $badge; ?>
                                                     </td>
                                                     <td><?php echo $key->jumlah_sks; ?></td>
+                                                    <td><?php 
+                                                        $prodi_html = '-';
+                                                        if (!empty($key->nama_prodi)) {
+                                                            $color_classes = ['text-primary', 'text-success', 'text-danger', 'text-info', 'text-dark', 'text-secondary'];
+                                                            $color_class = $color_classes[$key->id_prodi % count($color_classes)];
+                                                            $prodi_html = '<span class="fw-bold '.$color_class.'">' . $key->nama_prodi . '</span>';
+                                                        }
+                                                        echo $prodi_html; 
+                                                    ?></td>
                                                     <td><input type="number" name="jumlah_kehadiran[]" class="form-control input-success"></td>
                                                     <td><input type="number" name="jumlah_kehadiran_15[]" class="form-control input-success"></td>
                                                     <td><input type="number" name="jumlah_kehadiran_10[]" class="form-control input-success"></td>

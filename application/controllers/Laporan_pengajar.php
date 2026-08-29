@@ -189,6 +189,13 @@ class Laporan_pengajar extends CI_Controller {
 		}
 		$data['walkes_config'] = $walkes_config;
 
+        $this->load->helper('hitung_pengajar_helper');
+        if (isset($data['header_info']) && $data['header_info']) {
+            $data['komponen_sebelumnya'] = get_komponen_sebelumnya_pengajar($data['header_info']->id_lembaga, $id);
+        } else {
+            $data['komponen_sebelumnya'] = array();
+        }
+
 		$this->load->view('Kehadiran_pengajar/Cetak', $data);
 	}
 }

@@ -184,7 +184,8 @@ class Laporan_model extends CI_Model {
                 kehadiran_pengajar.jumlah_hadir_10, kehadiran_pengajar.jumlah_hadir_piket,
                 kehadiran_lembaga.id_kehadiran_lembaga, kehadiran_lembaga.status,
                 transport.nominal_transport,
-                pengajar.jumlah_sks
+                pengajar.jumlah_sks,
+                mp.nama_prodi
             FROM umana
             JOIN pengajar   ON pengajar.nik = umana.nik
             JOIN kehadiran_pengajar ON kehadiran_pengajar.id_pengajar = pengajar.id_pengajar
@@ -197,7 +198,8 @@ class Laporan_model extends CI_Model {
             ORDER BY
                 CASE WHEN lembaga.id_bidang = 'Bidang DIKTI' THEN 0 ELSE 1 END ASC,
                 IFNULL(mp.nama_prodi, '~') ASC,
-                umana.nama_lengkap ASC
+                umana.nama_lengkap ASC,
+                umana.nik ASC
         ");
         return $list->result();
     }
